@@ -24,7 +24,7 @@ const Editprofile = () => {
 
                         <div className="edit-data" > 
                         <p className="edit-key">{data.key}</p>
-                        <p  className="edit-value">{data.value}<i class="bi bi-pencil-square ms-2"></i></p>
+                        <p  className="edit-value">{data.value}<i className="bi bi-pencil-square ms-2"></i></p>
                         </div>
                         
                          ))
