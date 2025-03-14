@@ -5,6 +5,7 @@
 .profile-container{
   display: flex;
   justify-content: space-between;
+  width: 100%;
 }
 .profile-image-box{
     display: flex;
@@ -16,18 +17,25 @@
    display: flex;
    flex-direction: column;
    margin-top: 30px;
+
+   padding-right: 380px
 }
-.profile-title{
+.profile-title-heading{
   display: flex;
-  padding-right: 500px;
-  
-  color: #fff !important;
+  /* padding-right: 500px;
+ */ 
+}
+
+.profile-title{
+  color: #fff;
+  width: 260px;
 }
 .profile-data{
  
     display: grid;
     grid-template-columns:50% 50%;
     color: #fff;
+    width: 260px;
     
 }
 .data-key{
@@ -36,8 +44,9 @@
 }
 .data-value{
   display: flex;
-  margin-left: -130px;
+ /*  margin-left: -130px; */
 }
+
 .download-report{
     display: flex;
 }
@@ -50,4 +59,27 @@ margin-top: 30px;
 padding: 7px;
 border-radius: 5px;
 font-size: 15px;
+margin-right: 10px;
+}
+
+@media(max-width:830px){
+
+  .container-box{
+    width: 100%;
+    height: 100vh;
+    overflow-x: hidden;
+  }
+ 
+  .profile-container{
+      flex-direction: column;
+  }
+  .profile-title-box{
+    width: 100%;
+  }
+  
+ 
+   .data-value{
+    margin-left: 5px;
+   } 
+
 }

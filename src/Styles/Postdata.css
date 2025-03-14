@@ -25,3 +25,22 @@
   border-top-left-radius: 30px;
   border-top-right-radius: 30px;
 }
+
+
+@media(max-width:830px){
+
+  .postbox-container{
+    height: 100vh;
+    
+
+  }
+  .post-images-grid{
+     flex-direction: column;
+     gap: 40px;
+    }
+   
+   .post-image{
+     margin-left: 25px;
+    
+  }
+}

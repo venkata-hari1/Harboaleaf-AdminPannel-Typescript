@@ -20,7 +20,24 @@
 }
 .social-data1{
     display: grid;
-    grid-template-columns:15% 85% ;
+    grid-template-columns:20% 80% ;
     color: #fff;
     
+}
+
+@media(max-width:830px){
+    
+    .social-container{
+        width: 100%;
+        height: 80vh;
+        overflow-x: hidden;
+    }
+    .social-data1{
+      grid-template-columns: 30% 70%;
+ }
+ .social-data-value{
+    margin-left: 30px;
+ }
+   
+
 }

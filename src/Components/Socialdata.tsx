@@ -23,8 +23,8 @@ const Socialdata = () => {
       {
          socialdata.map( data=>(
           <div className="social-data1">
-          <p style={{color:"#B9B9B9"}}>{data.key}</p>
-          <p style={{color:"#FFFFFF"}}>{data.value}</p>
+          <p className="social-data-key"style={{color:"#B9B9B9"}}>{data.key}</p>
+          <p className="social-data-value"style={{color:"#FFFFFF"}}>{data.value}</p>
 
           </div>
          ))

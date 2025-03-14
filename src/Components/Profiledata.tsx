@@ -21,7 +21,9 @@ return (
      </div>
       
       <div className="profile-title-box">
+        <div>
         <p className="profile-title">Suresh Kumar</p>
+        </div>
         {
           profiledata.map(data=>(
            
