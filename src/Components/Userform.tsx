@@ -89,7 +89,7 @@ const Userform = () => {
 
        <div className='preview-box'>
         <label>Preview</label>
-        <button className='preview-button'>view preview<i class="bi bi-eye-fill ms-2"></i></button>
+        <button className='preview-button'>view preview<i className="bi bi-eye-fill ms-2"></i></button>
        </div>
 
 

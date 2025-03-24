@@ -45,7 +45,7 @@ const Billinginvoice = () => {
 </svg></button>
       
     </div>
-    <div class="tab-content table-responsive">
+    <div className="tab-content table-responsive">
 <table className="table table-borderless mt-4">
    <thead >
   <tr >
