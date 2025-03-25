@@ -5,16 +5,16 @@ const Userform = () => {
   return (
    <div className="form-container">
        <div className='form-wrapper'>
-       <div className='title-box'>
+       <div className='title-box1'>
         <label>Add Title</label>
-        <input type="text" />
+        <input type="text"/>
        </div>
 
        <div className='admedia-box'>
         <label>Ad Media</label>
-        <input type="file" />
-        
-       </div>
+         <label htmlFor="file1" className='file1-class'>Attach<i className="bi bi-paperclip"></i></label>
+         <input type="file" id="file1" />
+         </div>
        <div className='desc-box'>
         <label>Add Description</label>
         <textarea></textarea>
@@ -34,13 +34,13 @@ const Userform = () => {
        
        <div className='target-check'>
         <input type='checkbox' />
-        <span className='ms-2'>All over india</span>
+        <span className='ms-2' >All over india</span>
         </div>
         
         <div className='target-num'>
         <label>Target Age Range</label>
         <div>
-        <input type='number' id="num1"/><span className='ms-2 mt-2'>Age <span className='me-2 mt-2'>to</span></span>
+        <input type='number' id="num1"/><span className='ms-2 mt-2'>Age <span className='me-2 mt-2'>&nbsp;to</span></span>
         <input type='number' id="num2" /><span className='ms-2 mt-2'> Age</span>  
         </div>
         </div>
@@ -54,7 +54,7 @@ const Userform = () => {
         <div className='gender-box'>
          <label>Gender</label>
          <div>
-         <input type='radio' name="gender" /><span>Male</span>
+         <input type='radio' name="gender"/><span>Male</span>
          <input type='radio' name="gender"/><span>Female</span>
          <input type='radio' name="gender" /> <span>All</span>
          </div>
@@ -83,7 +83,7 @@ const Userform = () => {
         <div>
          <input type='checkbox' /><span className='ms-2 me-2'>Banner at the top</span>
          <input type='checkbox' /><span className='ms-2 me-2'>Banner at the bottom</span>
-         <input type='checkbox' /><span className='ms-2 me-2'></span>Mid scroll card placement         
+         <input type='checkbox' /><span className='ms-2 '></span>Mid scroll card placement         
          </div>
        </div>
 
@@ -93,11 +93,10 @@ const Userform = () => {
        </div>
 
 
-
        
        <div className='buttons-ds'>
-         <button type="btn" className='discard-button'>Discard</button>
-                  <button type="btn" className='submit-button'>Submit</button>
+         <button className='discard-button'>Discard</button>
+                  <button  className='submit-button'>Submit</button>
        </div>      
 
        </div>

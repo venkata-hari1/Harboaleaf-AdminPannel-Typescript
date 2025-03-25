@@ -1,7 +1,6 @@
 .form-container{
     display: flex;
     justify-content: space-between;
-    
     align-items: center;
 }
 
@@ -10,12 +9,14 @@
     padding: 20px;
     color: #fff;
     align-items: center;
-    margin-left: 50px;
+    margin-left: 155px;
 }
-.title-box{
+.title-box1{
   display:grid;
   grid-template-columns: 50% 50%;
+  margin-top: 30px;
 }
+
 .admedia-box{
     display:grid;
   grid-template-columns: 50% 50%;
@@ -23,7 +24,22 @@
 }
 input [type="file"]{
   padding: 10px;
-  display:  none;
+  
+}
+
+#file1{
+   display: none;
+}
+.file1-class{
+    width: 90px;
+    height: 40px;
+    border: 1px solid #3856F3;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    cursor: pointer;
 }
 .desc-box{
  display:grid;
@@ -44,7 +60,6 @@ input[type="text"]{
     border: 1px solid #898989;
     background:#050a17;
 }
-
 
 .desc-box textarea{
     background:#050a17;
@@ -68,7 +83,7 @@ input[type="text"]{
 .target-check{
     float: right;
     
-    padding-right: 165px;
+    padding-right: 118px;
     padding-top: 3px;
 } 
 .target-num{
@@ -124,7 +139,6 @@ input[type="number"]{
     padding-left: 5px;
 }
 
-
 .date-box{
     display:grid;
     grid-template-columns: 50% 50%;
@@ -150,8 +164,8 @@ input[type="date"]{
 }
 input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(100%) sepia(50%) hue-rotate(120deg) saturate(300%);
+    
 }
-
 
 
 
@@ -200,7 +214,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
    width: 550px;
 }
 .placing-box input[type="checkbox"]{
-    padding-left: 30px !important;
+    /* padding-left: 30px !important; */
 }
 .preview-box{
     display:grid;
@@ -247,3 +261,243 @@ input[type="text"],input[type="number"],textarea:focus{
     color: #fff9ff;
     
 }
+
+.target-check [type="checkbox"] {
+    appearance: none;  
+    width: 18px;
+    height: 20px;
+    border: 1px solid #3856F3;  
+    border-radius: 4px;
+    background-color:transparent;
+    cursor: pointer;
+    position: relative;
+    
+    
+}
+.target-check [type="checkbox"]:checked::after {
+
+    content: "✔";
+    color: #fff;
+    position: absolute;
+    font-size: 15px;
+    padding-bottom: 40px;
+    
+}
+
+.gender-box [type="radio"]{
+
+    appearance: none;  
+    width: 18px;
+    height: 20px;
+    border: 1px solid #3856F3;  
+    border-radius: 4px;
+    background-color:transparent;
+    cursor: pointer;
+    position: relative;
+}
+
+.gender-box [type="radio"]:checked::after {
+    content: "";
+    width: 10px;
+    height: 10px;
+    background-color: rgb(255, 255, 255); 
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.placing-box [type="checkbox"]{
+    appearance: none;  
+    width: 20px;
+    height: 20px;
+    border: 1px solid #3856F3;  
+    border-radius: 4px;
+    background-color:transparent;
+    cursor: pointer;
+    position: relative;
+    
+}
+
+.placing-box [type="checkbox"]:checked::after {
+
+    content: "✔";
+    color: #fff;
+    position: absolute;
+    font-size: 14px;
+    padding-bottom: 50px;
+    padding-left: 3px;
+}
+
+input[type="date"] {
+    appearance: none; 
+    position: relative;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: transparent;
+    color:#fff;
+  }
+  
+  
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(27%) sepia(98%) saturate(1000%) hue-rotate(190deg); 
+    cursor: pointer;
+  }
+  
+
+
+/* ........................................................................ */
+
+@media(max-width:830px){
+
+    .form-container {
+         display: flex;
+         width: 100%;
+    } 
+    
+  .form-wrapper{
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+input[type="text"]{
+    width: 100%;
+}
+.title-box1{
+    display: flex;
+    justify-content:start;
+    align-items: start;
+    flex-direction: column;
+    width: 100%;
+ }
+  
+  .admedia-box {
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+  }    
+  .desc-box{
+   
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+  }
+  .desc-box textarea{
+    width: 100%;
+  }  
+
+  .call-action{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+
+  }
+  .taget-box{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+}
+
+.target-check{
+    display: flex;
+    justify-content: start;
+    flex-direction: row;/* change */
+    align-items: start;
+    width: 100%;
+}
+.target-num{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+}
+.interest-box{
+
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+}
+.gender-box{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+    
+}
+.budget-box{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+}
+.date-box{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+}
+
+input[type="date"]{
+    width: 100%;
+}
+.elimination-box{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+}
+.placing-box{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+}
+.placing-checkboxes{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+}
+.placing-box>div{
+    display: flex;
+    justify-content: start;
+    flex-direction: row;
+    align-items: start;
+    width: 100%;
+}
+.placing-box>div>input{
+    margin-top: 2px;
+}
+.preview-box{
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+}
+
+}
+
+
