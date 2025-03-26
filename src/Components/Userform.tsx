@@ -6,7 +6,7 @@ const Userform = () => {
    <div className="form-container">
        <div className='form-wrapper'>
        <div className='title-box1'>
-        <label>Add Title2</label>
+        <label>Add Title</label>
         <input type="text"/>
        </div>
 
