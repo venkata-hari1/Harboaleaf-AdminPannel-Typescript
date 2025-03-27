@@ -1,9 +1,17 @@
 import React from 'react'
 import '../Styles/Userform.css';
+import PreviewPopUp from './PreviewPopUp';
 
 const Userform = () => {
+
+  const[state,setState]=React.useState(false)
+  
+  function openPreviewpop(){
+      setState((prev)=>!prev)
+  }
   return (
    <div className="form-container">
+    {state&&<PreviewPopUp  popupopen={openPreviewpop} closepop={openPreviewpop}/>}
        <div className='form-wrapper'>
        <div className='title-box1'>
         <label>Add Title</label>
@@ -68,8 +76,8 @@ const Userform = () => {
         <div className='date-box'>
            <label>Ad Duration</label>
            <div className='date-pick' >
-            <input type='date' /><span>
-            <input type='date' /></span>
+            <input type='date'/><span>
+            <input type='date'/></span>
            </div>
         </div>
 
@@ -89,7 +97,7 @@ const Userform = () => {
 
        <div className='preview-box'>
         <label>Preview</label>
-        <button className='preview-button'>view preview<i className="bi bi-eye-fill ms-2"></i></button>
+        <button className='preview-button'  onClick={openPreviewpop}>view preview<i className="bi bi-eye-fill ms-2"></i></button>
        </div>
 
 

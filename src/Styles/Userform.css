@@ -104,7 +104,7 @@ input[type="text"]{
     flex-direction: row;
         
 }   
-input[type="number"]{
+.target-num input[type="number"]{
   width: 50px;
   height: 50px;
   border-radius: 10px;
@@ -152,7 +152,7 @@ input[type="number"]{
     margin-top: 30px;
     
 }
-input[type="date"]{
+.date-pick input[type="date"]{
     width: 200px;
     height: 40px;
     border-radius: 5px;
@@ -162,8 +162,8 @@ input[type="date"]{
     padding-left: 10px;
     background:#050a17;
 }
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(100%) sepia(50%) hue-rotate(120deg) saturate(300%);
+.date-class::-webkit-calendar-picker-indicator {
+    filter: invert(100%) sepia(50%) hue-rotate(120deg) saturate(300%) !important;
     
 }
 
@@ -184,6 +184,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-radius: 4px;
     border: none;
     border: 1px solid #898989;
+    background: transparent;
 }
 .gender-box {
    display:grid;
@@ -330,7 +331,7 @@ input[type="text"],input[type="number"],textarea:focus{
     padding-left: 3px;
 }
 
-input[type="date"] {
+.date-box input[type="date"] {
     appearance: none; 
     position: relative;
     padding: 8px;
@@ -341,7 +342,7 @@ input[type="date"] {
   }
   
   
-  input[type="date"]::-webkit-calendar-picker-indicator {
+  .date-box input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(27%) sepia(98%) saturate(1000%) hue-rotate(190deg); 
     cursor: pointer;
   }
@@ -456,7 +457,7 @@ input[type="text"]{
     width: 100%;
 }
 
-input[type="date"]{
+.date-box input[type="date"]{
     width: 100%;
 }
 .elimination-box{

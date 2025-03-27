@@ -9,6 +9,8 @@ import Socialdata from '../Components/Socialdata'
 import Postdata from '../Components/Postdata'
 import Profileinformation from '../Components/Profileinformation'
 import Safetytable from '../Components/Safetytable'
+
+import PreviewPopUp from '../Components/PreviewPopUp'
 const AppRoutes = () => {
   return (
     <Routes> 
@@ -21,6 +23,7 @@ const AppRoutes = () => {
       <Route path='/post' element={<Postdata />}/> 
       <Route path='/profile-info' element={<Profileinformation />} />
       <Route path='/safetable' element={< Safetytable/>} />
+      <Route path='/preview-popup' element={< PreviewPopUp/>} />
     </Routes>
     
   )

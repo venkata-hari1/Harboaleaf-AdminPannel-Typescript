@@ -68,7 +68,7 @@ const Header = () => {
 
      {(location.pathname!=="/admin/user-management/profile-info/1" &&
       location.pathname!=="/admin/edit-profile" && location.pathname!=="/admin/safety-reports" &&
-      location.pathname!=="/admin/admin-pannel"
+      location.pathname!=="/admin/admin-pannel" &&location.pathname!=="/admin/admgmt/userform"
       ) &&<div className='total'>
       <p id="total1">Total Users</p>
       <p id="total2">40,300</p>
