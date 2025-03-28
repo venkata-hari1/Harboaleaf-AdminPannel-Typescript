@@ -3,7 +3,8 @@ import networkCall from "../../../Utils/NetworkCalls";
 import { endpoints } from "../../../Utils/Config";
 const initialState = {
   loading: false,
-  data:[]
+  data:[],
+  reports:[],
 }
 
 export const Users = createAsyncThunk(
@@ -12,6 +13,24 @@ export const Users = createAsyncThunk(
     try {
       const { response, error } = await networkCall(
         `${endpoints.USERS}?page=${page}`,
+        "GET"
+      );
+      if (response) {
+        return fulfillWithValue(response);
+      } else if (error) {
+        return rejectWithValue(error);
+      }
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+export const UserReports = createAsyncThunk(
+  "UserReports",
+  async (page: string | number, { fulfillWithValue, rejectWithValue }) => {
+    try {
+      const { response, error } = await networkCall(
+        `${endpoints.REPORTS}?page=${page}`,
         "GET"
       );
       if (response) {
@@ -37,6 +56,16 @@ export const UserMangement_Slice = createSlice({
       state.loading = false
     })
     builder.addCase(Users.rejected, (state, action) => {
+      state.loading = true
+    })
+    builder.addCase(UserReports.pending, (state, action) => {
+      state.loading = true
+    })
+    builder.addCase(UserReports.fulfilled, (state, action) => {
+      state.reports = action.payload
+      state.loading = false
+    })
+    builder.addCase(UserReports.rejected, (state, action) => {
       state.loading = true
     })
   

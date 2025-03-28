@@ -1,21 +1,29 @@
 import React from 'react'
-import Popupimg from'../../assets/popimg.jpg'
+import Popupimg from '../../assets/popimg.jpg'
 import '../../Styles/UserPopUp.css';
- const UserPopUp = ({ handleClick }) => {
+import moment from 'moment';
+ const UserPopUp = ({ handleClick,post }:any) => {
     const[value,setValue]=React.useState(false)
     const handleDelete=()=>{
-        handleClick()
+       
     }
-  return (
+    console.log(post)
+    const text=post.type==='post'?post.post?.[0].text:post.story?.[0].text
+    const image=post.type==='post'?post.post?.[0].files?.[0]:post.story?.[0].files?.[0]
+    const firstname=post.type==='post'?post.post?.[0].user?.firstname:post.story?.[0].user?.firstname
+    const lastname=post.type==='post'?post.post?.[0].user?.lastname:post.story?.[0].user?.lastname
+    const userimage=post.type==='post'?post.post?.[0].user?.image:post.story?.[0].user?.image
+    const createdAt=post.type==='post'?post.post?.[0].createdAt:post.story?.[0].createdAt
+    return (
      <div className='main-popup-container'>
       <div className='popup-container'>
          <div className='popup-title-container'>
-           <img src={Popupimg} width="20px" height="20px"className="rounded-circle" alt=''/><p>David Wilden</p>
-              <span>1d ago</span>
+           <img src={userimage?userimage:Popupimg} width="20px" height="20px"className="rounded-circle" alt=''/><p>{firstname}{lastname}</p>
+              <span>{moment(createdAt).fromNow()}</span>
          </div>
          <div className='popimg-container'>
        
-           <img src={Popupimg} width="100%" height="100%" /> 
+           <img src={image?image:Popupimg} width="100%" height="100%" /> 
              
             <div className='menu-delete-box'>
                  <div className='dot' onClick={()=>setValue(!value)}>
@@ -27,8 +35,7 @@ import '../../Styles/UserPopUp.css';
                   </div>}
            </div>  
              <div className='image-text'>
-              <p>Explored new heights today! Nothing beats the feeling of fresh air and freedom. 🌲🏔️ 
-                #AdventureAwaits #MountainLife</p>
+              <p>{text}</p>
              </div>
            </div>
          <div className='tools-wrapper'>
