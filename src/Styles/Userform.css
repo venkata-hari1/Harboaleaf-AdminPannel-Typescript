@@ -22,7 +22,7 @@
   grid-template-columns: 50% 50%;
   margin-top: 30px;
 }
-input [type="file"]{
+.file-box{
   padding: 10px;
   
 }
@@ -52,7 +52,7 @@ input [type="file"]{
     margin-top: 30px;
    }
 
-input[type="text"]{
+.form-textbox{
     width: 500px;
     height: 40px;
     border-radius: 5px;
@@ -61,6 +61,14 @@ input[type="text"]{
     background:#050a17;
 }
 
+.call-action-textbox{
+    width: 500px;
+    height: 40px;
+    border-radius: 5px;
+    border: none;
+    border: 1px solid #898989;
+    background:#050a17;
+}
 .desc-box textarea{
     background:#050a17;
     width: 500px;
@@ -104,7 +112,7 @@ input[type="text"]{
     flex-direction: row;
         
 }   
-.target-num input[type="number"]{
+.target-num-input{
   width: 50px;
   height: 50px;
   border-radius: 10px;
@@ -115,6 +123,14 @@ input[type="text"]{
     grid-template-columns: 50% 50%;
      margin-top: 30px;     
 }
+.interest-box-input{
+    width: 500px;
+    height: 40px;
+    border-radius: 5px;
+    border: none;
+    border: 1px solid #898989;
+    background:#050a17;    
+}
 .budget-box{
     display:grid;
     grid-template-columns: 50% 50%;
@@ -123,7 +139,7 @@ input[type="text"]{
 .budget-box label{
     margin-top: 32px;
 }
-.budget-box input[type="number"]{
+.budget-box-input{
     background:#050a17;
     width: 200px;
     height: 40px;
@@ -132,10 +148,10 @@ input[type="text"]{
     border: none;
     border: 1px solid #898989;
 }
-.budget-box input::placeholder{
+.budget-box ,.budget-box-input::placeholder{
   padding-left: 5px;
 }
-.elimination-box input::placeholder{
+.eliminiation-box-input::placeholder{
     padding-left: 5px;
 }
 
@@ -150,9 +166,9 @@ input[type="text"]{
     display: flex;
     gap: 20px;
     margin-top: 30px;
-    
 }
-.date-pick input[type="date"]{
+
+.data-pick-input{
     width: 200px;
     height: 40px;
     border-radius: 5px;
@@ -176,7 +192,7 @@ input[type="text"]{
 .elimination-box label{
     margin-top: 32px;
 }
-.elimination-box input[type="number"]{
+.eliminiation-box-input{
 
     width: 200px;
     height: 40px;
@@ -214,7 +230,7 @@ input[type="text"]{
    display: inline;
    width: 550px;
 }
-.placing-box input[type="checkbox"]{
+.placing-box-input{
     /* padding-left: 30px !important; */
 }
 .preview-box{
@@ -258,12 +274,14 @@ input[type="text"]{
     gap: 30px;    
 }
 
-input[type="text"],input[type="number"],textarea:focus{
+.form-textbox, .call-action-textbox,.target-num-input,textarea:focus{
     color: #fff9ff;
+    background-color: transparent;
+    
     
 }
 
-.target-check [type="checkbox"] {
+.target-check-input {
     appearance: none;  
     width: 18px;
     height: 20px;
@@ -275,7 +293,7 @@ input[type="text"],input[type="number"],textarea:focus{
     
     
 }
-.target-check [type="checkbox"]:checked::after {
+.target-check-input:checked::after {
 
     content: "✔";
     color: #fff;
@@ -285,7 +303,7 @@ input[type="text"],input[type="number"],textarea:focus{
     
 }
 
-.gender-box [type="radio"]{
+.gender-box-input{
 
     appearance: none;  
     width: 18px;
@@ -297,7 +315,7 @@ input[type="text"],input[type="number"],textarea:focus{
     position: relative;
 }
 
-.gender-box [type="radio"]:checked::after {
+.gender-box-input:checked::after {
     content: "";
     width: 10px;
     height: 10px;
@@ -309,7 +327,7 @@ input[type="text"],input[type="number"],textarea:focus{
     transform: translate(-50%, -50%);
 }
 
-.placing-box [type="checkbox"]{
+.placing-box-input{
     appearance: none;  
     width: 20px;
     height: 20px;
@@ -321,7 +339,7 @@ input[type="text"],input[type="number"],textarea:focus{
     
 }
 
-.placing-box [type="checkbox"]:checked::after {
+.placing-box-input:checked::after {
 
     content: "✔";
     color: #fff;
@@ -331,7 +349,7 @@ input[type="text"],input[type="number"],textarea:focus{
     padding-left: 3px;
 }
 
-.date-box input[type="date"] {
+.data-pick-input {
     appearance: none; 
     position: relative;
     padding: 8px;
@@ -342,7 +360,7 @@ input[type="text"],input[type="number"],textarea:focus{
   }
   
   
-  .date-box input[type="date"]::-webkit-calendar-picker-indicator {
+  .data-pick-input::-webkit-calendar-picker-indicator {
     filter: invert(27%) sepia(98%) saturate(1000%) hue-rotate(190deg); 
     cursor: pointer;
   }
@@ -366,7 +384,7 @@ input[type="text"],input[type="number"],textarea:focus{
     padding: 0;
     margin: 0;
 }
-input[type="text"]{
+.form-textbox{
     width: 100%;
 }
 .title-box1{
@@ -402,8 +420,14 @@ input[type="text"]{
     flex-direction: column;
     align-items: start;
     width: 100%;
+}
+.call-action-textbox{
+    width: 100%;
+}
+.interest-box-input{
+    width: 100%;
+}
 
-  }
   .taget-box{
     display: flex;
     justify-content: start;
@@ -457,7 +481,7 @@ input[type="text"]{
     width: 100%;
 }
 
-.date-box input[type="date"]{
+.data-pick-input{
     width: 100%;
 }
 .elimination-box{

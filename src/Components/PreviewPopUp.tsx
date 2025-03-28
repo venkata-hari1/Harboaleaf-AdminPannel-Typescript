@@ -7,15 +7,11 @@ import Harboleaf_title from '../assets/Hbtitle.png'
 import  BadgeImg from '../assets/BadgeImg.png' 
 import PreviewImg from '../assets/PreviewImg.png'
 import PreviewTv from '../assets/Preview-tv.png'
-const PreviewPopUp = ({popupopen,closepop}) => {
+const PreviewPopUp = () => {
 
+return (
 
-function closePreview(){
-    closepop()
-}
-
-  return (
-    <div className='main-preview-container'>
+     <div className='main-preview-container'>
        <div className='preview-popup-container'>
 
         <div className="tool-row-container">{/*first row  */}
@@ -45,7 +41,7 @@ function closePreview(){
              <div className='search-container'>
               <input type="search" className='search-box1' placeholder='SEARCH'/><i className="bi bi-search search-icon1"></i>
              </div>
-             <div className='badge-container' onClick={closePreview}>
+             <div className='badge-container'>
              <img src={BadgeImg} className='badge-image1 img-fluid rounded-circle' /> 
              </div>  
 
