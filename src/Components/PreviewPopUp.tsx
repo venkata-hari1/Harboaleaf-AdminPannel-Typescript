@@ -7,11 +7,17 @@ import Harboleaf_title from '../assets/Hbtitle.png'
 import  BadgeImg from '../assets/BadgeImg.png' 
 import PreviewImg from '../assets/PreviewImg.png'
 import PreviewTv from '../assets/Preview-tv.png'
-const PreviewPopUp = () => {
 
-return (
+const PreviewPopUp = ({ handlePopup }) => {
 
-     <div className='main-preview-container'>
+  const closeHandle=()=>{
+    
+    handlePopup()
+
+  }
+ return (
+
+   <div className='main-preview-container'>
        <div className='preview-popup-container'>
 
         <div className="tool-row-container">{/*first row  */}
@@ -23,7 +29,7 @@ return (
            <img src={Camera} className='camera-img'/>
            </div>
           
-           <div className='network-container'>  
+           <div className='network-container' >  
            <img src={Statusicon} className='status-img'/>
            </div>
 
@@ -42,14 +48,14 @@ return (
               <input type="search" className='search-box1' placeholder='SEARCH'/><i className="bi bi-search search-icon1"></i>
              </div>
              <div className='badge-container'>
-             <img src={BadgeImg} className='badge-image1 img-fluid rounded-circle' /> 
+             <img src={BadgeImg} className='badge-image1 img-fluid rounded-circle' onClick={closeHandle}/> 
              </div>  
 
             </div>{/* 2nd row end */}
        
-           <div className='preview-bgimage-container'>
+           <div className='preview-bgimage-container' >
             
-               <img src={PreviewImg} className='preview-image-box'/> 
+               <img src={PreviewImg} className='preview-image-box' /> 
               <div className='preview-img-text'>
                  Explored new hights today! Nothing beats the feelings
                  of fresh air and freedom.
@@ -89,6 +95,9 @@ return (
        
        </div> 
     </div>
+
+   
+     
   )
 }
 

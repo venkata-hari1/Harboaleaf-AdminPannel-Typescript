@@ -1,16 +1,24 @@
-import React from 'react'
+import React, { useState } from 'react'
 import '../Styles/Userform.css';
 import PreviewPopUp from './PreviewPopUp';
 
 const Userform = () => {
 
-
+  const[state,setState]=useState(false)
+             
+  const handlePopup=()=>{
+     
+    setState((prev)=>!prev)
   
+  }
 
-  return (
-   <div className="form-container">
-    
-       <div className='form-wrapper'>
+ return (
+   <div className="form-container" style={{position:"relative"}}>
+    {
+      state&&<PreviewPopUp handlePopup={handlePopup}/>
+    }
+        
+    <div className='form-wrapper'>
        <div className='title-box1'>
         <label>Add Title</label>
         <input type="text" className='form-textbox'/>
@@ -95,7 +103,7 @@ const Userform = () => {
 
        <div className='preview-box'>
         <label>Preview</label>
-        <button className='preview-button'>view preview<i className="bi bi-eye-fill ms-2"></i></button>
+        <button className='preview-button' onClick={handlePopup}>view preview<i className="bi bi-eye-fill ms-2"></i></button>
        </div>
 
 
