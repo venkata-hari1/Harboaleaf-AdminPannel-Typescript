@@ -54,15 +54,13 @@
 }
 .inputfiled-group{
  display: flex;
+ align-items: center;
+ justify-content: center;
 flex-direction: column;  
 margin-top: 140px;
 gap: 20px;
 margin: auto;
-}
-
-.form-controll:focus{
-  color: white;
-  padding:10px;
+width: 100%;
 }
 
 .password-box span{
@@ -77,4 +75,46 @@ margin: auto;
   color:#85B2E2; 
   font-family: "poppins";
   font-weight: 500;
+}
+
+.mobile-box .mobile-input{
+  color: #fff;
+}
+.password-box .password-input{
+  color: #fff;
+}
+
+.validate-mobile{
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.validate-mobile::before{
+  width: 100%;
+}
+.validate-mobile::after{
+  width: 100%;
+}
+.validate-mobile span{
+  width: 100%;
+  position: absolute;
+  top: 116px;
+}
+
+.validate-password{
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: 80px;
+}
+.validate-password:checked::before{
+  width: 100%;
+ }
+.validate-password:checked::after{
+  width: 100%;
+}
+.validate-password span{
+  width: 100%;
+  position: absolute;
+ 
 }

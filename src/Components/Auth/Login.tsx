@@ -95,15 +95,15 @@ const handleSignInInput = (e: React.ChangeEvent<HTMLInputElement>) => {
               <p>Sign in</p>
             </div>
             <div className="inputfiled-group">
-              <div className="email-box">
-                <input type="text" placeholder="mobile" name='mobile' value={auth.mobile} className="form-control" required onChange={handleSignInInput} />
+              <div className="mobile-box">
+                <input type="text" placeholder="mobile" name='mobile' value={auth.mobile} className="mobile-input form-control" required onChange={handleSignInInput} />
               </div>
-              {error.mobile && <div className="validate">{error.mobile}</div>}
+              {error.mobile && <div className="validate-mobile"><span className="text-danger">{error.mobile}</span></div>}
               <div className="password-box">
-                <input type="text" placeholder="Password" name='password' value={auth.password} className="form-control" required onChange={handleSignInInput}/>
-                <span onClick={handleForgetPassword}>Forget Password?</span>
+                <input type="text" placeholder="Password" name='password' value={auth.password} className="password-input form-control" required onChange={handleSignInInput}/>
+                <span onClick={handleForgetPassword} >Forget Password?</span>
               </div>
-              {error.password && <div className="validate">{error.password}</div>}
+              {error.password && <div className="validate-password"><span className="text-danger">{error.password}</span></div>}
               <div className="password-box">
                 <button className="form-control" id="login-submit" onClick={handleSignIn}>Sign in</button>
               </div>
