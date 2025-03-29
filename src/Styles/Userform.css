@@ -129,7 +129,8 @@
     border-radius: 5px;
     border: none;
     border: 1px solid #898989;
-    background:#050a17;    
+    background:#050a17;
+    color: #fff;    
 }
 .budget-box{
     display:grid;
@@ -147,6 +148,7 @@
     border-radius: 4px;
     border: none;
     border: 1px solid #898989;
+    color: #fff;
 }
 .budget-box ,.budget-box-input::placeholder{
   padding-left: 5px;
@@ -201,6 +203,7 @@
     border: none;
     border: 1px solid #898989;
     background: transparent;
+    color: #fff;
 }
 .gender-box {
    display:grid;
