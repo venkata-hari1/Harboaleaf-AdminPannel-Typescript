@@ -1,31 +1,43 @@
-import React from 'react'
-import '../Styles/Pagination.css';
-const Pagination = () => {
-  return (
+import React from "react";
 
-    <div style={{width:'90%',marginTop:'30px'}}>
-     <nav aria-label="Page navigation">
-  <ul className="pagination pagination-sm d-flex justify-content-center">
-    <li className="page-item me-2" style={{background:'#485562 !important'}}>
-      <a className="page-link" id="lt1" href="#" aria-label="Previous">
-        <span id="lt2"aria-hidden="true">&lt;</span>
-      </a>
-    </li>
-    <li className="page-item me-2" style={{height:'20px !important'}}><a className="page-link text-primary" id="one" href="#" >1</a></li>
-    <li className="page-item me-2" style={{height:'20px !important'}}><a className="page-link" href="#" >2</a></li>
-    <li className="page-item me-2" style={{height:'20px !important'}}><a className="page-link" href="#" >...</a></li>
-    <li className="page-item me-2" style={{height:'20px !important'}}><a className="page-link" href="#" >9</a></li>
-    <li className="page-item me-2" style={{height:'20px !important'}}><a className="page-link" href="#" >10</a></li>
-    <li className="page-item me-2">
-      <a className="page-link" href="" aria-label="Next" >
-        <span aria-hidden="true">&gt;</span>
-      </a>
-    </li>
-  </ul>
-</nav>
-
-    </div>
-  )
+interface PaginationProps {
+  currentPage: string | number | any;
+  totalPages: number;
+  setPage: (page: number) => void;
 }
 
-export default Pagination
+const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, setPage }) => {
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setPage(page);
+    }
+  };
+
+  return (
+    <nav aria-label="Page navigation">
+      <ul className="pagination pagination-sm d-flex justify-content-center">
+        <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+          <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>
+            &lt;
+          </button>
+        </li>
+
+        {Array.from({ length: totalPages }, (_, index) => (
+          <li key={index} className={`page-item ${currentPage === index + 1 ? "active" : ""}`} style={{marginLeft:'1px'}}>
+            <button className="page-link" onClick={() => handlePageChange(index + 1)}>
+              {index + 1}
+            </button>
+          </li>
+        ))}
+
+        <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+          <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>
+            &gt;
+          </button>
+        </li>
+      </ul>
+    </nav>
+  );
+};
+
+export default Pagination;
