@@ -99,6 +99,8 @@ width: 100%;
   width: 100%;
   position: absolute;
   top: 116px;
+  left: 10px;
+  font-size: 13px;
 }
 
 .validate-password{
@@ -116,5 +118,11 @@ width: 100%;
 .validate-password span{
   width: 100%;
   position: absolute;
- 
+  font-size: 13px;
+  left: 10px;
+}
+.password-box{
+
+  position: relative;
+
 }

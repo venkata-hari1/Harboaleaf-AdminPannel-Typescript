@@ -78,7 +78,24 @@ const handleSignInInput = (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 }
   }
-  return (
+
+  const [eyeflag, seteyeflag]=useState(false)
+  const [defaultPwd,setdefaultPwd]=useState("password")
+
+  const displayPassword=()=>{
+    
+    if(eyeflag===false){
+      seteyeflag(true)
+      setdefaultPwd("text")
+   }else{
+
+    seteyeflag(false)
+    setdefaultPwd("password")
+   }  
+
+  }
+
+ return (
     <Fragment>
       <div className="parent-container">
         <div className="logo-box">
@@ -100,11 +117,14 @@ const handleSignInInput = (e: React.ChangeEvent<HTMLInputElement>) => {
               </div>
               {error.mobile && <div className="validate-mobile"><span className="text-danger">{error.mobile}</span></div>}
               <div className="password-box">
-                <input type="text" placeholder="Password" name='password' value={auth.password} className="password-input form-control" required onChange={handleSignInInput}/>
+              
+                <input type={defaultPwd} placeholder="Password" name='password' value={auth.password} className="password-input form-control" required onChange={handleSignInInput}/>
+               {eyeflag?<span><i className="bi bi-eye" onClick={displayPassword}  style={{position:"absolute",top:"14px",right:"17px"}}></i></span>:<span><i className="bi bi-eye-slash" style={{position:"absolute",top:"14px",right:"17px"}} onClick={displayPassword}></i></span>}
+               
                 <span onClick={handleForgetPassword} >Forget Password?</span>
               </div>
               {error.password && <div className="validate-password"><span className="text-danger">{error.password}</span></div>}
-              <div className="password-box">
+              <div className="signin-box">
                 <button className="form-control" id="login-submit" onClick={handleSignIn}>Sign in</button>
               </div>
             </div>
