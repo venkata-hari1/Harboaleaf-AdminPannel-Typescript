@@ -2,8 +2,15 @@ import React from 'react'
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import  '../Styles/Logout.css';
+import Actions from './ActionBtns/Actions';
 
-const Logout = () => {
+
+const Logout = ({suspendLogout}) => {
+
+  const closePopup=()=>{
+
+    suspendLogout()
+  }
 return (
     <>
       <div
@@ -14,7 +21,7 @@ return (
           <button
            type="button"
            className="btn-close btn-close-white"
-           
+           onClick={closePopup}
        />
         </Modal.Header>
 
@@ -24,7 +31,7 @@ return (
 
         <Modal.Footer className='log-buttons'>
         <Button variant="primary log-button1">Yes</Button>
-          <Button variant="secondary log-button2">Cancel</Button>
+          <Button variant="secondary log-button2" onClick={closePopup}>Cancel</Button>
           
         </Modal.Footer>
       </Modal.Dialog>

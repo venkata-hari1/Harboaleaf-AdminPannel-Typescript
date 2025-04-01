@@ -41,11 +41,7 @@ const Notifications = () => {
             </div>
             ))
           }
-         
-       
-    
-        
-        </div>
+         </div>
       </Modal.Body>
 
       <Modal.Footer>
