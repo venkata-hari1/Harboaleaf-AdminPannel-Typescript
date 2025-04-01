@@ -2,25 +2,40 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #0d111d;
+    
+}
+.modal-header-log{
+    background:  #0d111d;
+    color: #fff;
+    border-radius: 0%;
+    border-bottom-color: #121a22;
+  }
+ .logout-title{
+    font-size: 17px;
+   
 }
 .log-buttons{
     display: flex;
     align-items: center;
     justify-content: center;
+    background:  #0d111d;
+    border-top: none;
+    border-radius: 0%;
 }
 .modal-body1{
     display: flex;
     justify-content: center;
     align-items: center;
+    background:  #0d111d;
 }
 
 .log-button1{
     width:100px;
-    background-color:#3856f3 ;
+    background-color:#334edd;
+    
 }
 .log-button2{
  width: 100px;
  background-color: transparent;
- color: black;
+ color:#fff;
 }

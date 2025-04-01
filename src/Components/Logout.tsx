@@ -9,12 +9,17 @@ return (
       <div
       className="modal show logout-modal1">
       <Modal.Dialog>
-        <Modal.Header closeButton>
-          <Modal.Title>Logout</Modal.Title>
+        <Modal.Header  className='modal-header-log'>
+          <Modal.Title className='logout-title'>Logout</Modal.Title>
+          <button
+           type="button"
+           className="btn-close btn-close-white"
+           
+       />
         </Modal.Header>
 
         <Modal.Body className='modal-body1'>
-          <p>Are you sure you want to logout?</p>
+          <p style={{fontSize:"15px",margin:"auto",padding:"10px",color:"#fff"}}>Are you sure you want to logout?</p>
         </Modal.Body>
 
         <Modal.Footer className='log-buttons'>
