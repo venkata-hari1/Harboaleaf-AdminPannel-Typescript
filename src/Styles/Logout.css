@@ -1,0 +1,26 @@
+.logout-modal1{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0d111d;
+}
+.log-buttons{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-body1{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.log-button1{
+    width:100px;
+    background-color:#3856f3 ;
+}
+.log-button2{
+ width: 100px;
+ background-color: transparent;
+ color: black;
+}
