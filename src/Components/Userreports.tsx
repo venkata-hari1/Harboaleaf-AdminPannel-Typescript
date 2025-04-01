@@ -48,7 +48,9 @@ const Userreports = () => {
         {loading ? (
           <Loader />
         ) :
-          <div className="tab-content table-responsive">
+        <Fragment>
+          {data?.data?.length>0?
+          <div className="tab-content table-responsive">      
             <table className="table table-borderless mt-4 ">
               <thead >
                 <tr>
@@ -63,8 +65,8 @@ const Userreports = () => {
                 </tr>
               </thead><br />
               <tbody >
-                {
-                  data?.data?.map((tdata, index) => {
+          
+                 {data?.data?.map((tdata, index) => {
                     return (
                       <Fragment>
                         {tdata.type === "account" ?
@@ -206,10 +208,16 @@ const Userreports = () => {
                     )
                   })
                 }
+  
               </tbody>
             </table>
-          </div>}
-        <Pagination currentPage={currentPage} totalPages={data.totalPages} setPage={setCurrentPage} />
+            <Pagination currentPage={currentPage} totalPages={data.totalPages} setPage={setCurrentPage} />
+          </div>:<div className='nodata'>
+            <p className='content'> No data found</p>
+            </div>}
+          </Fragment>
+          }
+      
       </div>
     </div>
 

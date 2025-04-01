@@ -5,6 +5,25 @@ body{
    cursor:pointer
      /* background: linear-gradient(to bottom,#081844, #000000); */
 }
+.No_data{
+  display:flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+
+}
+.nodata{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  text-align: center;
+}
+.content{
+  color:white;
+  font-weight: 600;
+  margin-top: 5%;
+}
 @media(max-width:830px){
 tr th{
  white-space:nowrap;

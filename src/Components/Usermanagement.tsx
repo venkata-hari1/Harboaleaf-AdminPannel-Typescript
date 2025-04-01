@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import "../Styles/Usermanagement.css";
 import Pagination from './Pagination';
 import '../Styles/Pagination.css';
@@ -46,6 +46,7 @@ const Usermanagement = () => {
         <Loader />
       ) : (
         <div className="tab-content table-responsive">
+          {state?.data?.length>0?<Fragment>
           <table className="table table-borderless mt-5 ">
             <thead>
               <tr>
@@ -89,10 +90,14 @@ const Usermanagement = () => {
               ))}
             </tbody>
           </table>
+          <Pagination currentPage={currentPage} totalPages={state.totalPages} setPage={setCurrentPage} />
+          </Fragment>:
+          <div className='nodata'>
+          <p className='content'> No data found</p>
+          </div>
+          }
         </div>
       )}
-
-      <Pagination currentPage={currentPage} totalPages={state.totalPages} setPage={setCurrentPage} />
     </div>
   );
 };
