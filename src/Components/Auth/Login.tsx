@@ -55,29 +55,30 @@ const handleSignInInput = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   };
   const handleSignIn=async(e: React.MouseEvent<HTMLButtonElement>)=>{
-    const data:any = {
-      countryCode:"+91",
-      mobile: auth.mobile,
-      password: auth.password,
-  }
-  const response = await dispatch(SignIn({ data }))
-  const fulfilled = response.payload
- if(!fulfilled.status){
-  showToast(false,fulfilled.message)
- }
- else{
-  if(fulfilled.role==='Admin'){
-    showToast(true,'Login Successfully')
-    localStorage.setItem('token',fulfilled.accesstoken)
     navigate('/admin/admin-pannel');
-    setTimeout(()=>{
-      navigate('/admin/admin-pannel');
-    },600)
-  }
-  else{
-    showToast(false,'Access denied')
-  }
-}
+//     const data:any = {
+//       countryCode:"+91",
+//       mobile: auth.mobile,
+//       password: auth.password,
+//   }
+//   const response = await dispatch(SignIn({ data }))
+//   const fulfilled = response.payload
+//  if(!fulfilled.status){
+//   showToast(false,fulfilled.message)
+//  }
+//  else{
+//   if(fulfilled.role==='Admin'){
+//     showToast(true,'Login Successfully')
+//     localStorage.setItem('token',fulfilled.accesstoken)
+//     navigate('/admin/admin-pannel');
+//     setTimeout(()=>{
+//       navigate('/admin/admin-pannel');
+//     },600)
+//   }
+//   else{
+//     showToast(false,'Access denied')
+//   }
+// }
   }
   return (
     <Fragment>
