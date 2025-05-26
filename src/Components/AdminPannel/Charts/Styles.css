@@ -58,7 +58,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%
+    width: 100%;
+    overflow: hidden !important;
   }
   @media(max-width:830px){
     .grid-rows{
