@@ -28,28 +28,28 @@ const [error, setError] = useState<IState>({
 const handleSignInInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
   
-    if (name === "mobile") {
-      if (!PhoneRegex.test(value)) {
-        setError((prev) => ({
-          ...prev,
-          mobile: "Invalid Phone Number",
-        }));
-      } else {
-        setError((prev) => ({ ...prev, mobile: "" }));
-      }
-    }
+    // if (name === "mobile") {
+    //   if (!PhoneRegex.test(value)) {
+    //     setError((prev) => ({
+    //       ...prev,
+    //       mobile: "Invalid Phone Number",
+    //     }));
+    //   } else {
+    //     setError((prev) => ({ ...prev, mobile: "" }));
+    //   }
+    // }
   
-    if (name === "password") {
-      if (!PasswordRegex.test(value)) {
-        setError((prev) => ({
-          ...prev,
-          password:
-            "Password must be 8 characters long and include at least one special character, one uppercase letter, one lowercase letter, and one number.",
-        }));
-      } else {
-        setError((prev) => ({ ...prev, password: "" }));
-      }
-    }
+    // if (name === "password") {
+    //   if (!PasswordRegex.test(value)) {
+    //     setError((prev) => ({
+    //       ...prev,
+    //       password:
+    //         "Password must be 8 characters long and include at least one special character, one uppercase letter, one lowercase letter, and one number.",
+    //     }));
+    //   } else {
+    //     setError((prev) => ({ ...prev, password: "" }));
+    //   }
+    // }
   
     setAuth((prev) => ({ ...prev, [name]: value }));
 
@@ -60,7 +60,7 @@ const handleSignInInput = (e: React.ChangeEvent<HTMLInputElement>) => {
       mobile: auth.mobile,
       password: auth.password,
   }
-  const response = await dispatch(SignIn({ data: data }))
+  const response = await dispatch(SignIn({ data }))
   const fulfilled = response.payload
  if(!fulfilled.status){
   showToast(false,fulfilled.message)
@@ -96,14 +96,14 @@ const handleSignInInput = (e: React.ChangeEvent<HTMLInputElement>) => {
             </div>
             <div className="inputfiled-group">
               <div className="email-box">
-                <input type="text" placeholder="mobile" name='mobile' value={auth.mobile} className="form-control" required onChange={handleSignInInput} />
+                <input type="text" placeholder="mobile" name='mobile' value={auth.mobile} className="form-control" style={{color:'white'}} required onChange={handleSignInInput} />
               </div>
               {error.mobile && <div className="validate">{error.mobile}</div>}
               <div className="password-box">
-                <input type="text" placeholder="Password" name='password' value={auth.password} className="form-control" required onChange={handleSignInInput}/>
+                <input type="text" placeholder="Password" name='password' value={auth.password} className="form-control"  style={{color:'white'}}  required onChange={handleSignInInput}/>
                 <span onClick={handleForgetPassword}>Forget Password?</span>
               </div>
-              {error.password && <div className="validate">{error.password}</div>}
+              {error.password && <div className="validate" style={{width:'30%'}}>{error.password}</div>}
               <div className="password-box">
                 <button className="form-control" id="login-submit" onClick={handleSignIn}>Sign in</button>
               </div>

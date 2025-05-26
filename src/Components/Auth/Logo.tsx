@@ -1,3 +1,4 @@
+import React from 'react'
 import HarbolLeaf from '../../assets/Harboleaf_logo.png'
 function Logo(){
 
