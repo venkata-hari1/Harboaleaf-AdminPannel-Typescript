@@ -69,6 +69,7 @@ const handleSignInInput = (e: React.ChangeEvent<HTMLInputElement>) => {
   if(fulfilled.role==='Admin'){
     showToast(true,'Login Successfully')
     localStorage.setItem('token',fulfilled.accesstoken)
+    navigate('/admin/admin-pannel');
     setTimeout(()=>{
       navigate('/admin/admin-pannel');
     },600)
