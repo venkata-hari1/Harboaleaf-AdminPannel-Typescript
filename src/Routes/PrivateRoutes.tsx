@@ -2,6 +2,7 @@ import React, { Fragment } from 'react'
 import { Route, Routes} from 'react-router-dom'
 import Usermanagement from '../Components/Usermanagement'
 import Gstusermanagement from '../Components/Gstusermanagement'
+import SubscriptionManagement from '../Components/SubscriptionManagement'
 import Billinginvoice from '../Components/Billinginvoice'
 import Suspendaccounts from '../Components/Suspendaccounts'
 import Emergencymanagement from '../Components/Emergencymanagement'
@@ -36,6 +37,7 @@ const PrivateRoutes = () => {
                     <Route path='suspend-accounts' element={<Suspendaccounts />} />
                     <Route path='gst-users' element={<Gstusermanagement />} />
                     <Route path='gst-reports' element={<Gstreportsmanagement />} />
+                    <Route path='subscription-management' element={<SubscriptionManagement />} />
                     <Route path='emergency' element={<Emergencymanagement />} />
                     <Route path='moniter-compaign' element={<Monitercompaign />} />
                     <Route path='vertical' element={<Verticalnavigation />} />

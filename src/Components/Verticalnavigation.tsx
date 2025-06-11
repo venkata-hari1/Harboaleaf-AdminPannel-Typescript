@@ -1,67 +1,128 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../Styles/Verticalnavigation.css';
 import Harborleaf from '../assets/Harboleaf_logo.png';
-import { useLocation, useNavigate } from 'react-router-dom';
 import Adiminpic from '../assets/Adminpic.jpg';
+
 const Verticalnavigation = ({ closeNav }) => {
- 
-  const navigate=useNavigate()
-  const location=useLocation()
-  const pathname=location.pathname
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const menudata = [
-    { id: 1, menu: "Admin Pannel", icon: "bi-people-fill", route: "admin-pannel", locationRoute: "/admin/admin-pannel" },
+    { id: 1, menu: "Admin Panel", icon: "bi-people-fill", route: "admin-pannel", locationRoute: "/admin/admin-pannel" },
     { id: 2, menu: "User Management", icon: "bi-people-fill", route: "user-management", locationRoute: "/admin/user-management" },
     { id: 3, menu: "User Management Reports", icon: "bi-file-earmark-fill", route: "user-reports", locationRoute: "/admin/user-reports" },
     { id: 4, menu: "GST User Management", icon: "bi-briefcase-fill", route: "gst-users", locationRoute: "/admin/gst-users" },
     { id: 5, menu: "GST User Reports", icon: "bi-cash-stack", route: "gst-reports", locationRoute: "/admin/gst-reports" },
-    { id: 6, menu: "Emergency Management", icon: "bi-shield-fill-check", route: "emergency", locationRoute: "/admin/emergency", color: "#FF0000" },
-    { id: 7, menu: "AD Management", icon: "bi-badge-ad-fill", route: "admgmt", locationRoute: "/admin/admgmt" },
-    { id: 8, menu: "Edit Profile", icon: "bi-person-circle", route: "edit-profile", locationRoute: "/admin/edit-profile" },
-];
-const handleClick=(menu)=>{
-  navigate(`/admin/${menu.route}`)
-  if (window.innerWidth < 900) {
-    closeNav();
-  }
-}
+    { id: 6, menu: "Subscription Management", icon: "bi-person-vcard", route: "subscription-management", locationRoute: "/admin/subscription-management" },
+    { id: 7, menu: "Emergency Management", icon: "bi-shield-fill-check", route: "emergency", locationRoute: "/admin/emergency", color: "#FF4C4C" },
+    { id: 8, menu: "AD Management", icon: "bi-badge-ad-fill", route: "admgmt", locationRoute: "/admin/admgmt" },
+    { id: 9, menu: "Edit Profile", icon: "bi-person-circle", route: "edit-profile", locationRoute: "/admin/edit-profile" },
+  ];
+
+  const handleClick = (menu) => {
+    navigate(`/admin/${menu.route}`);
+    if (window.innerWidth < 900) {
+      closeNav();
+    }
+  };
+
   return (
-    <div className="sidebar-container">
-      <div className='logo mt-4'>
-        <img src={Harborleaf} width="200px" height="40px" alt="Logo" />
-      </div>
+    <div
+      className="sidebar-container"
+      style={{
+       
+        background: 'linear-gradient(to bottom, #101010, #1a1a1a)',
+        color: '#fff',
+        padding: '20px 0px',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+      }}
+    >
       <div>
-        <p className="mt-4 ms-4"style={{ color: "#898989" }}>MENU</p>
-        <ul >
-          {menudata.map((menu) => (
-            <li key={menu.id} style={{cursor:'pointer'}} onClick={()=>handleClick(menu)}>
-              <i className={`icons bi ${menu.icon}`} style={{
-                color:menu.id===6?'red':pathname===menu.locationRoute?'#85B2E2':''
-              }}></i>
-              <a className="ms-2" style={{color:pathname===menu.locationRoute?'#85B2E2':''}}>{menu.menu}</a>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="adminbutton d-flex align-items-center p-3 rounded shadow mt-2 bottom-box">
-        <button className="btn p-0">
-          <img src={Adiminpic} className="rounded-circle" width="40px" height="40px" alt="Admin" />
-        </button>
-        <div className="ms-3" style={{ background: "#29292C" }} onClick={()=>navigate('/')}>
-          <span className="mb-0 fw-bold" style={{ color:"#FFFFFF", background:"#29292C",fontSize:"15px",fontFamily:"Roboto",whiteSpace:'no-wrap'}}>Sourav...</span><br/>
-          <small className="text-white" style={{ color: "#898989",background:"#29292C",fontFamily:"Roboto" }}>Admin</small>
+        <div className="text-center mb-4">
+          <img src={Harborleaf} width="170px" height="40px" alt="Logo" />
         </div>
 
-        <div className="ms-auto d-flex align-items-center" style={{ background: "#29292C" }}>
-          <button style={{ background: "#29292C", border: "none", color: "white" }}>
-            <i className="bi bi-bell-fill me-1"></i>
-          </button>
-          <button style={{ background: "#29292C", border: "none", color: "white" }}>
-            <i className="bi bi-envelope-fill ms-1  "></i>
-          </button>
+        <ul style={{ listStyle: 'none', paddingLeft: '18px', margin: 0 }}>
+          {menudata.map((menu) => {
+            const isActive = location.pathname === menu.locationRoute;
+
+            return (
+              <li
+                key={menu.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  marginBottom: '8px',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  backgroundColor: isActive ? '#1f2937' : 'transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                }}
+                onClick={() => handleClick(menu)}
+              >
+                <i
+                  className={`bi ${menu.icon}`}
+                  style={{
+                    fontSize: '18px',
+                    color: menu.color
+                      ? menu.color
+                      : isActive
+                      ? '#4dc9ff'
+                      : '#bbb',
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: isActive ? 600 : 400,
+                    color: isActive ? '#4dc9ff' : '#e0e0e0',
+                    fontFamily: 'Roboto',
+                  }}
+                >
+                  {menu.menu}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div
+        className="adminbutton d-flex align-items-center px-3 py-2 rounded"
+        style={{
+          margin: '16px',
+          backgroundColor: '#2a2a2e',
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <img
+          src={Adiminpic}
+          className="rounded-circle"
+          width="36px"
+          height="36px"
+          alt="Admin"
+        />
+        <div className="ms-2" style={{ lineHeight: '1.2' }} onClick={() => navigate('/')}>
+          <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>
+            Sourav Singh
+          </div>
+          <div style={{ fontSize: '12px', color: '#a0a0a0' }}>Admin</div>
+        </div>
+        <div className="ms-auto d-flex align-items-center gap-2">
+          <i className="bi bi-bell-fill" style={{ color: '#ccc' }}></i>
+          <i className="bi bi-envelope-fill" style={{ color: '#ccc' }}></i>
         </div>
       </div>
     </div>
   );
 };
 
-export default Verticalnavigation
+export default Verticalnavigation;
