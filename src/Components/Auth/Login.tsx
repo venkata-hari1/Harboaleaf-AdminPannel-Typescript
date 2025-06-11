@@ -103,7 +103,7 @@ const handleSignInInput = (e: React.ChangeEvent<HTMLInputElement>) => {
               {error.mobile && <div className="validate">{error.mobile}</div>}
               <div className="password-box">
                 <input type="text" placeholder="Password" name='password' value={auth.password} className="form-control"  style={{color:'white'}}  required onChange={handleSignInInput}/>
-                <span onClick={handleForgetPassword}>Forget Password?</span>
+                <span onClick={handleForgetPassword}>Forgot Password?</span>
               </div>
               {error.password && <div className="validate" style={{width:'30%'}}>{error.password}</div>}
               <div className="password-box">
