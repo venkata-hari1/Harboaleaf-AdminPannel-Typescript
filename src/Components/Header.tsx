@@ -35,6 +35,9 @@ const Header = () => {
     case "/admin/billing-invoice":
         name = "Billing and Invoice details";
       break;
+    case "/admin/subscription-management":
+        name = "Subscription Management";
+      break;
     case "/admin/moniter-compaign":
        name = "Monitor Campaign";
       break;
@@ -72,7 +75,7 @@ const Header = () => {
       ) &&<div className='total'>
       <p id="total1">Total Users</p>
       <p id="total2">40,300</p>
-      <p id="total3"><i className="bi bi-arrow-up-right "  style={{ background:"#26666333",color: "#4AD991" }}></i><span style={{ background:"#26666333",color: "#4AD991" }}>4.8</span>from yesterday</p>
+      <p id="total3"><i className="bi bi-arrow-up-right "  style={{ background:"#26666333",color: "#4AD991" }}></i><span style={{ background:"#26666333",color: "#4AD991" }}>4.8</span> from yesterday</p>
      </div>}
 
    </div>   

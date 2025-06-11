@@ -21,6 +21,9 @@ export default function MobileHeader() {
     case "/admin/gst-reports":
       name = "GST User Reports";
       break;
+    case "/admin/subscription-management":
+      name = "Subscription Management";
+      break;
     case "/admin/emergency":
       name = "Emergency Management";
       break;
