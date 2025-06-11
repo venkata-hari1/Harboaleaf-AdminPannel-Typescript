@@ -4,7 +4,7 @@ import { SubscriptionTable } from './JSON_Data/JSON';
 
 const SubscriptionManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [showDropdown, setShowDropdown] = useState(false); // Toggle dropdown
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const recordsPerPage = 6;
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -12,16 +12,15 @@ const SubscriptionManagement = () => {
   const currentRecords = SubscriptionTable.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(SubscriptionTable.length / recordsPerPage);
 
-  // Optional: handle dropdown selection
   const handleOptionClick = (option) => {
-    console.log("Selected:", option); // You can later apply filtering here
+    console.log("Selected:", option);
     setShowDropdown(false);
   };
 
   return (
     <div className='container'>
+      {/* Filter Button */}
       <div className='d-flex justify-content-end mt-4' style={{ position: 'relative' }}>
-        {/* Filter Button with Click Dropdown */}
         <div style={{ position: 'relative' }}>
           <button
             className='btn btn-primary me-3'
@@ -30,7 +29,10 @@ const SubscriptionManagement = () => {
               backgroundColor: "#3856F3",
               fontFamily: "Roboto",
               display: 'flex',
-              alignItems: 'center'
+              alignItems: 'center',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              border: 'none'
             }}
           >
             Filter
@@ -45,7 +47,7 @@ const SubscriptionManagement = () => {
             </svg>
           </button>
 
-          {/* Dropdown Options */}
+          {/* Dropdown */}
           {showDropdown && (
             <div
               style={{
@@ -54,10 +56,12 @@ const SubscriptionManagement = () => {
                 left: 0,
                 backgroundColor: 'white',
                 boxShadow: '0px 8px 16px rgba(0,0,0,0.1)',
-                borderRadius: '4px',
+                borderRadius: '10px',
                 marginTop: '5px',
-                zIndex: 10,
-                minWidth: '160px'
+                zIndex: 1000,
+                width: '180px',
+                maxHeight: '200px',
+                overflowY: 'auto'
               }}
             >
               {['Business', 'Creator', 'Premium'].map((option, idx) => (
@@ -68,7 +72,9 @@ const SubscriptionManagement = () => {
                     padding: '10px 16px',
                     cursor: 'pointer',
                     color: '#000',
-                    whiteSpace: 'nowrap'
+                    whiteSpace: 'nowrap',
+                    borderRadius: '8px',
+                    transition: 'background-color 0.2s ease'
                   }}
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
@@ -97,7 +103,21 @@ const SubscriptionManagement = () => {
           </thead>
           <tbody>
             {currentRecords.map((tdata, index) => (
-              <tr key={tdata.id}>
+              <tr
+                key={tdata.id}
+                style={{
+                  transition: 'background-color 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = '#fff';
+                  e.currentTarget.style.color = '#000';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = '';
+                  e.currentTarget.style.color = '';
+                }}
+              >
                 <th>{(currentPage - 1) * recordsPerPage + index + 1}</th>
                 <td className="d-flex align-items-center">
                   <img
