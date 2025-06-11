@@ -11,18 +11,17 @@ export const SignIn = createAsyncThunk(
   async (payload: { data }, { fulfillWithValue, rejectWithValue }) => {
     try {
       const {data}=payload
-      console.log(data)
       const response = await fetch(`${baseURL}/${endpoints.SIGNIN}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-        credentials: "include",
+        referrerPolicy: 'no-referrer-when-downgrade'
       });
 
       const result = await response.json();
-
+     
       if (response.ok) {
         localStorage.setItem("token", result.token);
         return fulfillWithValue(result);

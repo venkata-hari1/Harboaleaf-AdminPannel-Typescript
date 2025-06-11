@@ -82,7 +82,7 @@ return (
 </tbody>
   </table>
   </div>
-  <Pagination />
+  <Pagination currentPage={0} totalPages={0} setPage={(page: number) => console.log(`Page changed to: ${page}`)}/>
      
   </div>
 

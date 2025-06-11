@@ -12,7 +12,7 @@ export const Users = createAsyncThunk(
   async (page: string | number, { fulfillWithValue, rejectWithValue }) => {
     try {
       const { response, error } = await networkCall(
-        `${endpoints.USERS}?page=${page}`,
+        `${endpoints.USERS}?page=${page}&sort=&state=&accountStatus=`,
         "GET"
       );
       if (response) {
@@ -40,6 +40,26 @@ export const UserReports = createAsyncThunk(
       }
     } catch (error) {
       return rejectWithValue(error);
+    }
+  }
+);
+
+export const UserSuspended = createAsyncThunk(
+  'user/UserSuspended',
+  async (payload: { data:{id:string,temSuspended:boolean,suspended:boolean}}, { fulfillWithValue, rejectWithValue,dispatch }) => {
+    try {
+      const { response, error } = await networkCall(
+        endpoints.Suspended,
+        'PATCH',
+        JSON.stringify(payload.data)
+      );
+      if (response){
+        dispatch(Users(1))
+      }
+        return fulfillWithValue(response);
+      
+    } catch (err) {
+      return rejectWithValue(err);
     }
   }
 );

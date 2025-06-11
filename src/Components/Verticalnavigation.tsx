@@ -1,11 +1,13 @@
 import React from 'react';
 import '../Styles/Verticalnavigation.css';
 import Harborleaf from '../assets/Harboleaf_logo.png';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Adiminpic from '../assets/Adminpic.jpg';
 const Verticalnavigation = ({ closeNav }) => {
  
   const navigate=useNavigate()
+  const location=useLocation()
+  const pathname=location.pathname
   const menudata = [
     { id: 1, menu: "Admin Pannel", icon: "bi-people-fill", route: "admin-pannel", locationRoute: "/admin/admin-pannel" },
     { id: 2, menu: "User Management", icon: "bi-people-fill", route: "user-management", locationRoute: "/admin/user-management" },
@@ -32,8 +34,10 @@ const handleClick=(menu)=>{
         <ul >
           {menudata.map((menu) => (
             <li key={menu.id} style={{cursor:'pointer'}} onClick={()=>handleClick(menu)}>
-              <i className={`icons bi ${menu.icon}`} style={menu.color ? { color: menu.color } : {}}></i>
-              <a className="ms-2">{menu.menu}</a>
+              <i className={`icons bi ${menu.icon}`} style={{
+                color:menu.id===6?'red':pathname===menu.locationRoute?'#85B2E2':''
+              }}></i>
+              <a className="ms-2" style={{color:pathname===menu.locationRoute?'#85B2E2':''}}>{menu.menu}</a>
             </li>
           ))}
         </ul>
