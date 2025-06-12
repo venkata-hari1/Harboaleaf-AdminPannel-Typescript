@@ -3,5 +3,6 @@ export const endpoints={
     SIGNIN:'api/auth/signin',
     USERS:'api/admin/users',
     REPORTS:'api/admin/userreports',
-    Suspended:'api/admin/suspend'
+    Suspended:'api/admin/suspend',
+    SUBSCRIPTIONS: 'api/admin/subscription'
 }
