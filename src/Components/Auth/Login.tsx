@@ -68,13 +68,14 @@ function Login() {
       }
       const response = await dispatch(SignIn({ data }))
       const fulfilled = response.payload
+      localStorage.setItem('token', fulfilled.accesstoken)
       if (!fulfilled.status) {
         showToast(false, fulfilled.message)
       }
       else {
         if (fulfilled.role === 'Admin') {
           showToast(true, 'Login Successfully')
-          localStorage.setItem('token', fulfilled.accesstoken)
+       
             navigate('/admin/admin-pannel');
         }
         else {

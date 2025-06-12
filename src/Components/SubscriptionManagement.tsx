@@ -4,6 +4,7 @@ import { fetchSubscriptions } from '../Redux/Reducers/SubscriptionThunk';
 import { setPage, setFilterType } from '../Redux/Reducers/SubscriptionSlice';
 import Pagination from './Pagination';
 import { RootState, AppDispatch } from '../Redux/store/Store'
+import { getProfile } from '../Redux/Reducers/Auth';
 
 const SubscriptionManagement = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -13,7 +14,7 @@ const SubscriptionManagement = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchSubscriptions({ page: currentPage, accountType: filterType || undefined }));
+    dispatch(getProfile());
   }, [dispatch, currentPage, filterType]);
 
 

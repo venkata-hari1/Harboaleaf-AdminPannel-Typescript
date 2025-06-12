@@ -33,6 +33,27 @@ export const SignIn = createAsyncThunk(
     }
   }
 );
+
+
+export const getProfile = createAsyncThunk(
+  'getProfile',
+  async (__, { fulfillWithValue, rejectWithValue, dispatch }) => {
+    try {
+      const token = localStorage.getItem('token') || ''
+      const response = await fetch(`http://34.234.64.81/api/admin/subscription`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          token: token
+        },
+      });
+      const result = await response.json();
+      return fulfillWithValue(result);
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
 export const Auth_Slice = createSlice({
   name: "AuthSlice",
   initialState,
