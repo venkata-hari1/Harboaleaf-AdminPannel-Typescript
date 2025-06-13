@@ -550,7 +550,7 @@ const Userform: React.FC = () => {
           </button>
         </div>
 
-        {/* Submit & Discard Buttons */}
+        {/* Submit & Discard*/}
         <div className='buttons-ds'>
           <button className='discard-button' type="button" onClick={() => setForm({
             title: '',
