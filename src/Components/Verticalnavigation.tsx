@@ -31,7 +31,6 @@ const Verticalnavigation = ({ closeNav }) => {
     <div
       className="sidebar-container"
       style={{
-       
         background: 'linear-gradient(to bottom, #101010, #1a1a1a)',
         color: '#fff',
         padding: '20px 0px',
@@ -48,7 +47,16 @@ const Verticalnavigation = ({ closeNav }) => {
 
         <ul style={{ listStyle: 'none', paddingLeft: '18px', margin: 0 }}>
           {menudata.map((menu) => {
-            const isActive = location.pathname === menu.locationRoute;
+            let isActive = location.pathname === menu.locationRoute;
+
+            // 👇 Special case for Ad Management & its children
+            if (menu.menu === "AD Management") {
+              isActive =
+                location.pathname.startsWith('/admin/admgmt') ||
+                location.pathname.startsWith('/admin/userform') ||
+                location.pathname.startsWith('/admin/moniter-compaign') ||
+                location.pathname.startsWith('/admin/billing-invoice');
+            }
 
             return (
               <li

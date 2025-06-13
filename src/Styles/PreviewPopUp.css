@@ -1,188 +1,304 @@
-.main-preview-container{
-    display: flex;
-    justify-content: center;
-    height: 100vh;
-    position: absolute;
-    z-index: 1000;
-    width: 100%;
-}
-.preview-popup-container{
-    display: flex;
-    flex-direction: column; 
-    align-items:flex-start; 
-    width: 360px;
-    height: 97vh;
-    background: linear-gradient(to bottom, #081844, #000000);
-    position: absolute;
-    bottom: 20%; 
-}
-.tool-row-container{
-    display: flex;
-    justify-content: space-between;
-}
-.time-container{
-    display: flex;
-    justify-content: center;
-    color: rgb(123, 126, 126);
-    align-items: center;
-}
-.time-text{
-    padding:10px 0px 0px 15px
-}
-.camera-container{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.camera-container .camera-img{
-    width: 25px;
-    height: 25px;
-    margin-left: 120px;
-}
-.network-container{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.status-img{
-    width: 50px;
-    height: 40px;
-    margin-left: 100px;
+/* --- Overlay (The transparent background that covers the screen) --- */
+.main-preview-overlay {
+  position: fixed; /* Keep this fixed to overlay the main page */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
 
-.logo-search-container{
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   
-}
-.logos-container{
-    position: relative;
-}
-.logos-image1{
-    width: 35px;
-    height: 35px;
-}
-
-.notification-badge{
-    position: absolute;
-    left: 20px;
-    top: -8px;
+/* --- iPhone-sized Popup Container (The phone frame) --- */
+.preview-popup-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 292.5px; /* 390 * 0.75 */
+  height: 633px; /* 844 * 0.75 */
+  background: linear-gradient(to bottom, #081844, #000000);
+  border-radius: 27px; /* 36 * 0.75 */
+  padding: 0;
+  color: #fff;
+  font-family: sans-serif;
+  box-shadow: 0 8px 22px rgba(5, 5, 5, 0.5);
+  position: relative; /* Keep this if you want fixed top/bottom bars relative to this container */
+  overflow: hidden; /* Ensures content/scrollbars stay within rounded corners */
 }
 
-
-
-.search-container{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    
-}
-.search-box1{
-    background-color: #171D1B;
-    border: none;
-    border-radius: 12px;
-    width: 110px;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-}
-.search-box1::placeholder{
-    color: #85B2E2;
-    padding-left: 2px;
-}
-.search-box1:focus{
-   color: white;
-   border: transparent;
-   outline: none;
-}
-.search-icon1{
-    position: absolute;
-    left: 80px;
-    color: #85B2E2;
-}
-.badge-container{
-    display: flex;
-    justify-content: center;
-}
-.badge-image1{
-    width: 30px;
-    height: 30px;
-    margin-left: 50px;
+/* --- Top Status Bar (Time, Camera, Signal) --- */
+.top-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 9px;
+  background-color: #121212;
+  border-bottom: 1px solid #2a2a2a;
+  z-index: 10; /* Ensures it stays on top of scrolling content */
+  width: 100%;
+  box-sizing: border-box; /* Include padding in width */
 }
 
-.preview-bgimage-container{
-    width: 100%;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    
+.time-text {
+  margin: 0;
+  color: #ccc;
+  font-size: 10px;
+  padding: 10px 0px 0px 0px; /* Adjust padding if needed, was specific in original */
 }
-.preview-image-box{
-    width: 100%;
-    height: 60vh;
-    padding: 7px;
-}
-.preview-img-text{
-    color: white;
-    font-size: 15px;
-    position: absolute;
-    bottom: 30px;
-    width: 100%;
-    padding-left: 12px;
-}
-.preview-tool-wrapper{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 100px;
-    align-items: flex-start;
-    background-color:#97863b61;
-    width: 96%;
-    padding-top:-10px;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-    margin-top: -7px;
-    margin-left: 7px;
-    padding-top: 9px;
-    height: 40px;
-    color: white;
-}
-.product-desc-container{
-  
-    display: flex;
-    background-color: white;
-    width: 96%;
-    height: 90px;
-    border-radius: 10px;
-    padding-left: 10px;
-    margin-left: 7px;
-    margin-top: 5px;
-  
-}
-.product-img-box{
-    width: 160px;
-    height: 85px;
 
+.camera-img {
+  width: 14px; /* Scaled from 25px * 0.75 */
+  height: 14px; /* Scaled from 25px * 0.75 */
+  margin-left: auto; /* Push to center-right if camera is meant to be in middle */
+  margin-right: 5px; /* Adjust space between camera and status icon */
 }
-.product-des-info{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    height: auto;
+
+.status-img {
+  width: 22px; /* Scaled from 50px * 0.75, adjust as needed */
+  height: 22px; /* Scaled from 40px * 0.75, adjust as needed */
 }
-.product-desc-title{
-    font-size: 18px;
-    margin-top: 30px;
-    border-bottom: 2px solid #000;
+
+/* --- Title/Search/Close Bar --- */
+.title-search-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 13px;
+  background-color: #000040;
+  border-bottom: 1px solid #2a2a2a;
+  z-index: 10; /* Ensures it stays on top of scrolling content */
+  width: 100%;
+  box-sizing: border-box;
 }
-.product-desc-desc{
-    font-size: 12px;
-    padding-top:-30px;
+
+.logos-container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  position: relative; /* For notification badge */
+}
+
+.logos-image1 {
+  width: 25px; /* Scaled from 35px * 0.75 */
+  height: 25px; /* Scaled from 35px * 0.75 */
+}
+
+.notification-badge {
+  background-color: red;
+  color: white;
+  padding: 2px 5px;
+  border-radius: 9px;
+  font-size: 8px;
+  position: absolute;
+  left: 14px; /* Position relative to .logos-container */
+  top: -8px; /* Position relative to .logos-container */
+}
+
+.harboleaf-title-img {
+  width: 26px; /* Scaled from 35px * 0.75 */
+  height: 26px; /* Scaled from 35px * 0.75 */
+}
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 68px; /* Fixed width for search box */
+}
+
+.search-box1 {
+  background-color: #1e1e1e;
+  border: none;
+  border-radius: 7px;
+  padding: 3px 18px 3px 1px;
+  color: #fff;
+  font-size: 8px;
+  width: 100%;
+}
+
+.search-box1::placeholder {
+  color: #85B2E2;
+  padding-left: 2px;
+}
+
+.search-box1:focus {
+  color: white;
+  border: transparent;
+  outline: none;
+}
+
+.search-icon1 {
+  position: absolute;
+  left: 50px;
+  top: 50%; /* Adjusted to center vertically */
+  transform: translateY(-50%);
+  color: #888;
+  font-size: 10px;
+}
+
+.badge-image1 {
+  width: 20px; /* Scaled from 30px * 0.75 */
+  height: 20px; /* Scaled from 30px * 0.75 */
+  cursor: pointer;
+}
+
+/* --- Scrollable Feed Content (Holds posts and the ad) --- */
+.scrollable-feed-content {
+  flex: 1; /* Allows it to take up remaining vertical space */
+  overflow-y: auto; /* This makes the content scrollable */
+  padding: 9px;
+  /* Removed dynamic padding as ad is no longer sticky */
+  scrollbar-width: none; /* For Firefox */
+  -webkit-overflow-scrolling: touch; /* For iOS Safari */
+}
+
+/* Hide scrollbar for Webkit browsers */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* --- Post Component Card (Dummy Posts) --- */
+.post-component-card {
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  padding: 6px;
+  margin-bottom: 12px; /* Space between posts */
+}
+
+.post-profile-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.post-profile-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.post-profile-name {
+  font-weight: bold;
+  font-size: 10px;
+  color: #fff;
+}
+
+.post-time {
+  font-size: 8px;
+  color: #ccc;
+}
+
+.post-image-section {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.post-title-desc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.post-buttons-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: #ccc;
+}
+
+.post-actions-left,
+.post-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+/* --- Advertisement Card (The actual ad content) --- */
+.ad-card-preview {
+  /* No position: absolute; - This is the key change for scrolling */
+  background-color: #1e1e1e; /* Ad card background color */
+  padding: 8px;
+  border-radius: 6px;
+  box-shadow: 0 0px 8px rgba(0, 0, 0, 0.5);
+  margin-bottom: 12px; /* Space it out from posts */
+  width: auto; /* Adjust to content, or set fixed width if desired */
+  /* margin-left: auto; /* For centering if parent is flex/grid and ad is narrower */
+  /* margin-right: auto; /* For centering if parent is flex/grid and ad is narrower */
+}
+
+.ad-media {
+  width: 100%;
+  height: auto;
+  max-height: 150px; /* Max height for the ad media */
+  border-radius: 4px;
+  margin-bottom: 6px;
+  object-fit: cover; /* Ensures image covers the area without distortion */
+}
+
+.ad-details-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.ad-title {
+  font-weight: bold;
+  font-size: 12px;
+  margin: 0;
+  color: #fff;
+}
+
+.ad-sponsored-tag {
+  font-size: 8px;
+  color: #aaa;
+}
+
+.ad-description {
+  margin: 0;
+  font-size: 10px;
+  color: #ccc;
+  line-height: 1.3;
+}
+
+.ad-cta-button {
+  background-color: #007bff; /* Blue button color */
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  margin-top: 6px;
+  width: fit-content;
+  align-self: flex-end; /* Align button to the right within the ad card (if ad-card is flex) */
+}
+
+/* --- Bottom Navigation Bar --- */
+.bottom-nav-bar {
+  width: 100%;
+  height: 21px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid #2a2a2a;
+  background-color: #121212;
+  border-bottom-left-radius: 27px; /* Matches phone frame border radius */
+  border-bottom-right-radius: 27px; /* Matches phone frame border radius */
+  z-index: 10; /* Ensures it stays on top */
+}
+
+.bottom-nav-indicator {
+  width: 75px;
+  height: 3px;
+  background-color: #444;
+  border-radius: 8px;
 }

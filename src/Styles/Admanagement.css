@@ -49,3 +49,20 @@
     padding:10px 20px;
     
 }
+/* Common hover effect for all buttons */
+.advertisement button:hover,
+.moniter-cmpg button:hover,
+.billing-invoice button:hover {
+  background: linear-gradient(135deg, #3856F3, #1c2b91);
+  color: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(56, 86, 243, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Add smooth transition for normal state too */
+.advertisement button,
+.moniter-cmpg button,
+.billing-invoice button {
+  transition: all 0.3s ease;
+}

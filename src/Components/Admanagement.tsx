@@ -1,25 +1,52 @@
-import React from 'react'
-import '../Styles/Admanagement.css'
-import { useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import '../Styles/Admanagement.css';
+import { useNavigate } from 'react-router-dom';
+
 const Admanagement = () => {
-  const navigate=useNavigate()
+  const navigate = useNavigate();
+  const [clickedButton, setClickedButton] = useState<string | null>(null);
+
+  const handleClick = (route: string, key: string) => {
+    setClickedButton(key);
+    setTimeout(() => {
+      navigate(route);
+    }, 200); // short delay for visual feedback
+  };
+
   return (
     <div className='admanagment'>
-      <div className='ad-container'> 
+      <div className='ad-container'>
 
-      <div className='advertisement'>
-      <button onClick={()=>navigate('userform')}>Create New Advertisement</button> 
-      </div>
-      <div className='moniter-cmpg'>
-      <button onClick={()=>navigate('/admin/moniter-compaign')}>Moniter Campaign</button> 
-      </div>
-      <div className='billing-invoice'>
-      <button onClick={()=>navigate('/admin/billing-invoice')}>Billing and Invoice Details</button> 
-      </div>
-      </div>
+        <div className='advertisement'>
+          <button
+            className={clickedButton === 'create' ? 'clicked' : ''}
+            onClick={() => handleClick('userform', 'create')}
+          >
+            Create New Advertisement
+          </button>
+        </div>
 
+        <div className='moniter-cmpg'>
+          <button
+            className={clickedButton === 'monitor' ? 'clicked' : ''}
+            onClick={() => handleClick('/admin/moniter-compaign', 'monitor')}
+          >
+            Monitor Campaign
+          </button>
+        </div>
+
+        <div className='billing-invoice'>
+          <button
+            className={clickedButton === 'billing' ? 'clicked' : ''}
+            onClick={() => handleClick('/admin/billing-invoice', 'billing')}
+          >
+            Billing and Invoice Details
+          </button>
+        </div>
+
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Admanagement
+export default Admanagement;

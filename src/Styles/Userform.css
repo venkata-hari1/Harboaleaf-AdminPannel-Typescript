@@ -1,528 +1,708 @@
-.form-container{
+/* Base Styles & Global Resets */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif; /* Consistent font */
+    background-color: #050A17; /* Main dark background */
+    color: #E0E0E0; /* Default text color */
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+/* --- Main Layout --- */
+/* The overall container for the AD Management section (including header and form) */
+.form-container {
+    width: 100%;
+    padding: 20px 20px; /* Adjust padding for top/bottom */
+    box-sizing: border-box;
+}
+
+/* Header for the AD Management page (Title + Search) */
+.ad-management-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0px 0; /* Adjust padding to match screenshot */
+    margin-bottom: 25px; /* Space between header and form wrapper */
+    color: #fff; /* White text for header */
 }
 
-.form-wrapper{
-    max-width: 500px;
-    padding: 20px;
-    color: #fff;
+.ad-management-header h2 {
+    font-size: 24px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.search-bar {
+    display: flex;
     align-items: center;
-    margin-left: 155px;
-}
-.title-box1{
-  display:grid;
-  grid-template-columns: 50% 50%;
-  margin-top: 30px;
+    background-color: #1A202C; /* Darker background for search */
+    border-radius: 5px; /* Slightly rounded corners */
+    padding: 8px 12px;
+    width: 250px; /* Fixed width for search bar */
 }
 
-.admedia-box{
-    display:grid;
-  grid-template-columns: 50% 50%;
-  margin-top: 30px;
-}
-.file-box{
-  padding: 10px;
-  
+.search-bar input {
+    background: none;
+    border: none;
+    outline: none;
+    color: #E0E0E0;
+    padding-left: 8px;
+    width: calc(100% - 24px); /* Full width minus icon space */
 }
 
-#file1{
-   display: none;
+.search-bar input::placeholder {
+    color: #A0AEC0;
 }
-.file1-class{
-    width: 90px;
-    height: 40px;
-    border: 1px solid #3856F3;
-    border-radius: 5px;
+
+.search-bar .bi-search {
+    color: #A0AEC0;
+    font-size: 16px;
+}
+
+/* The actual form content wrapper */
+.form-wrapper {
+    width: 100%;
+    max-width: 900px; /* Adjusted max-width to visually match screenshot */
+    margin: 0 auto; /* Centers the form wrapper horizontally */
+    padding: 30px; /* Increased padding inside the form wrapper */
+    background-color: #1A202C; /* Darker background for the form itself */
+    border-radius: 8px; /* Consistent rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    box-sizing: border-box;
+}
+
+/* --- Form Sections (Labels & Inputs Layout) --- */
+.title-box1,
+.admedia-box,
+.desc-box,
+.call-action,
+.taget-box, /* Now includes location select AND all india checkbox */
+.target-num, /* Ad Duration & Estimated Budget */
+.interest-box,
+.budget-box, /* Daily Budget */
+.date-box, /* Ad Duration */
+.elimination-box, /* Estimated Budget */
+.gender-box,
+.placing-box,
+.preview-box {
+    display: grid;
+    grid-template-columns: 200px 1fr; /* Fixed width for label column, 1fr for input */
+    align-items: center; /* Vertically align items in the grid row */
+    gap: 20px; /* Space between label and input */
+    margin-top: 25px; /* Consistent vertical spacing between sections */
+    position: relative; /* Essential for absolute positioning of .input-message */
+    padding-bottom: 25px; /* Space for the helper/error message below input */
+}
+
+/* General label styles */
+.form-wrapper label {
+    font-size: 14px; /* Slightly smaller font for labels */
+    font-weight: 500;
+    color: #C0C0C0; /* Light grey for labels */
+    white-space: nowrap; /* Prevent labels from wrapping */
+    text-align: left; /* Ensure labels are left-aligned */
+}
+
+/* --- Input Field Styles --- */
+/* Consolidated styling for most input types */
+.form-textbox { /* Base class for all text-based inputs */
+    width: 100%;
+    max-width: 400px; /* Adjusted max-width for inputs to match screenshot visual */
+    height: 40px; /* Standard input height */
+    padding: 0 12px;
+    border-radius: 5px; /* Slightly less rounded than wrapper */
+    border: 1px solid #4A5568; /* Subtle border color */
+    background: #2D3748; /* Input background */
+    color: #E0E0E0; /* Text color inside inputs */
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Specific styles for different input types */
+textarea.form-textbox {
+    height: 100px; /* Height for the Description textarea */
+    padding-top: 10px;
+    resize: vertical;
+}
+
+/* Focus styles for inputs */
+.form-textbox:focus,
+.date-box input[type="date"]:focus,
+.target-num input[type="number"]:focus,
+select.form-textbox:focus,
+.all-india-button:focus, /* Add focus for the button */
+.custom-checkbox:focus {
+    outline: none;
+    border-color: #3856F3; /* Blue border on focus */
+    box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3); /* Subtle glow on focus */
+    background-color: #3B4553; /* Slightly lighter background on focus */
+}
+
+/* Placeholder color */
+input::placeholder,
+textarea::placeholder {
+    color: #A0AEC0;
+    opacity: 0.8;
+}
+
+/* --- Helper/Error Messages (Inline below input) --- */
+.input-message {
+    position: absolute;
+    top: calc(100% - 20px); /* Position just above the bottom of the grid row */
+    left: 220px; /* Aligned with the start of the input column (200px label + 20px gap) */
+    width: calc(100% - 220px); /* Take remaining width of input column */
+    max-width: 400px; /* Match max-width of inputs */
+    font-size: 11px;
+    padding: 2px 5px;
+    pointer-events: none; /* Allows clicks to pass through */
+    z-index: 1;
+    text-align: left; /* Messages are left-aligned below the input */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #A0AEC0; /* Default info color */
+}
+
+.input-message.error {
+    color: #FF5A5A; /* Clear red for errors */
+    font-weight: 500;
+}
+
+/* Highlight border on error */
+.has-error {
+    border-color: #FF5A5A !important;
+}
+
+/* --- Specific Input Group Styles --- */
+
+/* File Upload */
+#file1 {
+    display: none; /* Hide default file input */
+}
+
+.file1-class {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
+    width: 90px;
+    height: 40px;
+    border: 1px solid #3856F3;
+    background-color: #3856F3;
+    color: #FFFFFF;
+    border-radius: 5px;
+    font-size: 14px;
     cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0;
 }
-.desc-box{
- display:grid;
- grid-template-columns: 50% 50%;
- margin-top: 30px;
-}
-.call-action{
-    display:grid;
-    grid-template-columns: 50% 50%;
-    margin-top: 30px;
-   }
 
-/* input[type="text"]{
-    width: 500px;
-    height: 40px;
+.file1-class:hover {
+    background-color: #2a41c1;
+    border-color: #2a41c1;
+}
+
+.file1-class .bi-paperclip {
+    margin-left: 8px;
+}
+
+.file-upload-container-inline {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    grid-column: 2 / 3;
+}
+
+.file-info-inline {
+    display: flex;
+    align-items: center;
+    border: 1px solid #3856F3;
     border-radius: 5px;
-    border: none;
-    border: 1px solid #898989;
-    background:#050a17;
-} */
+    padding: 6px 10px;
+    font-size: 13px;
+    color: #E0E0E0;
+    background-color: #2D3748;
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+}
 
-.call-action-textbox{
-    width: 500px;
-    height: 40px;
+.file-info-inline .file-name {
+    margin-right: 8px;
+    max-width: 150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.file-remove {
+    background: none;
+    border: none;
+    color: #FF5A5A;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.file-remove:hover {
+    color: #E53E3E;
+}
+
+.admedia-box .error-msg {
+    position: absolute;
+    bottom: 0;
+    left: 220px;
+    width: calc(100% - 220px);
+    max-width: 400px;
+    text-align: left;
+    font-size: 11px;
+    color: #FF5A5A;
+}
+
+/* Target Location - Select Dropdown AND All Over India Button */
+.taget-box .location-selection-group { /* New flex container for select and button */
+    display: flex;
+    align-items: center; /* Align items vertically */
+    gap: 15px; /* Space between dropdown and button */
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    grid-column: 2 / 3; /* Ensure it stays in the second grid column */
+}
+
+select.form-textbox {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23E0E0E0"%3E%3Cpath d="M7 10l5 5 5-5H7z"/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 35px; /* Space for the custom arrow */
+    max-width: 250px; /* Limit the width of the select dropdown itself */
+    flex-grow: 1; /* Allow it to grow, but respect max-width */
+}
+
+select.form-textbox:disabled {
+    background-color: #3B4553; /* Visually indicate disabled */
+    cursor: not-allowed;
+    opacity: 0.7;
+    border-color: #5A6A7D;
+    background-image: url('data:image/svg+xml;charset=UTF8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23A0AEC0"%3E%3Cpath d="M7 10l5 5 5-5H7z"/%3E%3Csvg%3E'); /* Grey out arrow when disabled */
+}
+
+/* Styling for the "All over India" button */
+.all-india-button {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between text and icon */
+    padding: 0 15px; /* Horizontal padding */
+    height: 40px; /* Match input height */
+    border: 1px solid #4A5568; /* Default border color */
+    background-color: #2D3748; /* Default background */
+    color: #E0E0E0; /* Default text color */
     border-radius: 5px;
-    border: none;
-    border: 1px solid #898989;
-    background:#050a17;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap; /* Prevent text from wrapping */
+    flex-shrink: 0; /* Prevent button from shrinking */
 }
-.desc-box textarea{
-    background:#050a17;
-    width: 500px;
-    height: 140px;
+
+.all-india-button:hover {
+    background-color: #3B4553;
+    border-color: #5A6A7D;
 }
-.taget-box{
-    display:grid;
-    grid-template-columns: 50% 50%;
-    margin-top: 30px;
-    
+
+.all-india-button.checked {
+    background-color: #3856F3; /* Blue when checked */
+    border-color: #3856F3;
+    color: #FFFFFF;
 }
-.taget-box select{
-    background:#050a17;
-    width: 110px;
-    height: 40px;
+
+.all-india-button.checked .checkmark-icon {
+    color: #FFFFFF; /* White tick mark */
+    font-size: 16px;
+}
+
+/* Daily Budget & Estimated Budget with "Rs." prefix */
+.input-with-prefix {
+    display: flex;
+    align-items: center;
+    border: 1px solid #4A5568; /* Apply border to the container */
     border-radius: 5px;
-    color: #fff;
-    padding-left: 10px;
-}
-.target-check{
-    float: right;
-    
-    padding-right: 118px;
-    padding-top: 3px;
-} 
-.target-num{
-    display:grid;
-    grid-template-columns: 50% 50%;
-    margin-top: 50px;
-    border: none;
-    outline: none;
+    background: #2D3748; /* Apply background to the container */
+    max-width: 400px;
+    height: 40px;
+    overflow: hidden; /* Ensure content stays within bounds */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    grid-column: 2 / 3; /* Ensure it spans the second grid column */
 }
 
-#num1,#num2{
-
-    border: none;
-    border: 1px solid #898989;
+.input-with-prefix .currency-prefix {
+    background: #2D3748; /* Match input background */
+    color: #E0E0E0;
+    padding: 0 12px;
+    font-size: 14px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #4A5568; /* Separator */
+    flex-shrink: 0; /* Prevent shrinking */
 }
-.target-num>div{
+
+.input-with-prefix .form-textbox {
+    border: none; /* Remove individual input border */
+    background: none; /* Remove individual input background */
+    flex-grow: 1;
+    padding: 0 12px;
+    height: 100%; /* Fill the height of the container */
+    max-width: none; /* Override max-width from .form-textbox */
+}
+
+.input-with-prefix .form-textbox:focus {
+    box-shadow: none; /* Remove focus shadow as it's on parent */
+    border-color: transparent;
+    background-color: transparent; /* Don't change background on focus for inner input */
+}
+
+.input-with-prefix:focus-within { /* Apply focus style to the container */
+    border-color: #3856F3;
+    box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3);
+}
+
+
+/* Ad Duration (Date Pickers) */
+.date-box .date-pick {
     display: flex;
     flex-direction: row;
-        
-}   
-.target-num-input{
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
-  background:#050a17;
+    gap: 15px;
+    align-items: center;
+    grid-column: 2 / 3;
+    margin-top: 0;
+    flex-wrap: wrap;
 }
-.interest-box{
-    display:grid;
-    grid-template-columns: 50% 50%;
-     margin-top: 30px;     
-}
-.interest-box-input{
-    width: 500px;
-    height: 40px;
+
+.date-box input[type="date"] {
+    width: calc(50% - 7.5px);
+    max-width: 200px;
+    padding-right: 10px;
     border-radius: 5px;
-    border: none;
-    border: 1px solid #898989;
-    background:#050a17;    
-}
-.budget-box{
-    display:grid;
-    grid-template-columns: 50% 50%;
-}
-
-.budget-box label{
-    margin-top: 32px;
-}
-.budget-box-input{
-    background:#050a17;
-    width: 200px;
     height: 40px;
-    margin-top: 30px;
-    border-radius: 4px;
-    border: none;
-    border: 1px solid #898989;
-}
-.budget-box ,.budget-box-input::placeholder{
-  padding-left: 5px;
-}
-.eliminiation-box-input::placeholder{
-    padding-left: 5px;
 }
 
-.date-box{
-    display:grid;
-    grid-template-columns: 50% 50%;
+.date-box input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(100%) sepia(50%) hue-rotate(120deg) saturate(300%);
+    cursor: pointer;
+    font-size: 16px;
 }
-.date-box label{
-    margin-top: 32px;
+
+.date-separator { /* Style for the 'to' text */
+    color: #C0C0C0;
+    font-size: 14px;
 }
-.date-pick{
+
+/* Target Age Range */
+.target-num .age-range-inputs { /* Added class for flex on smaller screens */
     display: flex;
-    gap: 20px;
-    margin-top: 30px;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    grid-column: 2 / 3;
+    flex-wrap: wrap;
 }
 
-.data-pick-input{
-    width: 200px;
-    height: 40px;
+.target-num input[type="number"] {
+    width: 100px;
+    text-align: center;
+    padding: 0 5px;
     border-radius: 5px;
-    color: #fff;
-    border: none;
-    border: 1px solid #898989;
-    padding-left: 10px;
-    background:#050a17;
-}
-.date-class::-webkit-calendar-picker-indicator {
-    filter: invert(100%) sepia(50%) hue-rotate(120deg) saturate(300%) !important;
-    
-}
-
-
-
-.elimination-box{
-    display:grid;
-    grid-template-columns: 50% 50%;
-}
-.elimination-box label{
-    margin-top: 32px;
-}
-.eliminiation-box-input{
-
-    width: 200px;
     height: 40px;
-    margin-top: 30px;
-    border-radius: 4px;
-    border: none;
-    border: 1px solid #898989;
-    background: transparent;
 }
-.gender-box {
-   display:grid;
-   grid-template-columns: 50% 50%;
+
+/* --- REMOVE SPINNER BUTTONS FOR NUMBER INPUTS --- */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0; /* Important to remove the space reserved for the buttons */
 }
-.gender-box label{
-    margin-top: 30px !important;
+
+input[type="number"] {
+    -moz-appearance: textfield; /* For Firefox */
 }
-.gender-box >div{
-   display: flex;
-   margin-top: 30px;
-   gap:10px
+/* --- END REMOVE SPINNER BUTTONS --- */
+
+
+.target-num .age-separator { /* Specific class for Age to */
+    color: #C0C0C0;
+    font-size: 14px;
+    white-space: nowrap;
 }
-.placing-box{
-    display:grid;
-    grid-template-columns: 50% 50%;
-}
-.placing-box label{
-    margin-top: 30px;
-}
-.placing-box>div{
+
+/* Gender Radios (already styled in previous version) */
+.gender-box > div { /* Target the div containing radio labels */
     display: flex;
-   margin-top: 30px;
+    gap: 30px;
+    align-items: center;
+    flex-wrap: wrap;
+    grid-column: 2 / 3;
 }
-.placing-box>div{
-   
-   display: inline;
-   width: 550px;
+
+.gender-box label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #E0E0E0;
 }
-.placing-box-input{
-    /* padding-left: 30px !important; */
-}
-.preview-box{
-    display:grid;
-    grid-template-columns: 50% 50%;
-}
-.preview-box label{
-    margin-top: 30px;
-}
-.preview-box .preview-button{
-    margin-top: 30px;
-    padding: 10px;
-    width: 150px;
-    background-color: #3856F3;
-    border-radius: 3px;
-    border: none;
-    color: #fff;
-    
-}
-.discard-button{
-    background:#050a17;
-    padding:9px;
-    width: 90px;
-    color:#fff;
-    border-radius:3px;
-    border: 1px solid #898989;
-}
-.submit-button{
-    padding:9px;
-    width: 90px;
-    color:#fff;
-    background-color: #3856F3;
-    border-radius:3px;
+
+.gender-box input[type="radio"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
     border: 1px solid #3856F3;
-  
-}
-.buttons-ds{
-    display: flex;
-    float: right;
-    margin-top: 60px;
-    gap: 30px;    
-}
-
-.form-textbox, .call-action-textbox,.target-num-input,textarea:focus{
-    color: #fff9ff;
-    background-color: transparent;
-    
-    
-}
-
-.target-check-input {
-    appearance: none;  
-    width: 18px;
-    height: 20px;
-    border: 1px solid #3856F3;  
-    border-radius: 4px;
-    background-color:transparent;
-    cursor: pointer;
-    position: relative;
-    
-    
-}
-.target-check-input:checked::after {
-
-    content: "✔";
-    color: #fff;
-    position: absolute;
-    font-size: 15px;
-    padding-bottom: 40px;
-    
-}
-
-.gender-box-input{
-
-    appearance: none;  
-    width: 18px;
-    height: 20px;
-    border: 1px solid #3856F3;  
-    border-radius: 4px;
-    background-color:transparent;
-    cursor: pointer;
-    position: relative;
-}
-
-.gender-box-input:checked::after {
-    content: "";
-    width: 10px;
-    height: 10px;
-    background-color: rgb(255, 255, 255); 
     border-radius: 50%;
+    background-color: transparent;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.gender-box input[type="radio"]:checked {
+    background-color: #3856F3;
+    border-color: #3856F3;
+    position: relative;
+}
+
+.gender-box input[type="radio"]:checked::after {
+    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
+    width: 6px;
+    height: 6px;
+    background-color: #E0E0E0;
+    border-radius: 50%;
     transform: translate(-50%, -50%);
 }
 
-.placing-box-input{
-    appearance: none;  
-    width: 20px;
-    height: 20px;
-    border: 1px solid #3856F3;  
-    border-radius: 4px;
-    background-color:transparent;
-    cursor: pointer;
-    position: relative;
-    
-}
-
-.placing-box-input:checked::after {
-
-    content: "✔";
-    color: #fff;
-    position: absolute;
-    font-size: 14px;
-    padding-bottom: 50px;
-    padding-left: 3px;
-}
-
-.data-pick-input {
-    appearance: none; 
-    position: relative;
-    padding: 8px;
-    border-radius: 5px;
-    font-size: 16px;
-    background-color: transparent;
-    color:#fff;
-  }
-  
-  
-  .data-pick-input::-webkit-calendar-picker-indicator {
-    filter: invert(27%) sepia(98%) saturate(1000%) hue-rotate(190deg); 
-    cursor: pointer;
-  }
-  
-
-
-/* ........................................................................ */
-
-@media(max-width:830px){
-
-    .form-container {
-         display: flex;
-         width: 100%;
-    } 
-    
-  .form-wrapper{
+/* Placing Radios (already styled in previous version) */
+.placing-box .placing-options {
     display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-    width: 100%;
-    padding: 0;
-    margin: 0;
-}
-.form-textbox{
-    width: 100%;
-}
-.title-box1{
-    display: flex;
-    justify-content:start;
-    align-items: start;
-    flex-direction: column;
-    width: 100%;
- }
-  
-  .admedia-box {
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-  }    
-  .desc-box{
-   
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-  }
-  .desc-box textarea{
-    width: 100%;
-  }  
-
-  .call-action{
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-}
-.call-action-textbox{
-    width: 100%;
-}
-.interest-box-input{
-    width: 100%;
-}
-
-  .taget-box{
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-}
-
-.target-check{
-    display: flex;
-    justify-content: start;
-    flex-direction: row;/* change */
-    align-items: start;
-    width: 100%;
-}
-.target-num{
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-}
-.interest-box{
-
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-}
-.gender-box{
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-    
-}
-.budget-box{
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-}
-.date-box{
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-}
-
-.data-pick-input{
-    width: 100%;
-}
-.elimination-box{
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-}
-.placing-box{
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-}
-.placing-checkboxes{
-    display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
-}
-.placing-box>div{
-    display: flex;
-    justify-content: start;
     flex-direction: row;
-    align-items: start;
-    width: 100%;
+    gap: 30px;
+    margin-top: 8px;
+    grid-column: 2 / 3;
+    flex-wrap: wrap;
 }
-.placing-box>div>input{
-    margin-top: 2px;
-}
-.preview-box{
+
+.placing-box .placing-option {
     display: flex;
-    justify-content: start;
-    flex-direction: column;
-    align-items: start;
-    width: 100%;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #E0E0E0;
 }
 
+.placing-box input[type="radio"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #3856F3;
+    border-radius: 50%;
+    background-color: transparent;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0;
 }
 
+.placing-box input[type="radio"]:checked {
+    background-color: #3856F3;
+    border-color: #3856F3;
+    position: relative;
+}
 
+.placing-box input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background-color: #E0E0E0;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* --- Preview Button --- */
+.preview-box {
+    align-items: center;
+}
+.preview-box label {
+    grid-column: 1 / 2;
+}
+.preview-box .preview-button {
+    grid-column: 2 / 3;
+    width: 40px;
+    height: 40px;
+    background-color: #3856F3;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
+}
+
+.preview-box .preview-button:hover {
+    background-color: #2a41c1;
+}
+
+/* --- Action Buttons (Submit/Discard) --- */
+.buttons-ds {
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #2D3748;
+}
+
+.discard-button,
+.submit-button {
+    padding: 10px 20px;
+    min-width: 100px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.discard-button {
+    background: #2D3748;
+    color: #E0E0E0;
+    border: 1px solid #4A5568;
+}
+
+.discard-button:hover {
+    background-color: #3B4553;
+    border-color: #5A6A7D;
+}
+
+.submit-button {
+    background-color: #3856F3;
+    color: #FFFFFF;
+    border: 1px solid #3856F3;
+}
+
+.submit-button:hover:not(:disabled) {
+    background-color: #2a41c1;
+    border-color: #2a41c1;
+}
+
+.submit-button:disabled {
+    background-color: #4A5568;
+    border-color: #4A5568;
+    color: #A0AEC0;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 830px) {
+    .ad-management-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .form-wrapper {
+        padding: 15px;
+    }
+
+    .title-box1,
+    .admedia-box,
+    .desc-box,
+    .call-action,
+    .taget-box,
+    .target-num,
+    .interest-box,
+    .budget-box,
+    .date-box,
+    .elimination-box,
+    .gender-box,
+    .placing-box,
+    .preview-box {
+        grid-template-columns: 1fr; /* Stack label and input vertically */
+        gap: 8px;
+        padding-bottom: 20px;
+    }
+
+    .form-wrapper label {
+        margin-bottom: 5px;
+    }
+
+    .input-message {
+        position: static;
+        width: 100%;
+        max-width: none;
+        text-align: left;
+        margin-top: 5px;
+        background-color: transparent;
+        border: none;
+    }
+
+    .file-upload-container-inline,
+    .gender-box > div,
+    .target-num .age-range-inputs, /* Use the new class */
+    .date-box .date-pick,
+    .placing-box .placing-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        grid-column: 1 / -1;
+    }
+
+    /* Target Location - Select and All India Button on mobile */
+    .taget-box .location-selection-group {
+        flex-direction: column; /* Stack them vertically on mobile */
+        align-items: flex-start;
+        width: 100%;
+        max-width: none;
+        gap: 10px;
+    }
+
+    .date-box input[type="date"],
+    .target-num input[type="number"],
+    .form-textbox { /* Ensure all inputs become full width */
+        width: 100%;
+        max-width: none;
+    }
+
+    /* For inputs with prefix, make the container full width on mobile */
+    .input-with-prefix {
+        width: 100%;
+        max-width: none;
+    }
+
+    .buttons-ds {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .discard-button,
+    .submit-button {
+        width: 100%;
+        max-width: none;
+    }
+}

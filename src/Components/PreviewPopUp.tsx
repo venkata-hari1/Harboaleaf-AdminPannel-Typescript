@@ -1,104 +1,186 @@
-import React from 'react'
-import '../Styles/PreviewPopUp.css';
+import React, { useState, useEffect } from 'react';
+import '../Styles/PreviewPopUp.css'; // Link to your CSS file
+
+// Import images from your assets folder
 import Camera from '../assets/Camera.png';
 import Statusicon from '../assets/Status Icons.png';
-import Hblogo from '../assets/Hblogo.png'
-import Harboleaf_title from '../assets/Hbtitle.png'
-import  BadgeImg from '../assets/BadgeImg.png' 
-import PreviewImg from '../assets/PreviewImg.png'
-import PreviewTv from '../assets/Preview-tv.png'
+import Hblogo from '../assets/Hblogo.png';
+import Harboleaf_title from '../assets/Hbtitle.png';
+import BadgeImg from '../assets/BadgeImg.png';
+import PreviewImg from '../assets/PreviewImg.png';
 
-const PreviewPopUp = ({ handlePopup }) => {
-
-  const closeHandle=()=>{
-    
-    handlePopup()
-
-  }
- return (
-
-   <div className='main-preview-container'>
-       <div className='preview-popup-container'>
-
-        <div className="tool-row-container">{/*first row  */}
-           <div className='time-container'>  
-              <p className='time-text'>09:30</p>
-           </div>
-
-           <div className='camera-container'>  
-           <img src={Camera} className='camera-img'/>
-           </div>
-          
-           <div className='network-container' >  
-           <img src={Statusicon} className='status-img'/>
-           </div>
-
-          </div>{/* first row end */}
-
-     
-         <div className='logo-search-container'>{/* 2nd row */}
-             
-             <div className='logos-container'>
-              <img src={Hblogo} className='logos-image1'/>
-              <span className="notification-badge badge bg-danger rounded-pill">5</span>
-              <img src={Harboleaf_title} className='logos-image2'/>
-             </div>
-
-             <div className='search-container'>
-              <input type="search" className='search-box1' placeholder='SEARCH'/><i className="bi bi-search search-icon1"></i>
-             </div>
-             <div className='badge-container'>
-             <img src={BadgeImg} className='badge-image1 img-fluid rounded-circle' onClick={closeHandle}/> 
-             </div>  
-
-            </div>{/* 2nd row end */}
-       
-           <div className='preview-bgimage-container' >
-            
-               <img src={PreviewImg} className='preview-image-box' /> 
-              <div className='preview-img-text'>
-                 Explored new hights today! Nothing beats the feelings
-                 of fresh air and freedom.
-              </div>
-            </div> 
-
-             <div className='preview-tool-wrapper'>
-               <div className='preview-left-tool'>
-                  <i className="bi bi-hand-thumbs-up-fill ms-2 "></i>
-                  <i className="bi bi-hand-thumbs-down ms-2"></i>
-                  <i className="bi bi-chat-left-text ms-2"></i>
-                </div>
-                <div className='preview-right-tool'>
-                  <i className="bi bi-link ms-2"></i>
-                  <i className="bi bi-send ms-2"></i> 
-                  <i className="bi bi-three-dots-vertical ms-2"></i>
-                </div>
-              </div>
-
-             <div className="product-desc-container">
-              <div className='product-image'>
-              <img src={PreviewTv} className='product-img-box'/>
-              </div> 
-              <div className='product-des-info'>
-                <p className='product-desc-title'>Title</p>
-                
-                <p className='product-desc-desc'>Description of the Product<span><a href='#'>Link</a></span></p>
-
-              </div>
-              </div>  
-       
-       
-       
-       
-       
-       
-       
-       </div> 
-    </div>
-
-   
-     
-  )
+interface FormData {
+  title: string;
+  description: string;
+  callToAction: string;
+  file: File | null;
+  placing: string[]; // Assuming this is an array like ['top'] or ['bottom']
 }
 
-export default PreviewPopUp
+interface PreviewPopUpProps {
+  handlePopup: () => void;
+  formData: FormData;
+}
+
+const PreviewPopUp: React.FC<PreviewPopUpProps> = ({ handlePopup, formData }) => {
+  const { title, description, callToAction, file, placing } = formData;
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setMediaUrl(url);
+
+      // Cleanup function to revoke the object URL
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setMediaUrl(null);
+    }
+  }, [file]); // Re-run effect if the file changes
+
+  const closeHandle = () => {
+    handlePopup();
+  };
+
+  // Determine media type for rendering
+  const mediaType = file ? file.type.split('/')[0] : ''; // 'image' or 'video'
+
+  // Post Component (remains the same in terms of structure, but will use external CSS)
+  const PostComponent: React.FC<{ index: number }> = ({ index }) => (
+    <div className="post-component-card">
+      {/* Profile Row (Centered) */}
+      <div className="post-profile-row">
+        <img src={PreviewImg} alt="Profile" className="post-profile-img" />
+        <div>
+          <span className="post-profile-name"> Deepak Kumar </span>
+          <span className="post-time">2d ago</span>
+        </div>
+      </div>
+
+      {/* Image Section */}
+      <img src={PreviewImg} alt={`Preview ${index}`} className="post-image-section" />
+
+      {/* Title and Description (if any within the dummy post) */}
+      <div className="post-title-desc-row">
+        {/* Placeholder for title/desc if needed */}
+      </div>
+
+      {/* Buttons */}
+      <div className="post-buttons-row">
+        <div className="post-actions-left">
+          <i className="bi bi-hand-thumbs-up-fill"></i>
+          <i className="bi bi-hand-thumbs-down"></i>
+          <i className="bi bi-chat-left-text"></i>
+        </div>
+        <div className="post-actions-right">
+          <i className="bi bi-link"></i>
+          <i className="bi bi-send"></i>
+          <i className="bi bi-three-dots-vertical"></i>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="main-preview-overlay" onClick={closeHandle}>
+      <div className="preview-popup-container" onClick={(e) => e.stopPropagation()}>
+
+        {/* Top Status Bar - Fixed */}
+        <div className="top-status-bar">
+          <p className="time-text">09:30</p>
+          <img src={Camera} alt="Camera" className="camera-img" />
+          <img src={Statusicon} alt="Status" className="status-img" />
+        </div>
+
+        {/* Title/Search/Close Bar - Fixed */}
+        <div className="title-search-bar">
+          <div className="logos-container">
+            <img src={Hblogo} alt="Logo1" className="logos-image1" />
+            <span className="notification-badge">10</span>
+            <img src={Harboleaf_title} alt="Logo2" className="harboleaf-title-img" />
+          </div>
+          <div className="search-container">
+            <input
+              type="search"
+              placeholder="SEARCH"
+              className="search-box1"
+              onClick={(e) => e.stopPropagation()} // Prevent search input click from closing popup
+            />
+            <i className="bi bi-search search-icon1"></i>
+          </div>
+          <img src={BadgeImg} alt="Close" className="badge-image1" onClick={closeHandle} />
+        </div>
+
+        {/* Scrollable Feed Content */}
+        <div className="scrollable-feed-content hide-scrollbar">
+          {/* Render Ad at Top if placement includes 'top' */}
+          {placing.includes('top') && file && (
+            <div className="ad-card-preview">
+              {mediaType === 'image' ? (
+                <img src={mediaUrl || ''} alt="Ad Media" className="ad-media" />
+              ) : mediaType === 'video' ? (
+                <video controls className="ad-media">
+                  <source src={mediaUrl || ''} type={file.type} />
+                  Your browser does not support the video tag.
+                </video>
+              ) : null}
+              <div className="ad-details-row">
+                <p className="ad-title">{title}</p>
+                <span className="ad-sponsored-tag">Sponsored</span>
+              </div>
+              <p className="ad-description">{description}</p>
+              {callToAction && (
+                <button className="ad-cta-button">
+                  {callToAction}
+                </button>
+              )}
+            </div>
+          )}
+
+          <PostComponent index={1} />
+          <PostComponent index={2} />
+          <PostComponent index={3} />
+
+          {/* Render Ad at Bottom if placement includes 'bottom' */}
+          {placing.includes('bottom') && file && (
+            <div className="ad-card-preview">
+              {mediaType === 'image' ? (
+                <img src={mediaUrl || ''} alt="Ad Media" className="ad-media" />
+              ) : mediaType === 'video' ? (
+                <video controls className="ad-media">
+                  <source src={mediaUrl || ''} type={file.type} />
+                  Your browser does not support the video tag.
+                </video>
+              ) : null}
+              <div className="ad-details-row">
+                <p className="ad-title">{title}</p>
+                <span className="ad-sponsored-tag">Sponsored</span>
+              </div>
+              <p className="ad-description">{description}</p>
+              {callToAction && (
+                <button className="ad-cta-button">
+                  {callToAction}
+                </button>
+              )}
+            </div>
+          )}
+
+          <PostComponent index={4} />
+          <PostComponent index={5} />
+          <PostComponent index={6} />
+          <PostComponent index={7} />
+          <PostComponent index={8} />
+        </div>
+
+        {/* Bottom Navigation Bar */}
+        <div className="bottom-nav-bar">
+          <div className="bottom-nav-indicator"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PreviewPopUp;
