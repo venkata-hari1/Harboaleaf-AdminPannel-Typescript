@@ -52,13 +52,13 @@
 .camera-img {
   width: 14px; /* Scaled from 25px * 0.75 */
   height: 14px; /* Scaled from 25px * 0.75 */
-  margin-left: auto; /* Push to center-right if camera is meant to be in middle */
+  margin-left: centre; /* Push to center-right if camera is meant to be in middle */
   margin-right: 5px; /* Adjust space between camera and status icon */
 }
 
 .status-img {
-  width: 22px; /* Scaled from 50px * 0.75, adjust as needed */
-  height: 22px; /* Scaled from 40px * 0.75, adjust as needed */
+  width: 34px; /* Scaled from 50px * 0.75, adjust as needed */
+  height: 34px; /* Scaled from 40px * 0.75, adjust as needed */
 }
 
 /* --- Title/Search/Close Bar --- */
