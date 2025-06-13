@@ -28,10 +28,10 @@ export const Users = createAsyncThunk(
 );
 export const Subscription = createAsyncThunk(
   "Subscription",
-  async (page: string | number, { fulfillWithValue, rejectWithValue }) => {
+  async (__, { fulfillWithValue, rejectWithValue }) => {
     try {
       const { response, error } = await networkCall(
-        `${endpoints.subscription}?page=${page}`,
+        `${endpoints.subscription}`,
         "GET"
       );
       if (response) {
