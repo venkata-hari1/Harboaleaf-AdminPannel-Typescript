@@ -6,9 +6,9 @@ interface FormState {
   title: string;
   description: string;
   callToAction: string;
-  interest: string;
+  link: string;
   location: string;
-  allIndia: boolean; // NEW: State for "All over India" option
+  allIndia: boolean; // State for "All over India" option
   ageFrom: string;
   ageTo: string;
   gender: string;
@@ -26,7 +26,7 @@ const Userform: React.FC = () => {
     title: '',
     description: '',
     callToAction: '',
-    interest: '',
+    link: '',
     location: '',
     allIndia: false, // Initialize to false
     ageFrom: '',
@@ -47,6 +47,9 @@ const Userform: React.FC = () => {
 
   const validate = (name: keyof FormState, value: any): string => {
     let error = '';
+    // A more robust URL regex, ensuring http/https and a domain
+    const urlRegex = /^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})$/i;
+
     switch (name) {
       case 'title':
         if (value.trim().length < 4) error = 'Title must be more than 3 characters';
@@ -54,8 +57,12 @@ const Userform: React.FC = () => {
       case 'description':
         if (value.trim().length < 10) error = 'Description must be more than 10 characters';
         break;
-      case 'interest':
-        if (!value.trim()) error = 'Interest is required';
+      case 'link':
+        if (!value.trim()) {
+          error = 'Link is required';
+        } else if (!urlRegex.test(value)) {
+          error = 'Please enter a valid URL (e.g., https://example.com)';
+        }
         break;
       case 'location':
         // Validation for location: required ONLY if 'allIndia' is false
@@ -122,8 +129,8 @@ const Userform: React.FC = () => {
     setErrors(prev => ({ ...prev, [name]: error }));
   };
 
-  // NEW: Handle "All over India" button click
-  const handleAllIndiaClick = () => {
+  // Renamed from handleAllIndiaClick to handleAllIndiaChange
+  const handleAllIndiaChange = () => {
     setForm(prev => ({
       ...prev,
       allIndia: !prev.allIndia, // Toggle the allIndia state
@@ -138,9 +145,9 @@ const Userform: React.FC = () => {
       title: 'Enter at least 4 characters',
       description: 'Enter at least 10 characters',
       callToAction: 'Example: Learn More',
-      interest: 'e.g., Fashion, Technology',
+      link: 'e.g., https://yourwebsite.com', // Updated helper message for link
       location: 'Select a state',
-      allIndia: '', // No specific helper message for the button itself
+      allIndia: '', // No specific helper message for the checkbox itself
       ageFrom: 'Min age (e.g., 18)',
       ageTo: 'Max age (e.g., 65)',
       gender: 'Select target gender',
@@ -182,19 +189,28 @@ const Userform: React.FC = () => {
     }
   }, [form.ageFrom, form.ageTo, touched.ageFrom, touched.ageTo]);
 
-  // NEW: Validate location when allIndia changes
+  // CORRECTED: Validate location only if it has been touched
   useEffect(() => {
-    // Only revalidate if location has been touched or allIndia changed
-    if (touched.location || form.allIndia !== undefined) {
+    if (touched.location) {
       const locationError = validate('location', form.location);
       setErrors(prev => ({ ...prev, location: locationError }));
+    } else {
+      // If location is not touched, ensure no error message is displayed
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        // Only delete if the error specifically belongs to location
+        if (newErrors.location) {
+          delete newErrors.location;
+        }
+        return newErrors;
+      });
     }
-  }, [form.allIndia, form.location, touched.location]);
+  }, [form.location, form.allIndia, touched.location]);
 
 
   const isFormValid = (): boolean => {
     const requiredFields: Array<keyof FormState> = [
-      'title', 'description', 'callToAction', 'interest', 'dailyBudget',
+      'title', 'description', 'callToAction', 'link', 'dailyBudget',
       'startDate', 'endDate', 'gender', 'placing'
     ];
 
@@ -213,9 +229,11 @@ const Userform: React.FC = () => {
       if (field === 'location' && form.allIndia) {
           return true; // If allIndia is true, location is not required
       }
+      // For all other fields, check if value exists and validation passes
       return !!form[field] && validate(field, form[field]) === '';
     });
 
+    // Also check for general errors not caught by 'requiredFields' logic
     const noOtherErrors = Object.values(errors).every(error => !error);
 
     return allRequiredFieldsFilledAndValid && noOtherErrors;
@@ -235,13 +253,7 @@ const Userform: React.FC = () => {
           }}
         />
       )}
-      <div className="ad-management-header">
-        <h2>AD Management</h2>
-        <div className="search-bar">
-          <i className="bi bi-search"></i>
-          <input type="text" placeholder="Search" />
-        </div>
-      </div>
+      
       <div className="form-wrapper">
 
         {/* Title Input */}
@@ -335,10 +347,27 @@ const Userform: React.FC = () => {
           </span>
         </div>
 
-        {/* Target Location Select + All Over India Button */}
+        {/* Link Input */}
+        <div className='link-box'>
+          <label htmlFor="link">Link</label>
+          <input
+            type="text"
+            id="link"
+            name="link"
+            className={getInputClass('link')}
+            value={form.link}
+            onChange={handleChange}
+            onBlur={handleBlur}
+          />
+          <span className={`input-message ${touched.link && errors.link? 'error' : 'info'}`}>
+            {getHelperMessage('link')}
+          </span>
+        </div>
+
+        {/* Target Location Select + All Over India Checkbox */}
         <div className='taget-box'>
             <label htmlFor="location">Target Location</label>
-            <div className="location-selection-group"> {/* NEW: Wrapper for select and button */}
+            <div className="location-selection-group">
                 <select
                     id="location"
                     name="location"
@@ -353,15 +382,19 @@ const Userform: React.FC = () => {
                     <option value="MH">Maharashtra</option>
                     {/* Add more states as needed */}
                 </select>
-                <button
-                    type="button"
-                    className={`all-india-button ${form.allIndia ? 'checked' : ''}`}
-                    onClick={handleAllIndiaClick}
-                    onBlur={(e) => handleBlur(e as any)} // Ensure button also sets touched state for 'location'
+                <label 
+                  className={`custom-checkbox-container all-india-checkbox-label`}
+                  onBlur={(e) => handleBlur(e as any)} // Ensure label blur also sets touched state for 'location'
                 >
+                    <input
+                        type="checkbox"
+                        name="allIndia"
+                        checked={form.allIndia}
+                        onChange={handleAllIndiaChange} // Use the renamed handler
+                    />
+                    <span className="checkmark"></span>
                     All over India
-                    {form.allIndia && <i className="bi bi-check-lg checkmark-icon"></i>} {/* Tick mark */}
-                </button>
+                </label>
             </div>
             <span className={`input-message ${touched.location && errors.location ? 'error' : 'info'}`}>
                 {getHelperMessage('location')}
@@ -402,23 +435,6 @@ const Userform: React.FC = () => {
           </span>
         </div>
 
-        {/* Interest Input */}
-        <div className='interest-box'>
-          <label htmlFor="interest">Interest</label>
-          <input
-            type="text"
-            id="interest"
-            name="interest"
-            className={getInputClass('interest')}
-            value={form.interest}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
-          <span className={`input-message ${touched.interest && errors.interest ? 'error' : 'info'}`}>
-            {getHelperMessage('interest')}
-          </span>
-        </div>
-
         {/* Gender Radio Buttons */}
         <div className='gender-box'>
           <label>Gender</label>
@@ -435,9 +451,8 @@ const Userform: React.FC = () => {
         {/* Daily Budget Input */}
         <div className='budget-box'>
           <label htmlFor="dailyBudget">Daily Budget</label>
-          {/* Consider adding a span for "Rs." for better styling, example commented below */}
-          <div className="daily-budget-input-group"> {/* NEW: Wrapper for input and "Rs." if desired */}
-              <span className="currency-prefix">Rs.</span> {/* NEW: "Rs." prefix */}
+          <div className="daily-budget-input-group">
+              <span className="currency-prefix">Rs.</span>
               <input
                 type="number"
                 id="dailyBudget"
@@ -484,10 +499,10 @@ const Userform: React.FC = () => {
         </div>
 
         {/* Eliminated Budget Input */}
-        <div className='elimination-box'>
-          <label htmlFor="eliminatedBudget">Estimated Budget</label> {/* Changed label text */}
-          <div className="eliminated-budget-input-group"> {/* NEW: Wrapper for input and "Rs." */}
-              <span className="currency-prefix">Rs.</span> {/* NEW: "Rs." prefix */}
+        <div className='budget-box'>
+          <label htmlFor="eliminatedBudget">Estimated Budget</label>
+          <div className="daily-budget-input-group">
+              <span className="currency-prefix">Rs.</span>
               <input
                 type="number"
                 id="eliminatedBudget"
@@ -550,25 +565,33 @@ const Userform: React.FC = () => {
           </button>
         </div>
 
-        {/* Submit & Discard Buttons */}
+        {/* Submit & Discard*/}
         <div className='buttons-ds'>
-          <button className='discard-button' type="button" onClick={() => setForm({
-            title: '',
-            description: '',
-            callToAction: '',
-            interest: '',
-            location: '',
-            allIndia: false, // Reset allIndia on discard
-            ageFrom: '',
-            ageTo: '',
-            gender: '',
-            dailyBudget: '',
-            startDate: '',
-            endDate: '',
-            eliminatedBudget: '',
-            placing: [],
-            file: null,
-          })}>
+          <button
+            className='discard-button'
+            type="button"
+            onClick={() => {
+              setForm({ // Reset form data
+                title: '',
+                description: '',
+                callToAction: '',
+                link: '',
+                location: '',
+                allIndia: false,
+                ageFrom: '',
+                ageTo: '',
+                gender: '',
+                dailyBudget: '',
+                startDate: '',
+                endDate: '',
+                eliminatedBudget: '',
+                placing: [],
+                file: null,
+              });
+              setErrors({}); // Clear all errors
+              setTouched({}); // Reset all touched states
+            }}
+          >
             Discard
           </button>
           <button

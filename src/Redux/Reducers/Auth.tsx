@@ -1,11 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { baseURL, endpoints } from "../../../Utils/Config";
-import networkCall from "../../../Utils/NetworkCalls";
 const initialState = {
   loading: false,
   data:[]
 }
-
 export const SignIn = createAsyncThunk(
   "auth/signin",
   async (payload: { data }, { fulfillWithValue, rejectWithValue }) => {

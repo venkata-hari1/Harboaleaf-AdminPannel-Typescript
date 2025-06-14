@@ -35,14 +35,7 @@ const Admanagement = () => {
           </button>
         </div>
 
-        <div className='billing-invoice'>
-          <button
-            className={clickedButton === 'billing' ? 'clicked' : ''}
-            onClick={() => handleClick('/admin/billing-invoice', 'billing')}
-          >
-            Billing and Invoice Details
-          </button>
-        </div>
+        
 
       </div>
     </div>
