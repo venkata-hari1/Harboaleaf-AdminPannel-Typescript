@@ -14,7 +14,7 @@ interface FormData {
   description: string;
   callToAction: string;
   file: File | null;
-  placing: string[]; // Assuming this is an array like ['top'] or ['bottom']
+  // 'placing' property removed as it's no longer required
 }
 
 interface PreviewPopUpProps {
@@ -23,7 +23,8 @@ interface PreviewPopUpProps {
 }
 
 const PreviewPopUp: React.FC<PreviewPopUpProps> = ({ handlePopup, formData }) => {
-  const { title, description, callToAction, file, placing } = formData;
+  // 'placing' removed from destructuring
+  const { title, description, callToAction, file } = formData;
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -115,8 +116,8 @@ const PreviewPopUp: React.FC<PreviewPopUpProps> = ({ handlePopup, formData }) =>
 
         {/* Scrollable Feed Content */}
         <div className="scrollable-feed-content hide-scrollbar">
-          {/* Render Ad at Top if placement includes 'top' */}
-          {placing.includes('top') && file && (
+          {/* Ad is always rendered at the top if there is a file attached */}
+          {file && (
             <div className="ad-card-preview">
               {mediaType === 'image' ? (
                 <img src={mediaUrl || ''} alt="Ad Media" className="ad-media" />
@@ -143,29 +144,6 @@ const PreviewPopUp: React.FC<PreviewPopUpProps> = ({ handlePopup, formData }) =>
           <PostComponent index={2} />
           <PostComponent index={3} />
 
-          {/* Render Ad at Bottom if placement includes 'bottom' */}
-          {placing.includes('bottom') && file && (
-            <div className="ad-card-preview">
-              {mediaType === 'image' ? (
-                <img src={mediaUrl || ''} alt="Ad Media" className="ad-media" />
-              ) : mediaType === 'video' ? (
-                <video controls className="ad-media">
-                  <source src={mediaUrl || ''} type={file.type} />
-                  Your browser does not support the video tag.
-                </video>
-              ) : null}
-              <div className="ad-details-row">
-                <p className="ad-title">{title}</p>
-                <span className="ad-sponsored-tag">Sponsored</span>
-              </div>
-              <p className="ad-description">{description}</p>
-              {callToAction && (
-                <button className="ad-cta-button">
-                  {callToAction}
-                </button>
-              )}
-            </div>
-          )}
 
           <PostComponent index={4} />
           <PostComponent index={5} />

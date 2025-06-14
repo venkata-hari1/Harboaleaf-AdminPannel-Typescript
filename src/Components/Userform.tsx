@@ -1,31 +1,80 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../Redux/store/Store';
-import { createAdCampaign } from '../Redux/Reducers/UserMangement';
-import Loader from '../../Utils/Loader';
-import { showToast } from '../../Utils/Validation';
-import { baseURL } from '../../Utils/Config'; // Ensure baseURL is correctly imported
-
 import '../Styles/Userform.css';
 import PreviewPopUp from './PreviewPopUp';
+import { endpoints, baseURL } from '../../Utils/Config'; // Ensure baseURL and endpoints are correctly imported
 
-// Define the shape of your form data state
-// Keep types consistent with input elements (mostly string for direct input values)
+// --- Common Fetch Handler - BROUGHT DIRECTLY INTO THIS FILE ---
+// This function performs the actual API call and handles common logic like headers and error parsing.
+interface FetchResult<T = any, E = any> {
+  response: T | null;
+  error: {
+    status?: number;
+    message: string;
+    data?: E;
+  } | null;
+}
+
+const executeFetch = async <T = any, E = any>(
+  fullUrl: string,
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  body?: FormData | object | string,
+): Promise<FetchResult<T, E>> => {
+  const headers: HeadersInit = { 'Accept': 'application/json' };
+  const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
+  if (token) headers['token'] = token;
+
+  const options: RequestInit = { method, headers };
+
+  if (body) {
+    if (body instanceof FormData) {
+      options.body = body; // FormData does not require 'Content-Type' header
+    } else if (typeof body === 'object') {
+      options.body = JSON.stringify(body);
+      headers['Content-Type'] = 'application/json';
+    } else {
+      options.body = body;
+      headers['Content-Type'] = 'text/plain';
+    }
+  } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+    // For POST/PUT/PATCH requests with no body, still set Content-Type if JSON is expected
+    headers['Content-Type'] = 'application/json';
+  }
+
+  try {
+    const res = await fetch(fullUrl, options);
+    // Attempt to parse JSON response; gracefully handle non-JSON responses
+    const data = await res.json().catch(() => ({ message: res.statusText || "Something went wrong" }));
+
+    if (!res.ok) {
+      // If response is not OK (e.g., 4xx, 5xx status codes)
+      return {
+        response: null,
+        error: { status: res.status, message: data.message || `Error ${res.status}`, data },
+      };
+    }
+    // If response is OK
+    return { response: data, error: null };
+  } catch (err: any) {
+    // Catch network errors or issues during fetch
+    return {
+      response: null,
+      error: { status: 0, message: err.message || "Network error or unexpected issue", data: null },
+    };
+  }
+};
+// --- END executeFetch ---
+
+
+// Define the shape of your form data state, aligned with Figma
 interface FormState {
     title: string;
     description: string;
     callToAction: string;
     link: string;
-    location: string;
-    allIndia: boolean;
-    ageFrom: string; // Stored as string from input, converted to number for payload
-    ageTo: string;   // Stored as string from input, converted to number for payload
-    gender: string;
     dailyBudget: string; // Stored as string from input, converted to number for payload
     startDate: string;
     endDate: string;
     estimatedBudget: string; // Stored as string from input, converted to number for payload
-    placing: string[];
     file: File | null; // This will be uploaded directly to the backend
 }
 
@@ -36,28 +85,21 @@ const Userform: React.FC = () => {
         description: '',
         callToAction: '',
         link: '',
-        location: '',
-        allIndia: false,
-        ageFrom: '',
-        ageTo: '',
-        gender: '',
         dailyBudget: '',
         startDate: '',
         endDate: '',
         estimatedBudget: '',
-        placing: [],
         file: null,
     });
 
     const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
     const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
-    // uploadProgress will no longer be relevant for frontend S3 direct upload,
-    // as file is sent directly to backend. You might remove this state.
-    const [uploadProgress, setUploadProgress] = useState<number>(0); 
 
-    const dispatch = useDispatch<AppDispatch>();
-    const reduxLoading = useSelector((state: RootState) => state.UserMangment.loading);
-    const reduxError = useSelector((state: RootState) => state.UserMangment.error);
+    // Local state for loading, error, and success messages (replacing Redux state)
+    const [loading, setLoading] = useState<boolean>(false);
+    const [apiError, setApiError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
 
     const handlePopup = () => setState(prev => !prev);
 
@@ -65,12 +107,9 @@ const Userform: React.FC = () => {
     const getISODateString = (dateString: string): string => {
         if (!dateString) return '';
         const [year, month, day] = dateString.split('-').map(Number);
+        // Using UTC to avoid timezone issues when sending to backend
         return new Date(Date.UTC(year, month - 1, day, 0, 0, 0)).toISOString();
     };
-
-    // Removed the uploadFileToS3 function as it's no longer used in this workflow.
-    // If other parts of your app use it, keep it. Otherwise, delete it.
-
 
     // --- Validation Logic ---
     const validate = (name: keyof FormState, value: any, currentForm: FormState = form): string => {
@@ -91,25 +130,12 @@ const Userform: React.FC = () => {
                     error = 'Please enter a valid URL (e.g., https://example.com)';
                 }
                 break;
-            case 'location':
-                if (!currentForm.allIndia && !value) error = 'Location is required if not "All over India"';
-                break;
             case 'dailyBudget':
-                if (isNaN(Number(value)) || Number(value) <= 0) error = 'Budget must be greater than 0';
+                if (isNaN(Number(value)) || Number(value) <= 0) error = 'Daily Budget must be greater than 0';
                 break;
             case 'estimatedBudget':
-                if (value && (isNaN(Number(value)) || Number(value) < 0)) error = 'Cannot be negative'; // Estimated budget is optional, but if entered, must be non-negative
-                break;
-            case 'ageFrom':
-            case 'ageTo':
-                const numAgeFrom = Number(currentForm.ageFrom);
-                const numAgeTo = Number(currentForm.ageTo);
-
-                if (value && (isNaN(Number(value)) || Number(value) < 0)) {
-                    error = 'Age must be a positive number';
-                } else if (name === 'ageTo' && numAgeFrom && value && numAgeTo < numAgeFrom) {
-                    error = 'Max age must be greater than min age';
-                }
+                // Estimated budget is optional, but if entered, must be non-negative
+                if (value && (isNaN(Number(value)) || Number(value) < 0)) error = 'Estimated Budget cannot be negative';
                 break;
             case 'startDate':
             case 'endDate':
@@ -132,12 +158,6 @@ const Userform: React.FC = () => {
                     if (value.type.includes('video') && sizeMB > 2) error = 'Video should be less than 2MB';
                 }
                 break;
-            case 'gender':
-                if (!value) error = 'Gender is required';
-                break;
-            case 'placing':
-                if (value.length === 0) error = 'Placing option is required';
-                break;
             default:
                 break;
         }
@@ -150,13 +170,8 @@ const Userform: React.FC = () => {
 
         if (type === 'file') {
             newVal = files?.[0] || null;
-        } else if (type === 'radio' && name === 'placingRadio') {
-            newVal = [value]; // Ensure placing is always an array, even for single selection
-            setForm(prev => ({ ...prev, placing: newVal }));
-            const placingError = validate('placing', newVal, { ...form, placing: newVal });
-            setErrors(prev => ({ ...prev, placing: placingError }));
-            setTouched(prev => ({ ...prev, placing: true }));
-            return; // Skip default setForm and validation for placing
+        } else if (type === 'number') {
+            newVal = value === '' ? '' : Number(value); // Keep as string for empty, convert to number otherwise
         }
 
         setForm(prev => {
@@ -165,6 +180,9 @@ const Userform: React.FC = () => {
             setErrors(currentErrors => ({ ...currentErrors, [name]: error }));
             return updatedForm;
         });
+        // Clear success/error messages on input change
+        setApiError(null);
+        setSuccessMessage(null);
     };
 
     const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -176,40 +194,16 @@ const Userform: React.FC = () => {
             const fieldName = name as keyof FormState;
             newErrors[fieldName] = validate(fieldName, form[fieldName], form); // Validate current field
 
-            // Re-validate interdependent fields on blur
+            // Re-validate interdependent fields on blur (only dates remain)
             if (fieldName === 'startDate' || fieldName === 'endDate') {
                 newErrors.startDate = validate('startDate', form.startDate, form);
                 newErrors.endDate = validate('endDate', form.endDate, form);
-            }
-            if (fieldName === 'ageFrom' || fieldName === 'ageTo') {
-                newErrors.ageFrom = validate('ageFrom', form.ageFrom, form);
-                newErrors.ageTo = validate('ageTo', form.ageTo, form);
-            }
-            if (fieldName === 'location' || fieldName === 'allIndia') {
-                newErrors.location = validate('location', form.location, form);
             }
             return newErrors;
         });
     };
 
-    const handleAllIndiaChange = () => {
-        setForm(prev => {
-            const newAllIndia = !prev.allIndia;
-            const newLocation = newAllIndia ? '' : prev.location; // Clear location if allIndia is checked
-            const updatedForm = {
-                ...prev,
-                allIndia: newAllIndia,
-                location: newLocation,
-            };
-
-            setTouched(current => ({ ...current, location: true })); // Mark location as touched to show validation
-            setErrors(currentErrors => ({
-                ...currentErrors,
-                location: validate('location', newLocation, updatedForm), // Re-validate location
-            }));
-            return updatedForm;
-        });
-    };
+    // Removed handleAllIndiaChange as 'allIndia' and 'location' are removed
 
     const getHelperMessage = (name: keyof FormState): string => {
         const emptyMsgs: Record<keyof FormState, string> = {
@@ -217,50 +211,24 @@ const Userform: React.FC = () => {
             description: 'Enter at least 10 characters',
             callToAction: 'Example: Learn More',
             link: 'e.g., https://yourwebsite.com',
-            location: 'Select a state',
-            allIndia: '', // No helper for checkbox
-            ageFrom: 'Min age (e.g., 18)',
-            ageTo: 'Max age (e.g., 65)',
-            gender: 'Select target gender',
             dailyBudget: 'Enter a number > 0',
             startDate: 'Select start date',
             endDate: 'Must be after start date',
             estimatedBudget: 'Optional: Cannot be negative',
-            placing: 'Select placement option (Top/Bottom)',
             file: 'Upload image (<1MB) or video (<2MB)',
         };
-
         // Prioritize error messages if field is touched and has an error
         if (touched[name] && errors[name]) {
-            // Special handling for interdependent age fields
-            if (name === 'ageFrom' || name === 'ageTo') {
-                return errors.ageFrom || errors.ageTo || '';
-            }
             return errors[name] || '';
-        }
-        // Show info messages if no error or not touched yet
-        if (name === 'ageFrom' || name === 'ageTo') {
-            return emptyMsgs.ageFrom; // Show helper for ageFrom as a general age helper
         }
         return emptyMsgs[name];
     };
 
     const getInputClass = (name: keyof FormState): string => {
         const baseClass = 'form-textbox';
-        // Special handling for interdependent age fields
-        if ((name === 'ageFrom' || name === 'ageTo') && ((touched.ageFrom || touched.ageTo) && (errors.ageFrom || errors.ageTo))) {
-            return `${baseClass} has-error`;
-        }
         if (touched[name] && errors[name]) return `${baseClass} has-error`;
         return baseClass;
     };
-
-    // --- Redux Error Feedback ---
-    useEffect(() => {
-        if (reduxError) {
-            showToast(false, reduxError);
-        }
-    }, [reduxError]);
 
     // --- Re-run validation for interdependent fields (on form state changes) ---
     useEffect(() => {
@@ -271,35 +239,19 @@ const Userform: React.FC = () => {
         }));
     }, [form.startDate, form.endDate]);
 
-    useEffect(() => {
-        const ageFromError = validate('ageFrom', form.ageFrom, form);
-        const ageToError = validate('ageTo', form.ageTo, form);
-        setErrors(prev => ({ ...prev, ageFrom: ageFromError, ageTo: ageToError }));
-    }, [form.ageFrom, form.ageTo]);
-
-    useEffect(() => {
-        setErrors(prev => ({ ...prev, location: validate('location', form.location, form) }));
-    }, [form.location, form.allIndia]);
-
-    useEffect(() => {
-        setErrors(prev => ({
-            ...prev,
-            gender: validate('gender', form.gender, form),
-            placing: validate('placing', form.placing, form),
-            file: validate('file', form.file, form),
-        }));
-    }, [form.gender, form.placing, form.file]);
+    // Removed useEffect for ageFrom/ageTo, location/allIndia, gender/placing as they are removed
 
     // --- Form Validity Check ---
     const isFormValid = (): boolean => {
         const allFormFields: Array<keyof FormState> = Object.keys(form) as Array<keyof FormState>;
         let currentValidationErrors: Partial<Record<keyof FormState, string>> = {};
 
-        // Run validation for all fields
+        // Run validation for all fields that are part of the FormState
         allFormFields.forEach(field => {
             currentValidationErrors[field] = validate(field, form[field], form);
         });
 
+        // Check if any field has a validation error
         const hasErrors = Object.values(currentValidationErrors).some(error => !!error);
 
         // Additionally check for explicitly required fields to not be empty/invalid
@@ -311,10 +263,7 @@ const Userform: React.FC = () => {
             Number(form.dailyBudget) > 0 &&
             form.startDate.trim() !== '' &&
             form.endDate.trim() !== '' &&
-            form.gender.trim() !== '' &&
-            form.placing.length > 0 &&
             form.file !== null && // Ensure a file is selected
-            (form.allIndia || form.location.trim() !== '') && // Location OR All India
             (form.estimatedBudget === '' || Number(form.estimatedBudget) >= 0); // Estimated budget optional but if filled, valid
 
         return requiredFieldsExplicitlyFilled && !hasErrors;
@@ -329,7 +278,7 @@ const Userform: React.FC = () => {
         });
         setTouched(newTouched);
 
-        // 2. Perform a full validation pass to update `errors` state
+        // 2. Perform a full validation pass to update `errors` state based on current form
         let fullFormErrors: Partial<Record<keyof FormState, string>> = {};
         (Object.keys(form) as Array<keyof FormState>).forEach(key => {
             fullFormErrors[key] = validate(key, form[key], form);
@@ -338,12 +287,16 @@ const Userform: React.FC = () => {
 
         // 3. Check validity based on the *latest* errors state and explicit checks
         if (!isFormValid()) {
-            showToast(false, "Please correct the errors in the form before submitting.");
+            alert("Please correct the errors in the form before submitting.");
             return; // Stop if form is not valid
         }
 
+        setLoading(true); // Start loading
+        setApiError(null); // Clear previous API errors
+        setSuccessMessage(null); // Clear previous success messages
+
         try {
-            // Build the FormData with all fields, including the file directly
+            // Build the FormData with all fields
             const campaignFormData = new FormData();
 
             campaignFormData.append('title', form.title);
@@ -353,56 +306,75 @@ const Userform: React.FC = () => {
             campaignFormData.append('dailyBudget', form.dailyBudget);
             campaignFormData.append('estimatedBudget', form.estimatedBudget);
 
-            // Directly append the File object to FormData under the key 'file' as shown in Postman
+            // Append the File object directly
             if (form.file) {
-                campaignFormData.append('file', form.file); // Append the actual File object
+                campaignFormData.append('file', form.file);
             } else {
-                // This case should ideally be caught by `isFormValid()`, but good for safety
-                showToast(false, 'Ad media file is required.');
+                // This case should be caught by isFormValid(), but as a fallback
+                alert('Ad media file is required.');
+                setLoading(false);
                 return;
             }
 
             campaignFormData.append('adDuration[startDate]', getISODateString(form.startDate));
             campaignFormData.append('adDuration[endDate]', getISODateString(form.endDate));
 
-            // Handle 'targetAudience' as a JSON string
-            campaignFormData.append('targetAudience', JSON.stringify({
-                location: form.allIndia ? 'all over india' : form.location, // Dynamic location based on allIndia
-                allIndia: form.allIndia,
-                gender: form.gender,
-                ageRange: {
-                    min: Number(form.ageFrom), // Convert to number
-                    max: Number(form.ageTo)    // Convert to number
-                }
-            }));
-
-         
-            form.placing.forEach(p => campaignFormData.append('placing', p));
-
-           
-            console.log("Userform.tsx: Sending FormData contents to createAdCampaign API:");
+            console.log("Userform.tsx: Sending FormData contents to API:");
             for (const pair of campaignFormData.entries()) {
                 console.log(`${pair[0]}:`, pair[1] instanceof File ? `File: ${pair[1].name} (${pair[1].type})` : pair[1]);
             }
 
-            await dispatch(createAdCampaign(campaignFormData)).unwrap();
-            showToast(true, "Ad Campaign Created Successfully!");
-      
-            setForm({
-                title: '', description: '', callToAction: '', link: '',
-                location: '', allIndia: false, ageFrom: '', ageTo: '',
-                gender: '', dailyBudget: '', startDate: '', endDate: '',
-                estimatedBudget: '', placing: [], file: null,
-            });
-            setErrors({}); // Clear all errors
-            setTouched({}); // Reset all touched states
-            
+            // Directly call executeFetch
+            const { response, error } = await executeFetch(
+                `${baseURL}${endpoints.advertisement}`,
+                "POST",
+                campaignFormData
+            );
+
+            if (response) {
+                setSuccessMessage("Ad Campaign Created Successfully!");
+                // Reset form on successful submission
+                setForm({
+                    title: '', description: '', callToAction: '', link: '',
+                    dailyBudget: '', startDate: '', endDate: '',
+                    estimatedBudget: '', file: null,
+                });
+                setErrors({}); // Clear all validation errors
+                setTouched({}); // Reset all touched states
+                // Manually clear file input element
+                const fileInput = document.getElementById('file1') as HTMLInputElement;
+                if (fileInput) fileInput.value = '';
+            } else {
+                // Handle API error
+                setApiError(error?.message || "Failed to create ad campaign.");
+            }
         } catch (err: any) {
-            console.error("Userform.tsx: Failed to create ad campaign (caught in component):", err);
-            
+            // Handle unexpected errors (e.g., network issues)
+            setApiError(err.message || "An unexpected error occurred during submission.");
+        } finally {
+            setLoading(false); // Stop loading regardless of success or failure
         }
     };
 
+    const handleDiscard = () => {
+        // Reset all form fields
+        setForm({
+            title: '', description: '', callToAction: '', link: '',
+            dailyBudget: '', startDate: '', endDate: '',
+            estimatedBudget: '', file: null,
+        });
+        setErrors({}); // Clear all errors
+        setTouched({}); // Reset all touched states
+        // Manually clear file input element
+        const fileInput = document.getElementById('file1') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        setApiError(null); // Clear any API errors
+        setSuccessMessage(null); // Clear any success messages
+        setLoading(false); // Ensure loading is false
+    };
+
+    // Determine if the publish button should be disabled
+    const isPublishDisabled = loading || !isFormValid();
 
     return (
         <div className="form-container" style={{ position: 'relative' }}>
@@ -411,20 +383,20 @@ const Userform: React.FC = () => {
                     handlePopup={handlePopup}
                     formData={{
                         file: form.file,
-                        placing: form.placing,
                         title: form.title,
                         description: form.description,
                         callToAction: form.callToAction,
+                        link: form.link, // Pass link to preview
                     }}
                 />
             )}
 
-            {reduxLoading && <Loader />} {/* Show loader if Redux is loading */}
+            {loading && <p style={{ color: 'white', textAlign: 'center', margin: '10px 0' }}>Processing...</p>}
 
             <div className="form-wrapper">
-                {/* Title Input */}
+                {/* Ad Title Input */}
                 <div className='title-box1'>
-                    <label htmlFor="title">Add Title</label>
+                    <label htmlFor="title">Ad Title</label>
                     <input
                         type="text"
                         id="title"
@@ -433,7 +405,7 @@ const Userform: React.FC = () => {
                         value={form.title}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        disabled={reduxLoading} // Disable during submission
+                        disabled={loading} // Disable during submission
                     />
                     <span className={`input-message ${touched.title && errors.title ? 'error' : 'info'}`}>
                         {getHelperMessage('title')}
@@ -450,12 +422,12 @@ const Userform: React.FC = () => {
                         <input
                             type="file"
                             id="file1"
-                            name="file"
+                            name="file" // Name corresponds to form state key
                             className='file-box'
                             onChange={handleChange}
                             onBlur={handleBlur}
                             accept="image/*,video/*"
-                            disabled={reduxLoading} // Disable during submission
+                            disabled={loading} // Disable during submission
                         />
                         {form.file && (
                             <div className="file-info-inline">
@@ -467,9 +439,12 @@ const Userform: React.FC = () => {
                                         setForm(prev => ({ ...prev, file: null }));
                                         setErrors(prev => ({ ...prev, file: validate('file', null) }));
                                         setTouched(prev => ({ ...prev, file: true }));
+                                        // Manually clear file input
+                                        const fileInput = document.getElementById('file1') as HTMLInputElement;
+                                        if (fileInput) fileInput.value = '';
                                     }}
                                     aria-label="Remove file"
-                                    disabled={reduxLoading} // Disable during submission
+                                    disabled={loading} // Disable during submission
                                 >
                                     &times;
                                 </button>
@@ -479,12 +454,11 @@ const Userform: React.FC = () => {
                     <span className={`input-message ${touched.file && errors.file ? 'error' : 'info'}`}>
                         {getHelperMessage('file')}
                     </span>
-                    {/* Removed upload progress display as it's no longer a direct S3 upload from frontend */}
                 </div>
 
                 {/* Description Input */}
                 <div className='desc-box'>
-                    <label htmlFor="description">Add Description</label>
+                    <label htmlFor="description">Ad Description</label>
                     <textarea
                         id="description"
                         name="description"
@@ -492,7 +466,7 @@ const Userform: React.FC = () => {
                         value={form.description}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        disabled={reduxLoading} // Disable during submission
+                        disabled={loading} // Disable during submission
                     ></textarea>
                     <span className={`input-message ${touched.description && errors.description ? 'error' : 'info'}`}>
                         {getHelperMessage('description')}
@@ -510,7 +484,7 @@ const Userform: React.FC = () => {
                         value={form.callToAction}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        disabled={reduxLoading} // Disable during submission
+                        disabled={loading} // Disable during submission
                     />
                     <span className={`input-message ${touched.callToAction && errors.callToAction ? 'error' : 'info'}`}>
                         {getHelperMessage('callToAction')}
@@ -528,95 +502,10 @@ const Userform: React.FC = () => {
                         value={form.link}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        disabled={reduxLoading} // Disable during submission
+                        disabled={loading} // Disable during submission
                     />
                     <span className={`input-message ${touched.link && errors.link ? 'error' : 'info'}`}>
                         {getHelperMessage('link')}
-                    </span>
-                </div>
-
-                {/* Target Location Select + All Over India Checkbox */}
-                <div className='taget-box'>
-                    <label htmlFor="location">Target Location</label>
-                    <div className="location-selection-group">
-                        <select
-                            id="location"
-                            name="location"
-                            value={form.location}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            className={getInputClass('location')}
-                            disabled={form.allIndia || reduxLoading} // Disable if allIndia or submitting
-                        >
-                            <option value="">Select State</option>
-                            <option value="Andhra Pradesh">Andhra Pradesh</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            {/* Add more states as needed */}
-                        </select>
-                        <label
-                            className={`custom-checkbox-container all-india-checkbox-label`}
-                        >
-                            <input
-                                type="checkbox"
-                                name="allIndia"
-                                checked={form.allIndia}
-                                onChange={handleAllIndiaChange}
-                                disabled={reduxLoading} // Disable during submission
-                            />
-                            <span className="checkmark"></span>
-                            All over India
-                        </label>
-                    </div>
-                    <span className={`input-message ${touched.location && errors.location ? 'error' : 'info'}`}>
-                        {getHelperMessage('location')}
-                    </span>
-                </div>
-
-                {/* Target Age Range */}
-                <div className='target-num'>
-                    <label>Target Age Range</label>
-                    <div className="d-flex align-items-center">
-                        <input
-                            type="number"
-                            name="ageFrom"
-                            placeholder={getHelperMessage('ageFrom')}
-                            value={form.ageFrom}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            className={getInputClass('ageFrom')}
-                            min="0"
-                            disabled={reduxLoading} // Disable during submission
-                        />
-                        <span className='mx-2'>Age&nbsp;to</span>
-                        <input
-                            type="number"
-                            name="ageTo"
-                            placeholder={getHelperMessage('ageTo')}
-                            value={form.ageTo}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            className={getInputClass('ageTo')}
-                            min={form.ageFrom ? String(Number(form.ageFrom)) : "0"}
-                            disabled={reduxLoading} // Disable during submission
-                        />
-                    </div>
-                    <span className={`input-message ${
-                        (touched.ageFrom || touched.ageTo) && (errors.ageFrom || errors.ageTo) ? 'error' : 'info'
-                    }`}>
-                        {getHelperMessage('ageFrom')}
-                    </span>
-                </div>
-
-                {/* Gender Radio Buttons */}
-                <div className='gender-box'>
-                    <label>Gender</label>
-                    <div className="d-flex gender-options">
-                        <label className="me-3"><input type='radio' name="gender" value="male" checked={form.gender === 'male'} onChange={handleChange} onBlur={handleBlur} disabled={reduxLoading} /> Male</label>
-                        <label className="me-3"><input type='radio' name="gender" value="female" checked={form.gender === 'female'} onChange={handleChange} onBlur={handleBlur} disabled={reduxLoading} /> Female</label>
-                        <label><input type='radio' name="gender" value="all" checked={form.gender === 'all'} onChange={handleChange} onBlur={handleBlur} disabled={reduxLoading} /> All</label>
-                    </div>
-                    <span className={`input-message ${touched.gender && errors.gender ? 'error' : 'info'}`}>
-                        {getHelperMessage('gender')}
                     </span>
                 </div>
 
@@ -634,7 +523,8 @@ const Userform: React.FC = () => {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             min="1"
-                            disabled={reduxLoading} // Disable during submission
+                            disabled={loading} // Disable during submission
+                            onWheel={(e) => e.currentTarget.blur()} // Prevent scroll effect
                         />
                     </div>
                     <span className={`input-message ${touched.dailyBudget && errors.dailyBudget ? 'error' : 'info'}`}>
@@ -653,8 +543,8 @@ const Userform: React.FC = () => {
                             value={form.startDate}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            min={new Date().toISOString().split('T')[0]}
-                            disabled={reduxLoading} // Disable during submission
+                            min={new Date().toISOString().split('T')[0]} // Min date is today
+                            disabled={loading} // Disable during submission
                         />
                         <span className='mx-2'>to</span>
                         <input
@@ -664,8 +554,8 @@ const Userform: React.FC = () => {
                             value={form.endDate}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            min={form.startDate || new Date().toISOString().split('T')[0]}
-                            disabled={reduxLoading} // Disable during submission
+                            min={form.startDate || new Date().toISOString().split('T')[0]} // Min date is start date or today
+                            disabled={loading} // Disable during submission
                         />
                     </div>
                     <span className={`input-message ${touched.endDate && errors.endDate ? 'error' : 'info'}`}>
@@ -687,7 +577,8 @@ const Userform: React.FC = () => {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             min="0"
-                            disabled={reduxLoading} // Disable during submission
+                            disabled={loading} // Disable during submission
+                            onWheel={(e) => e.currentTarget.blur()} // Prevent scroll effect
                         />
                     </div>
                     <span className={`input-message ${touched.estimatedBudget && errors.estimatedBudget ? 'error' : 'info'}`}>
@@ -695,40 +586,7 @@ const Userform: React.FC = () => {
                     </span>
                 </div>
 
-                {/* Placing Radio Buttons */}
-                <div className='placing-box'>
-                    <label>Placing</label>
-                    <div className="placing-options d-flex">
-                        <label className="placing-option me-3">
-                            <input
-                                type="radio"
-                                name="placingRadio"
-                                value="top"
-                                checked={form.placing.includes('top')}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                disabled={reduxLoading} // Disable during submission
-                            />
-                            Top
-                        </label>
-
-                        <label className="placing-option">
-                            <input
-                                type="radio"
-                                name="placingRadio"
-                                value="bottom"
-                                checked={form.placing.includes('bottom')}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                disabled={reduxLoading} // Disable during submission
-                            />
-                            Bottom
-                        </label>
-                    </div>
-                    <span className={`input-message ${touched.placing && errors.placing ? 'error' : 'info'}`}>
-                        {getHelperMessage('placing')}
-                    </span>
-                </div>
+                {/* Removed 'Placing' section */}
 
                 {/* Preview Button */}
                 <div className='preview-box'>
@@ -736,11 +594,11 @@ const Userform: React.FC = () => {
                     <button
                         className='preview-button'
                         onClick={handlePopup}
-                        aria-label="Preview Ad"
+                        aria-label="View Preview"
                         type="button"
-                        disabled={reduxLoading} // Disable during submission
+                        disabled={loading} // Disable during submission
                     >
-                        <i className="bi bi-eye-fill"></i>
+                        View Preview<i className="bi bi-eye-fill ms-2"></i>
                     </button>
                 </div>
 
@@ -749,34 +607,29 @@ const Userform: React.FC = () => {
                     <button
                         className='discard-button'
                         type="button"
-                        onClick={() => {
-                            setForm({
-                                title: '', description: '', callToAction: '', link: '',
-                                location: '', allIndia: false, ageFrom: '', ageTo: '',
-                                gender: '', dailyBudget: '', startDate: '', endDate: '',
-                                estimatedBudget: '', placing: [], file: null,
-                            });
-                            setErrors({});
-                            setTouched({});
-                            setUploadProgress(0); // Reset upload progress on discard
-                        }}
-                        disabled={reduxLoading} // Disable during submission
+                        onClick={handleDiscard}
+                        disabled={loading} // Disable during submission
                     >
                         Discard
                     </button>
                     <button
                         className='submit-button'
                         type="button"
-                        disabled={!isFormValid() || reduxLoading} // Disable if invalid or loading
+                        disabled={isPublishDisabled} // Disable if invalid or loading
                         style={{
-                            opacity: (!isFormValid() || reduxLoading) ? 0.5 : 1,
-                            cursor: (!isFormValid() || reduxLoading) ? 'not-allowed' : 'pointer'
+                            opacity: isPublishDisabled ? 0.5 : 1,
+                            cursor: isPublishDisabled ? 'not-allowed' : 'pointer'
                         }}
                         onClick={handleSubmit}
                     >
-                        {reduxLoading ? 'Submitting...' : 'Submit'}
+                        {loading ? 'Publishing...' : 'Publish'} {/* Text changed to 'Publish' */}
                     </button>
                 </div>
+
+                {/* Local API Call Feedback */}
+                {apiError && <p style={{ color: 'red', marginTop: '15px', textAlign: 'center' }}>Error: {apiError}</p>}
+                {successMessage && <p style={{ color: 'green', marginTop: '15px', textAlign: 'center' }}>{successMessage}</p>}
+
             </div>
         </div>
     );
