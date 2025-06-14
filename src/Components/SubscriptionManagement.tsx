@@ -9,10 +9,9 @@ import { Subscription } from '../Redux/Reducers/UserMangement'; // Adjust this p
 import Loader from '../../Utils/Loader'; // Adjust this path as needed
 import { showToast } from '../../Utils/Validation'; // Adjust this path as needed
 
-// Define a constant for items per page. This is the 'limit' sent to your API.
+
 const ITEMS_PER_PAGE = 5;
 
-// Helper function to format dates for display.
 const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
     try {
