@@ -166,7 +166,7 @@ const handleFilter=(t:string)=>{
                         </td>
                         <td onClick={() => userInfo(tdata.id)} style={{ display: 'flex' }}>
                           {tdata.image ? (
-                            <img src={tdata.image} alt="avatar" className="rounded-circle me-2" width="30" height="30" />
+                            <img src={tdata.image} alt="avatar" className="rounded-circle me-2" style={{width:'30px',height:'30px',borderRadius:'50%',objectFit:'cover'}} />
                           ) : (
                             <img src={`https://robohash.org/${tdata.username}?size=40x40`} alt="avatar" className="rounded-circle me-2" width="30" height="30" />
                           )}

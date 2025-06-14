@@ -8,6 +8,7 @@ interface PaginationProps {
 
 const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, setPage }) => {
   const handlePageChange = (page: number) => {
+    localStorage.setItem('page',page.toString())
     if (page >= 1 && page <= totalPages) {
       setPage(page);
     }

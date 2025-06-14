@@ -25,7 +25,7 @@ const Profileinformation = () => {
     return <div><Loader/></div>;
   }
   return (
-    <div className='container'>
+    <div className='container' style={{marginTop:'60px',marginBottom:'30px'}}>
         <Profiledata />
         <Socialdata />
         <Postdata />

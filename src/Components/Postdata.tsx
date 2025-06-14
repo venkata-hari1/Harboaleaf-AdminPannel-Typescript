@@ -25,13 +25,13 @@ const Postdata = () => {
     switch (activeTab) {
       case 'Posts':
   return (
-    <div className="post-content">
+    <div className="post-content" style={{display:'grid',gridTemplateColumns:'30% 30% 30%',gridGap:'2%',width:'100%'}}>
       {Array.isArray(socialUser.posts) && socialUser.posts.length > 0 ? (
         socialUser.posts.map((post: any, index: number) => (
           <div key={post._id || index}>
-            <p>{post.text || 'No content'}</p>
+      
             {post.files?.map((file: {file:string}, i: number) => (
-              <img key={i} src={file.file} alt="Post media" width="300px" />
+              <img key={i} src={file.file} alt="Post media" style={{width:'100%',height:'100%',objectFit:'cover'}} />
             ))}
           </div>
         ))
@@ -43,28 +43,20 @@ const Postdata = () => {
 
       case 'Vibes':
         return (
-          <div className="post-content">
+          <div className="post-content" style={{display:'grid',gridTemplateColumns:'30% 30% 30%',gridGap:'2%',width:'100%'}}>
             {Array.isArray(socialUser.reels) && socialUser.reels.length > 0 ? (
               socialUser.reels.map((reel: any, index: number) => (
                 <div key={reel._id || index} className="reel-item">
-                  {reel.text && <p className="reel-text">{reel.text}</p>}
-                  <p>Likes: {reel.likes?.length || 0}</p>
-                  <p>Dislikes: {reel.dislikes?.length || 0}</p>
-                  <p>Comments: {reel.comments?.length || 0}</p>
-
-                  {Array.isArray(reel.comments) && reel.comments.length > 0 && (
-                    <ul>
-                      {reel.comments.map((comment: any, cIndex: number) => (
-                        <li key={cIndex}>
-                          {comment?.user?.firstname} {comment?.user?.lastname}: {comment?.text || 'No comment text'}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
                   {Array.isArray(reel.files) && reel.files.length > 0 ? (
                     reel.files.map((file: {file:string}, fIndex: number) => (
-                      <img key={fIndex} src={file.file} alt="Reel media" width="287px" height="495px" />
+                      <video
+                      key={fIndex}
+                      src={file.file}
+                      controls
+                      muted
+                      loop
+                      style={{width:'100%', borderRadius: "10px", }}
+                    />
                     ))
                   ) : (
                     <p>No media available</p>
@@ -78,12 +70,10 @@ const Postdata = () => {
         );
         case 'Tag':
           return (
-            <div className="post-content">
+            <div className="post-content" style={{display:'grid',gridTemplateColumns:'30% 30% 30%',gridGap:'2%',width:'100%'}}>
               {socialUser?.Tagged_Posts && socialUser?.Tagged_Posts?.targetId ? (
                 <div className="tagged-post-item">
-                  {socialUser.Tagged_Posts.targetId.text && (
-                    <p>{socialUser.Tagged_Posts.targetId.text}</p>
-                  )}
+        
         
                   {socialUser.Tagged_Posts.targetId.files?.length > 0 ? (
                     socialUser.Tagged_Posts.targetId.files.map((file, index) => (
@@ -91,7 +81,7 @@ const Postdata = () => {
                         key={index}
                         src={file.file}
                         alt="Tagged post media"
-                        width="300px"
+                        style={{width:'100%',height:'100%'}}
                       />
                     ))
                   ) : (
@@ -119,7 +109,7 @@ const Postdata = () => {
             {pvtdata.map((data) => (
               <li
                 key={data.id}
-                style={{marginRight:'10px'}}
+                style={{textAlign:'center',color:activeTab === data.title ?'rgb(56, 86, 243)':'',marginRight:'10px'}}
                 className={`tab-item ${activeTab === data.title ? 'active' : ''}`}
                 onClick={() => handleTabClick(data.title)}
               >

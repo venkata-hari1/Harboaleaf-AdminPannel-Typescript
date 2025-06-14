@@ -55,10 +55,11 @@ export const Subscription = createAsyncThunk(
 
 export const UserReports = createAsyncThunk(
   "UserReports",
-  async (page: string | number, { fulfillWithValue, rejectWithValue }) => {
+  async (payload: { data: { page: number | string, sort: string, filter: string } }, { fulfillWithValue, rejectWithValue }) => {
     try {
+      const {data}=payload
       const { response, error } = await networkCall(
-        `${endpoints.REPORTS}?page=${page}`,
+        `${endpoints.REPORTS}?page=${data.page}sortField=type&sortOrder=${data.sort}`,
         "GET"
       );
       if (response) {
@@ -83,7 +84,7 @@ export const UserSuspended = createAsyncThunk(
       );
       if (response) {
         const data = {
-          page: 1,
+          page: localStorage.getItem('page') || 1,
           sort: 'desc',
           filter: ''
         };
