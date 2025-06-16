@@ -9,7 +9,6 @@ import { Provider } from 'react-redux';
 import { store } from './Redux/store/Store.js';
 import { ToastContainer } from 'react-toastify';
 import 'react-loading-skeleton/dist/skeleton.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 const rootElement = document.getElementById('root');
 if (rootElement) {
   createRoot(rootElement).render(

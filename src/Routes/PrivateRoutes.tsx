@@ -25,11 +25,13 @@ const PrivateRoutes = () => {
           <MobileHeader/>
         <div className='grid-container'>
             <div className='sidebar'>
-                <Verticalnavigation />
+                <Verticalnavigation  />
             </div>
             <div>
                 <Header/>
+              
                 <div style={{padding:'10px'}}>
+               
                 <Routes>
                 <Route path='admin-pannel' element={<AdminPannel />} />
                     <Route path='user-management' element={<Usermanagement />} />

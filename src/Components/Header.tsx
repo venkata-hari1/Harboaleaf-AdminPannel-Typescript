@@ -152,9 +152,9 @@ const Header = () => {
            <p>{name}</p> 
         </div>
         <div className='search-notify'>
-        <div className='header-serach'>
+        {(location.pathname!=="/admin/edit-profile" && location.pathname!=="/admin/admgmt" && location.pathname!=='/admin/admgmt/userform') &&<div className='header-serach'>
         <input type={pathanme==="/admin/admin-pannel"?'number':'text'} value={search} name='year' onChange={(e)=>setSearch(e.target.value)} placeholder={pathanme==="/admin/admin-pannel"?'Search with year...':'Search with State'} id='header-input'/><i className="bi bi-search" onClick={handleSearch}></i> 
-        </div>
+        </div>}
 
         {/* <div className='header-notify'>
           <button id="notify-button" ><i className="bi bi-bell-fill "></i></button>

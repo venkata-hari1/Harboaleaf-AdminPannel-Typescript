@@ -419,6 +419,62 @@ export const Admin_Dashboard = createAsyncThunk(
     }
   }
 );
+export const AdminUpdateProfile = createAsyncThunk(
+  'AdminUpdateProfile',
+  async (
+    payload: { data: { firstname: string; mobile:string } },
+    { fulfillWithValue, rejectWithValue, dispatch }
+  ) => {
+    try {
+      const { data } = payload
+      const response = await fetch(`${baseURL}${endpoints.updateProfile}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          token: localStorage.getItem('token') || ''
+
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+    
+      if (response) {
+        dispatch(AdminProfile())
+      }
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Suspension failed' });
+    }
+  }
+);
+export const AdminUploadProfileImage = createAsyncThunk(
+  'AdminUploadProfileImage',
+  async (
+   formData:FormData,
+    { fulfillWithValue, rejectWithValue, dispatch }
+  ) => {
+    try {    
+      const response = await fetch(`${baseURL}${endpoints.uploadImage}`, {
+        method: 'PATCH',
+        headers: {
+          token: localStorage.getItem('token') || ''
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        dispatch(AdminProfile()); 
+        return fulfillWithValue(result);
+      } else {
+        return rejectWithValue(result);
+      }
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Upload failed' });
+    }
+  }
+);
 const UserMangement_Slice = createSlice({
   name: "UserMangementSlice",
   initialState,

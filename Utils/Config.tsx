@@ -10,5 +10,7 @@ export const endpoints={
     gstusers:'api/admin/gst_users',
     gstUserReports:'api/admin/gst_reports',
     dashboard:'api/admin/dashboards',
-    adminprofile:'api/admin/admin_profile'
+    adminprofile:'api/admin/admin_profile',
+    updateProfile:'api/admin/admin_update_profile',
+    uploadImage:'api/socialmedia/update_user'
 }
