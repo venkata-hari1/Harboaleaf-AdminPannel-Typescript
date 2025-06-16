@@ -1,0 +1,115 @@
+.delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw; /* Full viewport width */
+    height: 100vh; /* Full viewport height */
+    background-color: rgba(0, 0, 0, 0.7); /* Dark, semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050; /* Ensure it's above most other content */
+    backdrop-filter: blur(3px); /* Optional: Adds a subtle blur effect */
+}
+
+.delete-modal-content {
+    background-color: #1A202C; /* Dark background, matching your existing theme */
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5); /* More pronounced shadow */
+    text-align: center;
+    max-width: 450px; /* Max width for readability */
+    width: 90%; /* Responsive width */
+    color: #E0E0E0; /* Light text color */
+    transform: translateY(0); /* Initial state for animation */
+    opacity: 1; /* Initial state for animation */
+    animation: fadeInScaleUp 0.3s ease-out forwards; /* Simple entrance animation */
+}
+
+@keyframes fadeInScaleUp {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.delete-modal-content h2 {
+    margin-top: 0;
+    color: #FF5A5A; /* Red color for warning/danger */
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    font-family: 'Roboto', sans-serif; /* Ensure consistent font */
+}
+
+.delete-modal-content p {
+    margin-bottom: 30px;
+    font-size: 1rem;
+    line-height: 1.6;
+    font-family: 'Open Sans', sans-serif; /* Ensure consistent font */
+}
+
+.delete-modal-content .item-name-highlight {
+    font-weight: bold;
+    color: #FFD700; /* Gold/yellow for highlighting the item name */
+}
+
+.delete-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Space between buttons */
+}
+
+.delete-modal-cancel-btn,
+.delete-modal-confirm-btn {
+    padding: 12px 25px; /* Slightly larger padding */
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out; /* Smoother transitions */
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    border: none; /* Remove default button border */
+}
+
+.delete-modal-cancel-btn {
+    background: #2D3748; /* Darker gray, matching your theme */
+    color: #E0E0E0;
+    border: 1px solid #4A5568; /* Subtle border */
+}
+
+.delete-modal-cancel-btn:hover {
+    background-color: #3B4553;
+    border-color: #5A6A7D;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.delete-modal-confirm-btn {
+    background-color: #FF5A5A; /* Your primary delete red color */
+    color: #FFFFFF;
+    border: 1px solid #FF5A5A; /* Matching border */
+}
+
+.delete-modal-confirm-btn:hover {
+    background-color: #E53E3E; /* Slightly darker red on hover */
+    border-color: #E53E3E;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive adjustments if needed */
+@media (max-width: 600px) {
+    .delete-modal-content {
+        padding: 20px;
+    }
+    .delete-modal-actions {
+        flex-direction: column; /* Stack buttons vertically on small screens */
+        gap: 10px;
+    }
+    .delete-modal-cancel-btn,
+    .delete-modal-confirm-btn {
+        width: 100%; /* Full width buttons */
+    }
+}

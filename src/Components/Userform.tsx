@@ -1,69 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../Styles/Userform.css';
-import PreviewPopUp from './PreviewPopUp';
+import PreviewPopUp from './PreviewPopUp'; // Ensure this path is correct
 import { endpoints, baseURL } from '../../Utils/Config'; // Ensure baseURL and endpoints are correctly imported
-
-// --- Common Fetch Handler - BROUGHT DIRECTLY INTO THIS FILE ---
-// This function performs the actual API call and handles common logic like headers and error parsing.
-interface FetchResult<T = any, E = any> {
-  response: T | null;
-  error: {
-    status?: number;
-    message: string;
-    data?: E;
-  } | null;
-}
-
-const executeFetch = async <T = any, E = any>(
-  fullUrl: string,
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
-  body?: FormData | object | string,
-): Promise<FetchResult<T, E>> => {
-  const headers: HeadersInit = { 'Accept': 'application/json' };
-  const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
-  if (token) headers['token'] = token;
-
-  const options: RequestInit = { method, headers };
-
-  if (body) {
-    if (body instanceof FormData) {
-      options.body = body; // FormData does not require 'Content-Type' header
-    } else if (typeof body === 'object') {
-      options.body = JSON.stringify(body);
-      headers['Content-Type'] = 'application/json';
-    } else {
-      options.body = body;
-      headers['Content-Type'] = 'text/plain';
-    }
-  } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
-    // For POST/PUT/PATCH requests with no body, still set Content-Type if JSON is expected
-    headers['Content-Type'] = 'application/json';
-  }
-
-  try {
-    const res = await fetch(fullUrl, options);
-    // Attempt to parse JSON response; gracefully handle non-JSON responses
-    const data = await res.json().catch(() => ({ message: res.statusText || "Something went wrong" }));
-
-    if (!res.ok) {
-      // If response is not OK (e.g., 4xx, 5xx status codes)
-      return {
-        response: null,
-        error: { status: res.status, message: data.message || `Error ${res.status}`, data },
-      };
-    }
-    // If response is OK
-    return { response: data, error: null };
-  } catch (err: any) {
-    // Catch network errors or issues during fetch
-    return {
-      response: null,
-      error: { status: 0, message: err.message || "Network error or unexpected issue", data: null },
-    };
-  }
-};
-// --- END executeFetch ---
-
 
 // Define the shape of your form data state, aligned with Figma
 interface FormState {
@@ -71,10 +9,10 @@ interface FormState {
     description: string;
     callToAction: string;
     link: string;
-    dailyBudget: string; // Stored as string from input, converted to number for payload
+    dailyBudget: string; 
     startDate: string;
     endDate: string;
-    estimatedBudget: string; // Stored as string from input, converted to number for payload
+    estimatedBudget: string; 
     file: File | null; // This will be uploaded directly to the backend
 }
 
@@ -84,7 +22,7 @@ const Userform: React.FC = () => {
         title: '',
         description: '',
         callToAction: '',
-        link: '',
+        link: '', // Initialize link
         dailyBudget: '',
         startDate: '',
         endDate: '',
@@ -100,7 +38,6 @@ const Userform: React.FC = () => {
     const [apiError, setApiError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-
     const handlePopup = () => setState(prev => !prev);
 
     // Helper to get ISO string for dates (e.g., "2025-06-12T00:00:00.000Z")
@@ -109,6 +46,25 @@ const Userform: React.FC = () => {
         const [year, month, day] = dateString.split('-').map(Number);
         // Using UTC to avoid timezone issues when sending to backend
         return new Date(Date.UTC(year, month - 1, day, 0, 0, 0)).toISOString();
+    };
+
+    // Helper function to check if a field is considered 'required' for visual valid feedback
+    const isFieldRequired = (name: keyof FormState): boolean => {
+        switch (name) {
+            case 'title':
+            case 'description':
+            case 'callToAction':
+            case 'link': // Link is required
+            case 'dailyBudget':
+            case 'startDate':
+            case 'endDate':
+            case 'file':
+                return true;
+            case 'estimatedBudget':
+                return false; // Estimated budget is optional
+            default:
+                return true; // Default to true for safety
+        }
     };
 
     // --- Validation Logic ---
@@ -139,13 +95,17 @@ const Userform: React.FC = () => {
                 break;
             case 'startDate':
             case 'endDate':
+                // For dates, always validate both if either has a value to catch start > end issues
                 if (currentForm.startDate && currentForm.endDate) {
                     const start = new Date(currentForm.startDate);
                     const end = new Date(currentForm.endDate);
                     if (end <= start) {
                         error = 'End date must be after start date';
                     }
-                } else if (!value.trim()) {
+                }
+                // Also check if required date fields are empty
+                if (!value.trim()) {
+                    // Only show "required" error if the field itself is empty
                     error = `${name === 'startDate' ? 'Start' : 'End'} date is required`;
                 }
                 break;
@@ -171,11 +131,12 @@ const Userform: React.FC = () => {
         if (type === 'file') {
             newVal = files?.[0] || null;
         } else if (type === 'number') {
-            newVal = value === '' ? '' : Number(value); // Keep as string for empty, convert to number otherwise
+            newVal = value === '' ? '' : value; // Keep as string; validation handles parsing
         }
 
         setForm(prev => {
             const updatedForm = { ...prev, [name]: newVal };
+            // Validate the current field immediately to update errors for display
             const error = validate(name as keyof FormState, newVal, updatedForm);
             setErrors(currentErrors => ({ ...currentErrors, [name]: error }));
             return updatedForm;
@@ -189,21 +150,21 @@ const Userform: React.FC = () => {
         const { name } = e.target;
         setTouched(prev => ({ ...prev, [name]: true }));
 
+        // Re-validate the field on blur
         setErrors(prevErrors => {
             const newErrors = { ...prevErrors };
             const fieldName = name as keyof FormState;
-            newErrors[fieldName] = validate(fieldName, form[fieldName], form); // Validate current field
+            newErrors[fieldName] = validate(fieldName, form[fieldName], form);
 
             // Re-validate interdependent fields on blur (only dates remain)
             if (fieldName === 'startDate' || fieldName === 'endDate') {
+                // We need to re-evaluate both dates because changing one affects the other's validity
                 newErrors.startDate = validate('startDate', form.startDate, form);
                 newErrors.endDate = validate('endDate', form.endDate, form);
             }
             return newErrors;
         });
     };
-
-    // Removed handleAllIndiaChange as 'allIndia' and 'location' are removed
 
     const getHelperMessage = (name: keyof FormState): string => {
         const emptyMsgs: Record<keyof FormState, string> = {
@@ -213,24 +174,44 @@ const Userform: React.FC = () => {
             link: 'e.g., https://yourwebsite.com',
             dailyBudget: 'Enter a number > 0',
             startDate: 'Select start date',
-            endDate: 'Must be after start date',
+            endDate: 'Must be after start date', // This will be the initial hint
             estimatedBudget: 'Optional: Cannot be negative',
             file: 'Upload image (<1MB) or video (<2MB)',
         };
-        // Prioritize error messages if field is touched and has an error
+        // Display specific error message if the field has been touched AND has an error
         if (touched[name] && errors[name]) {
             return errors[name] || '';
         }
+        // Otherwise, display the initial helper message
         return emptyMsgs[name];
     };
 
     const getInputClass = (name: keyof FormState): string => {
         const baseClass = 'form-textbox';
-        if (touched[name] && errors[name]) return `${baseClass} has-error`;
+        // If touched AND has an error, apply 'has-error'
+        if (touched[name] && errors[name]) {
+            return `${baseClass} has-error`;
+        }
+
+        // Check if the field has a value (if it's a string, trim it) or is not null for files
+        const fieldValue = form[name];
+        const hasValue = (typeof fieldValue === 'string' && fieldValue.trim() !== '') || (fieldValue !== null && fieldValue !== undefined);
+
+        // If touched, no error, AND (has a value OR is an optional field), apply 'has-valid'
+        if (touched[name] && !errors[name] && (hasValue || !isFieldRequired(name))) {
+            // Special handling for file input: it might be touched and have no error, but still no file selected
+            if (name === 'file' && form.file === null) {
+                return baseClass; // Don't mark as valid if file is still null
+            }
+            return `${baseClass} has-valid`;
+        }
+
+        // Default case
         return baseClass;
     };
 
     // --- Re-run validation for interdependent fields (on form state changes) ---
+    // This useEffect ensures that if you change startDate, endDate error updates without blur, and vice-versa.
     useEffect(() => {
         setErrors(prev => ({
             ...prev,
@@ -239,34 +220,20 @@ const Userform: React.FC = () => {
         }));
     }, [form.startDate, form.endDate]);
 
-    // Removed useEffect for ageFrom/ageTo, location/allIndia, gender/placing as they are removed
-
     // --- Form Validity Check ---
     const isFormValid = (): boolean => {
         const allFormFields: Array<keyof FormState> = Object.keys(form) as Array<keyof FormState>;
         let currentValidationErrors: Partial<Record<keyof FormState, string>> = {};
 
-        // Run validation for all fields that are part of the FormState
+        // Run validation for all fields that are part of the FormState to get all potential errors
         allFormFields.forEach(field => {
             currentValidationErrors[field] = validate(field, form[field], form);
         });
 
         // Check if any field has a validation error
-        const hasErrors = Object.values(currentValidationErrors).some(error => !!error);
+        const hasAnyErrors = Object.values(currentValidationErrors).some(error => !!error);
 
-        // Additionally check for explicitly required fields to not be empty/invalid
-        const requiredFieldsExplicitlyFilled =
-            form.title.trim() !== '' &&
-            form.description.trim() !== '' &&
-            form.callToAction.trim() !== '' &&
-            form.link.trim() !== '' &&
-            Number(form.dailyBudget) > 0 &&
-            form.startDate.trim() !== '' &&
-            form.endDate.trim() !== '' &&
-            form.file !== null && // Ensure a file is selected
-            (form.estimatedBudget === '' || Number(form.estimatedBudget) >= 0); // Estimated budget optional but if filled, valid
-
-        return requiredFieldsExplicitlyFilled && !hasErrors;
+        return !hasAnyErrors; // Form is valid if no errors are found across all fields
     };
 
     // --- Handle Submit ---
@@ -283,10 +250,11 @@ const Userform: React.FC = () => {
         (Object.keys(form) as Array<keyof FormState>).forEach(key => {
             fullFormErrors[key] = validate(key, form[key], form);
         });
-        setErrors(fullFormErrors);
+        setErrors(fullFormErrors); // Update errors state before checking validity
 
-        // 3. Check validity based on the *latest* errors state and explicit checks
-        if (!isFormValid()) {
+        // 3. Check validity based on the *latest* errors state
+        const tempHasErrors = Object.values(fullFormErrors).some(error => !!error);
+        if (tempHasErrors) {
             alert("Please correct the errors in the form before submitting.");
             return; // Stop if form is not valid
         }
@@ -304,7 +272,10 @@ const Userform: React.FC = () => {
             campaignFormData.append('callToAction', form.callToAction);
             campaignFormData.append('link', form.link);
             campaignFormData.append('dailyBudget', form.dailyBudget);
-            campaignFormData.append('estimatedBudget', form.estimatedBudget);
+            // Append estimatedBudget only if it has a value, otherwise backend might expect a number
+            if (form.estimatedBudget !== '') {
+                campaignFormData.append('estimatedBudget', form.estimatedBudget);
+            }
 
             // Append the File object directly
             if (form.file) {
@@ -324,15 +295,28 @@ const Userform: React.FC = () => {
                 console.log(`${pair[0]}:`, pair[1] instanceof File ? `File: ${pair[1].name} (${pair[1].type})` : pair[1]);
             }
 
-            // Directly call executeFetch
-            const { response, error } = await executeFetch(
-                `${baseURL}${endpoints.advertisement}`,
-                "POST",
-                campaignFormData
-            );
+            // Directly using native fetch API
+            const url = `${baseURL}${endpoints.advertisement}`;
+            const headers: HeadersInit = { 'Accept': 'application/json' };
+            const token = localStorage.getItem('token');
+            if (token) headers['token'] = token;
 
-            if (response) {
+            const options: RequestInit = {
+                method: "POST",
+                headers: headers, // Headers explicitly set, but FormData doesn't need Content-Type set manually
+                body: campaignFormData,
+            };
+
+            const res = await fetch(url, options);
+            const data = await res.json().catch(() => ({ message: res.statusText || "Something went wrong" }));
+
+            if (!res.ok) {
+                const errorMessage = data.message || `Error ${res.status}: Failed to create ad campaign.`;
+                setApiError(errorMessage);
+                // showToast(false, errorMessage); // Assuming showToast is available globally or imported
+            } else {
                 setSuccessMessage("Ad Campaign Created Successfully!");
+                // showToast(true, "Ad Campaign Created Successfully!"); // Assuming showToast is available
                 // Reset form on successful submission
                 setForm({
                     title: '', description: '', callToAction: '', link: '',
@@ -344,13 +328,10 @@ const Userform: React.FC = () => {
                 // Manually clear file input element
                 const fileInput = document.getElementById('file1') as HTMLInputElement;
                 if (fileInput) fileInput.value = '';
-            } else {
-                // Handle API error
-                setApiError(error?.message || "Failed to create ad campaign.");
             }
         } catch (err: any) {
-            // Handle unexpected errors (e.g., network issues)
             setApiError(err.message || "An unexpected error occurred during submission.");
+            // showToast(false, err.message || "An unexpected error occurred during submission.");
         } finally {
             setLoading(false); // Stop loading regardless of success or failure
         }
@@ -374,6 +355,7 @@ const Userform: React.FC = () => {
     };
 
     // Determine if the publish button should be disabled
+    // The button should be disabled if loading OR if the form is not completely valid
     const isPublishDisabled = loading || !isFormValid();
 
     return (
@@ -386,7 +368,7 @@ const Userform: React.FC = () => {
                         title: form.title,
                         description: form.description,
                         callToAction: form.callToAction,
-                        link: form.link, // Pass link to preview
+                        link: form.link, // <--- IMPORTANT: Link is now passed to PreviewPopUp
                     }}
                 />
             )}
@@ -407,7 +389,7 @@ const Userform: React.FC = () => {
                         onBlur={handleBlur}
                         disabled={loading} // Disable during submission
                     />
-                    <span className={`input-message ${touched.title && errors.title ? 'error' : 'info'}`}>
+                    <span className={`input-message ${touched.title && errors.title ? 'error' : ''}`}>
                         {getHelperMessage('title')}
                     </span>
                 </div>
@@ -437,9 +419,11 @@ const Userform: React.FC = () => {
                                     className="file-remove"
                                     onClick={() => {
                                         setForm(prev => ({ ...prev, file: null }));
-                                        setErrors(prev => ({ ...prev, file: validate('file', null) }));
+                                        // When file is removed, ensure the error state is re-evaluated immediately
+                                        // Mark as touched to show error immediately if file is required
                                         setTouched(prev => ({ ...prev, file: true }));
-                                        // Manually clear file input
+                                        setErrors(prev => ({ ...prev, file: validate('file', null, form) }));
+                                        // Manually clear file input element
                                         const fileInput = document.getElementById('file1') as HTMLInputElement;
                                         if (fileInput) fileInput.value = '';
                                     }}
@@ -451,7 +435,8 @@ const Userform: React.FC = () => {
                             </div>
                         )}
                     </div>
-                    <span className={`input-message ${touched.file && errors.file ? 'error' : 'info'}`}>
+                    {/* Applying getInputClass to the file input itself for border, but message for text */}
+                    <span className={`input-message ${touched.file && errors.file ? 'error' : ''}`}>
                         {getHelperMessage('file')}
                     </span>
                 </div>
@@ -468,7 +453,7 @@ const Userform: React.FC = () => {
                         onBlur={handleBlur}
                         disabled={loading} // Disable during submission
                     ></textarea>
-                    <span className={`input-message ${touched.description && errors.description ? 'error' : 'info'}`}>
+                    <span className={`input-message ${touched.description && errors.description ? 'error' : ''}`}>
                         {getHelperMessage('description')}
                     </span>
                 </div>
@@ -486,7 +471,7 @@ const Userform: React.FC = () => {
                         onBlur={handleBlur}
                         disabled={loading} // Disable during submission
                     />
-                    <span className={`input-message ${touched.callToAction && errors.callToAction ? 'error' : 'info'}`}>
+                    <span className={`input-message ${touched.callToAction && errors.callToAction ? 'error' : ''}`}>
                         {getHelperMessage('callToAction')}
                     </span>
                 </div>
@@ -498,13 +483,13 @@ const Userform: React.FC = () => {
                         type="text"
                         id="link"
                         name="link"
-                        className={getInputClass('link')}
+                        className={getInputClass('link')} // This now includes has-valid or has-error
                         value={form.link}
                         onChange={handleChange}
                         onBlur={handleBlur}
                         disabled={loading} // Disable during submission
                     />
-                    <span className={`input-message ${touched.link && errors.link ? 'error' : 'info'}`}>
+                    <span className={`input-message ${touched.link && errors.link ? 'error' : ''}`}>
                         {getHelperMessage('link')}
                     </span>
                 </div>
@@ -512,13 +497,13 @@ const Userform: React.FC = () => {
                 {/* Daily Budget Input */}
                 <div className='budget-box'>
                     <label htmlFor="dailyBudget">Daily Budget</label>
-                    <div className="daily-budget-input-group">
+                    <div className={`daily-budget-input-group ${getInputClass('dailyBudget').includes('has-error') ? 'has-error' : ''} ${getInputClass('dailyBudget').includes('has-valid') ? 'has-valid' : ''}`}>
                         <span className="currency-prefix">Rs.</span>
                         <input
                             type="number"
                             id="dailyBudget"
                             name="dailyBudget"
-                            className={getInputClass('dailyBudget')}
+                            className="form-textbox"
                             value={form.dailyBudget}
                             onChange={handleChange}
                             onBlur={handleBlur}
@@ -527,7 +512,7 @@ const Userform: React.FC = () => {
                             onWheel={(e) => e.currentTarget.blur()} // Prevent scroll effect
                         />
                     </div>
-                    <span className={`input-message ${touched.dailyBudget && errors.dailyBudget ? 'error' : 'info'}`}>
+                    <span className={`input-message ${touched.dailyBudget && errors.dailyBudget ? 'error' : ''}`}>
                         {getHelperMessage('dailyBudget')}
                     </span>
                 </div>
@@ -535,44 +520,53 @@ const Userform: React.FC = () => {
                 {/* Ad Duration Dates */}
                 <div className='date-box'>
                     <label>Ad Duration</label>
-                    <div className='date-pick d-flex align-items-center'>
-                        <input
-                            type="date"
-                            name="startDate"
-                            className={getInputClass('startDate')}
-                            value={form.startDate}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            min={new Date().toISOString().split('T')[0]} // Min date is today
-                            disabled={loading} // Disable during submission
-                        />
-                        <span className='mx-2'>to</span>
-                        <input
-                            type="date"
-                            name="endDate"
-                            className={getInputClass('endDate')}
-                            value={form.endDate}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            min={form.startDate || new Date().toISOString().split('T')[0]} // Min date is start date or today
-                            disabled={loading} // Disable during submission
-                        />
+                    <div className='date-fields-container'> {/* Container for two date inputs */}
+                        <div className='date-input-wrap'> {/* Wrap for Start Date */}
+                            <label htmlFor="startDate" className='date-sub-label'>Start Date</label>
+                            <input
+                                type="date"
+                                id="startDate"
+                                name="startDate"
+                                className={getInputClass('startDate')}
+                                value={form.startDate} // Ensure value is bound
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                min={new Date().toISOString().split('T')[0]} // Min date is today
+                                disabled={loading} // Disable during submission
+                            />
+                        </div>
+                        <div className='date-input-wrap'> {/* Wrap for End Date */}
+                            <label htmlFor="endDate" className='date-sub-label'>End Date</label>
+                            <input
+                                type="date"
+                                id="endDate"
+                                name="endDate"
+                                className={getInputClass('endDate')}
+                                value={form.endDate} // Ensure value is bound
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                min={form.startDate || new Date().toISOString().split('T')[0]} // Min date is start date or today
+                                disabled={loading} // Disable during submission
+                            />
+                        </div>
+                        {/* Error message for dates, will position this below the two inputs */}
+                        <span className={`input-message ${touched.endDate && errors.endDate ? 'error' : ''} date-error-message`}>
+                            {getHelperMessage('endDate')}
+                        </span>
                     </div>
-                    <span className={`input-message ${touched.endDate && errors.endDate ? 'error' : 'info'}`}>
-                        {getHelperMessage('endDate')}
-                    </span>
                 </div>
 
                 {/* Estimated Budget Input */}
                 <div className='budget-box'>
                     <label htmlFor="estimatedBudget">Estimated Budget</label>
-                    <div className="daily-budget-input-group">
+                    <div className={`daily-budget-input-group ${getInputClass('estimatedBudget').includes('has-error') ? 'has-error' : ''} ${getInputClass('estimatedBudget').includes('has-valid') ? 'has-valid' : ''}`}>
                         <span className="currency-prefix">Rs.</span>
                         <input
                             type="number"
                             id="estimatedBudget"
                             name="estimatedBudget"
-                            className={getInputClass('estimatedBudget')}
+                            
+                            className="form-textbox"
                             value={form.estimatedBudget}
                             onChange={handleChange}
                             onBlur={handleBlur}
@@ -581,12 +575,10 @@ const Userform: React.FC = () => {
                             onWheel={(e) => e.currentTarget.blur()} // Prevent scroll effect
                         />
                     </div>
-                    <span className={`input-message ${touched.estimatedBudget && errors.estimatedBudget ? 'error' : 'info'}`}>
+                    <span className={`input-message ${touched.estimatedBudget && errors.estimatedBudget ? 'error' : ''}`}>
                         {getHelperMessage('estimatedBudget')}
                     </span>
                 </div>
-
-                {/* Removed 'Placing' section */}
 
                 {/* Preview Button */}
                 <div className='preview-box'>
@@ -596,7 +588,7 @@ const Userform: React.FC = () => {
                         onClick={handlePopup}
                         aria-label="View Preview"
                         type="button"
-                        disabled={loading} // Disable during submission
+                        disabled={loading} 
                     >
                         View Preview<i className="bi bi-eye-fill ms-2"></i>
                     </button>
@@ -608,7 +600,7 @@ const Userform: React.FC = () => {
                         className='discard-button'
                         type="button"
                         onClick={handleDiscard}
-                        disabled={loading} // Disable during submission
+                        disabled={loading} 
                     >
                         Discard
                     </button>
@@ -626,7 +618,7 @@ const Userform: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Local API Call Feedback */}
+             
                 {apiError && <p style={{ color: 'red', marginTop: '15px', textAlign: 'center' }}>Error: {apiError}</p>}
                 {successMessage && <p style={{ color: 'green', marginTop: '15px', textAlign: 'center' }}>{successMessage}</p>}
 

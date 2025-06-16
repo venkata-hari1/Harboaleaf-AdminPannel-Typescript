@@ -6,5 +6,8 @@ export const endpoints={
     Suspended:'api/admin/suspend',
     subscription:'api/admin/subscription',
     advertisement:'api/admin/create_ad_campaign',
-    moniteradvertisement:'api/admin/get_all_campaigns'
+    moniteradvertisement:'api/admin/get_all_campaigns',
+    deletead: 'api/admin/delete_ad_campaign',
+    updatead:'api/admin//update_ad_campaign',
+    getad:'api/admin/get_ad_camaign'
 }

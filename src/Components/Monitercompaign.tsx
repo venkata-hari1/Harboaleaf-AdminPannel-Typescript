@@ -1,77 +1,14 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import Pagination from './Pagination';
-import Actions from './ActionBtns/Actions';
 import Loader from '../../Utils/Loader';
 import { showToast } from '../../Utils/Validation';
-import { endpoints, baseURL } from '../../Utils/Config'; // Ensure baseURL and endpoints are correctly imported
-
-// --- Common Fetch Handler - BROUGHT DIRECTLY INTO THIS FILE ---
-// This function performs the actual API call and handles common logic like headers and error parsing.
-// Defined outside the component to be accessible by useCallback without being redefined on every render.
-interface FetchResult<T = any, E = any> {
-  response: T | null;
-  error: {
-    status?: number;
-    message: string;
-    data?: E;
-  } | null;
-}
-
-const executeFetch = async <T = any, E = any>(
-  fullUrl: string,
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
-  body?: FormData | object | string,
-): Promise<FetchResult<T, E>> => {
-  const headers: HeadersInit = { 'Accept': 'application/json' };
-  const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
-  if (token) headers['token'] = token;
-
-  const options: RequestInit = { method, headers };
-
-  if (body) {
-    if (body instanceof FormData) {
-      options.body = body; // FormData does not require 'Content-Type' header
-    } else if (typeof body === 'object') {
-      options.body = JSON.stringify(body);
-      headers['Content-Type'] = 'application/json';
-    } else {
-      options.body = body;
-      headers['Content-Type'] = 'text/plain';
-    }
-  } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
-    // For POST/PUT/PATCH requests with no body, still set Content-Type if JSON is expected
-    headers['Content-Type'] = 'application/json';
-  }
-
-  try {
-    const res = await fetch(fullUrl, options);
-    // Attempt to parse JSON response; gracefully handle non-JSON responses
-    const data = await res.json().catch(() => ({ message: res.statusText || "Something went wrong" }));
-
-    if (!res.ok) {
-      // If response is not OK (e.g., 4xx, 5xx status codes)
-      return {
-        response: null,
-        error: { status: res.status, message: data.message || `Error ${res.status}`, data },
-      };
-    }
-    // If response is OK
-    return { response: data, error: null };
-  } catch (err: any) {
-    // Catch network errors or issues during fetch
-    return {
-      response: null,
-      error: { status: 0, message: err.message || "Network error or unexpected issue", data: null },
-    };
-  }
-};
-// --- END executeFetch ---
-
+import { endpoints, baseURL } from '../../Utils/Config'; // Import your configured endpoints
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const ITEMS_PER_PAGE = 5;
 
-// Define interfaces for the data structure expected from the API
 interface AdDuration {
     startDate: string;
     endDate: string;
@@ -80,13 +17,16 @@ interface AdDuration {
 interface Campaign {
     _id: string;
     title: string;
+    description?: string;
+    callToAction?: string;
+    link?: string;
+    // Assuming 'file' in the Campaign interface means a URL to the file,
+    // as it's typically fetched as a string from the backend, not a File object.
+    file?: string; // Changed to string as typically backend returns file URL
     status: string;
     dailyBudget?: number;
     eliminatedBudget?: number;
     adDuration?: AdDuration;
-    // Add other fields as per your API response for campaigns
-    // impressions: number; // If API provides
-    // engagementRate: number; // If API provides
 }
 
 interface MonitorCampaignsApiResponse {
@@ -101,66 +41,191 @@ const formatDate = (dateString: string | null | undefined) => {
     return isNaN(date.getTime())
         ? dateString
         : date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+          });
 };
 
-const Monitercompaign = () => {
-    const [id, setId] = useState<string | null>(null); // Changed to string for _id
+const Monitercompaign: React.FC = () => {
+    const [openActionId, setOpenActionId] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [campaignsData, setCampaignsData] = useState<Campaign[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
     const [apiError, setApiError] = useState<string | null>(null);
 
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [campaignToDeleteId, setCampaignToDeleteId] = useState<string | null>(null);
+
     const navigate = useNavigate();
 
-    // Memoize the fetchData function to prevent unnecessary re-creations
+    const actionButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+    const dropdownRef = useRef<HTMLUListElement>(null);
+
     const fetchData = useCallback(async (page: number, limit: number) => {
         setLoading(true);
-        setApiError(null); // Clear previous errors
+        setApiError(null);
 
-        // Corrected endpoint: endpoints.moniteradvertisement
         const url = `${baseURL}${endpoints.moniteradvertisement}?page=${page}&limit=${limit}`;
+        const headers: HeadersInit = { 'Accept': 'application/json' };
+        const token = localStorage.getItem('token');
+        if (token) headers['token'] = token;
+        const options: RequestInit = { method: 'GET', headers };
 
         try {
-            const { response, error } = await executeFetch<MonitorCampaignsApiResponse>(url, 'GET');
+            const res = await fetch(url, options);
+            const data: MonitorCampaignsApiResponse = await res.json().catch(() => ({
+                data: [],
+                totalCount: 0,
+                message: res.statusText || "Something went wrong parsing response"
+            }));
 
-            if (response) {
-                setCampaignsData(response.data);
-                setTotalCount(response.totalCount);
-                if (response.totalCount === 0) {
-                    showToast(false, "No campaigns found for the current page.");
-                }
-            } else {
-                setApiError(error?.message || "Failed to fetch campaigns.");
-                showToast(false, error?.message || "Failed to fetch campaigns.");
-                setCampaignsData([]); // Clear data on error
+            if (!res.ok) {
+                const errorMessage = data.message || `Error ${res.status}: Failed to fetch campaigns.`;
+                setApiError(errorMessage);
+                showToast(false, errorMessage);
+                setCampaignsData([]);
                 setTotalCount(0);
+            } else {
+                setCampaignsData(data.data);
+                setTotalCount(data.totalCount);
+                if (data.totalCount === 0 && page === 1) {
+                    showToast(false, "No campaigns found.");
+                }
             }
         } catch (err: any) {
-            setApiError(err.message || "An unexpected error occurred while fetching campaigns.");
-            showToast(false, err.message || "An unexpected error occurred while fetching campaigns.");
-            setCampaignsData([]); // Clear data on error
+            const errorMessage = err.message || "An unexpected network error occurred while fetching campaigns.";
+            setApiError(errorMessage);
+            showToast(false, errorMessage);
+            setCampaignsData([]);
             setTotalCount(0);
         } finally {
             setLoading(false);
         }
-    }, []); // Empty dependency array means this function is created once
+    }, [endpoints.moniteradvertisement, baseURL]);
 
     useEffect(() => {
         fetchData(currentPage, ITEMS_PER_PAGE);
-    }, [currentPage, fetchData]); // Depend on currentPage and fetchData
+    }, [currentPage, fetchData]);
+
+    const handleEditCampaign = useCallback(async (campaignId: string) => {
+        setLoading(true);
+        setApiError(null);
+        setOpenActionId(null);
+
+        // --- IMPORTANT: Using 'getad' with the backend's exact spelling 'camaign' ---
+        const url = `${baseURL}${endpoints.getad}/${campaignId}`;
+        const headers: HeadersInit = { 'Accept': 'application/json' };
+        const token = localStorage.getItem('token');
+        if (token) headers['token'] = token;
+        const options: RequestInit = { method: 'GET', headers };
+
+        try {
+            const res = await fetch(url, options);
+            const data = await res.json();
+
+            if (!res.ok) {
+                const errorMessage = data.message || `Error ${res.status}: Failed to fetch campaign for edit.`;
+                showToast(false, errorMessage);
+            } else {
+                // Assuming data.data contains the single campaign object
+                navigate('admin/admgmt/userform', { state: { campaignData: data.data } });
+            }
+        } catch (err: any) {
+            const errorMessage = err.message || "Network error while fetching campaign for edit.";
+            showToast(false, errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    }, [navigate, endpoints.getad, baseURL]);
+
+    const handleDeleteClick = useCallback((campaignId: string) => {
+        setCampaignToDeleteId(campaignId);
+        setShowDeleteConfirm(true);
+        setOpenActionId(null);
+    }, []);
+
+    const confirmDelete = useCallback(async () => {
+        if (!campaignToDeleteId) return;
+
+        setLoading(true);
+        setShowDeleteConfirm(false);
+        setApiError(null);
+
+        const url = `${baseURL}${endpoints.deletead}/${campaignToDeleteId}`;
+        const headers: HeadersInit = { 'Accept': 'application/json' };
+        const token = localStorage.getItem('token');
+        if (token) headers['token'] = token;
+        const options: RequestInit = { method: 'DELETE', headers };
+
+        try {
+            const res = await fetch(url, options);
+            const data = await res.json().catch(() => ({ message: res.statusText || "Something went wrong" }));
+
+            if (!res.ok) {
+                const errorMessage = data.message || `Error ${res.status}: Failed to delete campaign.`;
+                showToast(false, errorMessage);
+            } else {
+                showToast(true, data.message || "Campaign deleted successfully!");
+                fetchData(currentPage, ITEMS_PER_PAGE);
+            }
+        } catch (err: any) {
+            const errorMessage = err.message || "Network error while deleting campaign.";
+            showToast(false, errorMessage);
+        } finally {
+            setLoading(false);
+            setCampaignToDeleteId(null);
+        }
+    }, [campaignToDeleteId, currentPage, fetchData, endpoints.deletead, baseURL]);
+
+    const cancelDelete = useCallback(() => {
+        setShowDeleteConfirm(false);
+        setCampaignToDeleteId(null);
+    }, []);
 
     const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE) || 1;
 
-    const handleOpen = (campaignId: string) => { // Changed type to string
-        setId((prev) => (prev === campaignId ? null : campaignId));
+    const handleToggleActions = (campaignId: string) => {
+        setOpenActionId((prev) => (prev === campaignId ? null : campaignId));
     };
 
-    const handleAdd = () => navigate('/admin/admgmt');
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const clickedButton = actionButtonRefs.current[openActionId || ''];
+            if (openActionId && dropdownRef.current && clickedButton) {
+                if (!dropdownRef.current.contains(event.target as Node) && !clickedButton.contains(event.target as Node)) {
+                    setOpenActionId(null);
+                }
+            }
+        };
+
+        const timer = setTimeout(() => {
+            document.addEventListener('mousedown', handleClickOutside);
+        }, 0);
+
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [openActionId]);
+
+    const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+
+    useEffect(() => {
+        if (openActionId && actionButtonRefs.current[openActionId]) {
+            const button = actionButtonRefs.current[openActionId];
+            if (button) {
+                const rect = button.getBoundingClientRect();
+                setDropdownPosition({
+                    top: rect.bottom + window.scrollY + 5,
+                    left: rect.left + window.scrollX,
+                });
+            }
+        } else {
+            setDropdownPosition(null);
+        }
+    }, [openActionId]);
 
     return (
         <div className='container'>
@@ -169,8 +234,8 @@ const Monitercompaign = () => {
                     Filter
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                         className="bi bi-funnel-fill ms-2" viewBox="0 0 16 16">
-                        <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 
-                            8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 
+                        <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10
+                            8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1
                             6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5z" />
                     </svg>
                 </button>
@@ -217,8 +282,8 @@ const Monitercompaign = () => {
                                     <td>{formatDate(tdata.adDuration?.startDate)}</td>
                                     <td>{formatDate(tdata.adDuration?.endDate)}</td>
                                     <td>{tdata.status || 'N/A'}</td>
-                                    <td>{'N/A'}</td> {/* Replace with actual data if API provides */}
-                                    <td>{'N/A'}</td> {/* Replace with actual data if API provides */}
+                                    <td>{'N/A'}</td>
+                                    <td>{'N/A'}</td>
                                     <td>
                                         {tdata.eliminatedBudget
                                             ? `₹${tdata.eliminatedBudget.toLocaleString('en-IN')}`
@@ -226,17 +291,16 @@ const Monitercompaign = () => {
                                             ? `₹${tdata.dailyBudget.toLocaleString('en-IN')}`
                                             : 'N/A'}
                                     </td>
-                                    <td>
+                                    <td className="position-relative">
                                         <button
-                                            onClick={() => handleOpen(tdata._id)}
+                                            ref={el => actionButtonRefs.current[tdata._id] = el}
+                                            onClick={() => handleToggleActions(tdata._id)}
                                             className="btn dropdown-toggle border"
                                             type="button"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false"
+                                            aria-expanded={openActionId === tdata._id}
                                         >
                                             Actions
                                         </button>
-                                        {id === tdata._id && <Actions />}
                                     </td>
                                 </tr>
                             ))
@@ -257,11 +321,56 @@ const Monitercompaign = () => {
                 setPage={setCurrentPage}
             />
 
-            <div className='d-flex justify-content-end mt-4'>
-                <button className='btn btn-success' style={{ backgroundColor: '#28a745', fontFamily: 'Roboto' }} onClick={handleAdd}>
-                    Add Campaigns
-                </button>
-            </div>
+            {openActionId && dropdownPosition && ReactDOM.createPortal(
+                <ul
+                    ref={dropdownRef}
+                    className="action-dropdown-menu show"
+                    style={{
+                        position: 'absolute',
+                        top: dropdownPosition.top,
+                        left: dropdownPosition.left,
+                        minWidth: '120px',
+                        padding: '5px 0',
+                        margin: '0',
+                        fontSize: '1rem',
+                        color: '#212529',
+                        textAlign: 'left',
+                        listStyle: 'none',
+                        backgroundColor: '#fff',
+                        backgroundClip: 'padding-box',
+                        border: '1px solid rgba(0, 0, 0, 0.15)',
+                        borderRadius: '.25rem',
+                        zIndex: 2000,
+                        boxShadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.175)',
+                    }}
+                >
+                    <li>
+                        <button
+                            className="dropdown-item"
+                            onClick={(e) => { e.stopPropagation(); handleEditCampaign(openActionId); }}
+                        >
+                            Edit
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            className="dropdown-item"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(openActionId); }}
+                        >
+                            Delete
+                        </button>
+                    </li>
+                </ul>,
+                document.body
+            )}
+
+            {showDeleteConfirm && (
+                <DeleteConfirmationModal
+                    onConfirm={confirmDelete}
+                    onCancel={cancelDelete}
+                    itemName={campaignsData.find(c => c._id === campaignToDeleteId)?.title || "this advertisement"}
+                />
+            )}
         </div>
     );
 };

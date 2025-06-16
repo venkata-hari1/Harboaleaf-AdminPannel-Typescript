@@ -35,7 +35,7 @@ body {
 .link-box, /* Keep link-box here, it's a direct input group */
 .budget-box,
 .date-box, /* Date box itself is a grid item */
-.elimination-box,
+.elimination-box, /* Ensure this is here if used, otherwise remove */
 .preview-box {
     display: grid;
     grid-template-columns: 200px 1fr; /* Fixed width for label column, 1fr for input */
@@ -48,7 +48,7 @@ body {
 
 /* General label styles */
 .form-wrapper label {
-    font-size: 15px; /* Reverted to 20px as per previous discussions/typical usage for main labels */
+    font-size: 15px;
     font-weight: 500;
     color: #C0C0C0; /* Light grey for labels */
     white-space: nowrap; /* Prevent labels from wrapping */
@@ -62,11 +62,11 @@ body {
     height: 40px; /* Standard input height */
     padding: 0 12px; /* Adjusted padding to be consistent */
     border-radius: 5px; /* Slightly less rounded than wrapper */
-    border: 1px solid #4A5568; /* Subtle border color */
-    background: #2D3748; /* Input background */
+    border: 1px solid #4A5568; /* Default subtle border color */
+    background: #2D3748; /* Input background - Ensure this is the correct dark background */
     color: #E0E0E0; /* Text color inside inputs */
     box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; /* Add background-color to transition */
 }
 
 /* Specific styles for different input types */
@@ -83,13 +83,6 @@ textarea.form-textbox {
     box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3); /* Subtle glow on focus */
     background-color: #3B4553; /* Slightly lighter background on focus */
 }
-/* Apply focus style to the group for budget inputs */
-.daily-budget-input-group:focus-within,
-.estimated-budget-input-group:focus-within {
-    border-color: #3856F3;
-    box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3);
-}
-
 
 /* Placeholder color */
 input::placeholder,
@@ -100,7 +93,7 @@ textarea::placeholder {
 
 /* --- Helper/Error Messages (Inline below input) --- */
 .input-message {
-    color: #fff;
+    color: #fcfcfc; /* Default text color (almost white) */
     position: absolute;
     top: calc(100% - 20px); /* Position just above the bottom of the grid row */
     left: 220px; /* Aligned with the start of the input column (200px label + 20px gap) */
@@ -114,18 +107,48 @@ textarea::placeholder {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: #fcfcfc; /* Default info color */
 }
 
 .input-message.error {
-    color: #FF5A5A; /* Clear red for errors */
+    color: #FF5A5A; /* Clear red for errors when 'error' class is present */
     font-weight: 500;
 }
 
-/* Highlight border on error */
+/* --- Validation State Borders and Backgrounds --- */
+/* Highlight border AND background on error */
 .has-error {
-    border-color: #FF5A5A !important;
+    border-color: #FF5A5A !important; /* Clear red for errors */
+    background-color: #2D3748 !important; /* Keep background dark on error */
 }
+
+/* Highlight border AND background on valid input (after touched) */
+.has-valid {
+    border-color: #3856F3 !important; /* Changed to blue for valid input */
+    background-color: #2D3748 !important; /* Keep background dark on valid */
+}
+
+/* Apply focus style to the group for budget inputs */
+.daily-budget-input-group:focus-within,
+.estimated-budget-input-group:focus-within {
+    border-color: #3856F3;
+    box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3);
+}
+
+/* Apply error/valid classes to budget input groups for consistent styling */
+/* IMPORTANT: These need !important for background as well if the inner input overrides it */
+.daily-budget-input-group.has-error {
+    border-color: #FF5A5A !important;
+    background-color: #2D3748 !important; /* Ensure background stays dark */
+}
+.daily-budget-input-group.has-valid {
+    border-color: #3856F3 !important; /* Changed to blue */
+    background-color: #2D3748 !important; /* Ensure background stays dark */
+}
+/* Ensure the inner input of the daily-budget-input-group maintains background */
+.daily-budget-input-group .form-textbox {
+    background: none; /* Already set to none, so it inherits from parent */
+}
+
 
 /* --- Specific Input Group Styles --- */
 
@@ -174,7 +197,7 @@ textarea::placeholder {
     padding: 6px 10px;
     font-size: 13px;
     color: #E0E0E0;
-    background-color: #2D3748;
+    background-color: #2D3748; /* Consistent background */
     max-width: 200px;
     overflow: hidden;
     white-space: nowrap;
@@ -213,15 +236,16 @@ textarea::placeholder {
     align-items: center;
     border: 1px solid #4A5568;
     border-radius: 5px;
-    background: #2D3748;
+    background: #2D3748; /* Ensure this background is consistent */
     height: 40px;
     overflow: hidden;
     box-sizing: border-box;
     max-width: 200px; /* Keeps these budget inputs at 200px */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; /* Add background-color to transition */
 }
 
 .daily-budget-input-group .currency-prefix {
-    background: #2D3748;
+    background: #2D3748; /* Should match parent */
     color: #E0E0E0;
     padding: 0 12px;
     font-size: 14px;
@@ -234,20 +258,19 @@ textarea::placeholder {
 
 .daily-budget-input-group .form-textbox {
     border: none;
-    background: none;
+    background: none; /* Important: this makes it inherit background from parent (.daily-budget-input-group) */
     flex-grow: 1;
     padding: 0 12px;
     height: 100%;
     max-width: none;
 }
 
-/* Ad Duration (Date Pickers) - MODIFIED FOR FIGMA DESIGN */
+/* Ad Duration (Date Pickers) */
 .date-box .date-fields-container {
     display: flex;
     flex-wrap: wrap; /* Allows stacking on smaller screens */
     gap: 20px; /* Space between start and end date inputs */
     align-items: flex-start; /* Aligns them to the top */
-    /* This container now acts as the content for the 1fr grid column */
 }
 
 .date-box .date-input-wrap {
@@ -255,7 +278,7 @@ textarea::placeholder {
     flex-direction: column; /* Stacks label and input vertically */
     gap: 8px; /* Space between sub-label and input */
     flex: 1; /* Allows each date input block to share space */
-    min-width: px; /* Minimum width for each date input block */
+    min-width: 150px; /* Minimum width for each date input block */
     max-width: 200px; /* Set max-width to 200px to match budget inputs */
 }
 
@@ -273,10 +296,10 @@ textarea::placeholder {
     padding: 0 12px; /* Basic padding */
     border-radius: 5px;
     border: 1px solid #4A5568;
-    background: #2D3748;
+    background: #2D3748; /* Default background for date inputs */
     color: #E0E0E0; /* This color will show the selected date */
     box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; /* Add background-color to transition */
 
     /* Customizing the date input appearance */
     -webkit-appearance: none; /* Remove default browser styling */
@@ -285,14 +308,9 @@ textarea::placeholder {
 
     /* Add padding for the custom calendar icon */
     padding-right: 0px; /* Space for the calendar icon */
-
-    /* SVG for a blue calendar icon */
-    
 }
 
 /* This pseudo-element targets the inner text container of the date input in WebKit browsers */
-/* We set its color to transparent to hide the default "dd-mm-yyyy" text. */
-/* The selected date will still be visible due to the input's main color property. */
 .date-box input[type="date"]::-webkit-datetime-edit {
     color: transparent;
 }
@@ -311,14 +329,24 @@ textarea::placeholder {
     color: #E0E0E0; /* Ensure separators are visible if needed */
 }
 
-
 /* Specific focus style for date inputs */
 .date-box input[type="date"]:focus {
     outline: none;
     border-color: #3856F3;
     box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3);
-    background-color: #3B4553;
+    background-color: #3B4553; /* Slightly lighter on focus */
 }
+
+/* Apply error/valid classes to date inputs */
+.date-box input[type="date"].has-error {
+    border-color: #FF5A5A !important;
+    background-color: #2D3748 !important; /* Keep background dark */
+}
+.date-box input[type="date"].has-valid {
+    border-color: #3856F3 !important; /* Changed to blue */
+    background-color: #2D3748 !important; /* Keep background dark */
+}
+
 
 /* Style for disabled date inputs */
 .date-box input[type="date"]:disabled {
@@ -340,9 +368,8 @@ textarea::placeholder {
     max-width: none;
     text-align: left;
     font-size: 11px;
-    color: #FF5A5A; /* Clear red for errors */
+    /* Color is now managed by .input-message and .input-message.error */
 }
-
 
 /* --- REMOVE SPINNER BUTTONS FOR NUMBER INPUTS --- */
 input[type="number"]::-webkit-inner-spin-button,
@@ -355,6 +382,40 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 /* --- END REMOVE SPINNER BUTTONS --- */
+
+/* Autofill Fix for dark background */
+/* Apply to general form-textbox */
+.form-textbox:-webkit-autofill,
+.form-textbox:-webkit-autofill:hover,
+.form-textbox:-webkit-autofill:focus,
+.form-textbox:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0px 1000px #2D3748 inset !important; /* Force dark background */
+    -webkit-text-fill-color: #E0E0E0 !important; /* Force text color */
+    background-color: #2D3748 !important; /* Fallback */
+    transition: background-color 5000s ease-in-out 0s !important; /* Long transition to prevent flash */
+}
+
+/* Apply to the inner input of the daily-budget-input-group */
+.daily-budget-input-group .form-textbox:-webkit-autofill,
+.daily-budget-input-group .form-textbox:-webkit-autofill:hover,
+.daily-budget-input-group .form-textbox:-webkit-autofill:focus,
+.daily-budget-input-group .form-textbox:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0px 1000px #2D3748 inset !important;
+    -webkit-text-fill-color: #E0E0E0 !important;
+    background-color: #2D3748 !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Apply to date inputs */
+.date-box input[type="date"]:-webkit-autofill,
+.date-box input[type="date"]:-webkit-autofill:hover,
+.date-box input[type="date"]:-webkit-autofill:focus,
+.date-box input[type="date"]:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0px 1000px #2D3748 inset !important;
+    -webkit-text-fill-color: #E0E0E0 !important;
+    background-color: #2D3748 !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+}
 
 
 /* --- Preview Button --- */
@@ -437,7 +498,7 @@ input[type="number"] {
 
 /* --- Responsive Adjustments --- */
 @media (max-width: 830px) {
-    .ad-management-header {
+    .ad-management-header { /* Assuming this header exists in your HTML */
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
@@ -467,8 +528,9 @@ input[type="number"] {
         margin-bottom: 5px;
     }
 
+    /* Input message positioning for mobile */
     .input-message {
-        position: static;
+        position: static; /* Remove absolute positioning on mobile */
         width: 100%;
         max-width: none;
         text-align: left;
@@ -481,7 +543,7 @@ input[type="number"] {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
-        grid-column: 1 / -1;
+        grid-column: 1 / -1; /* Make it span full width if needed */
     }
 
     /* Responsive for date inputs */
@@ -499,8 +561,8 @@ input[type="number"] {
     }
 
     .date-box input[type="date"] {
-        width: 150px; /* Reduced width for the date inputs on mobile */
-        max-width: none;
+        width: 150px; /* Retain original width for the date inputs on mobile if desired */
+        max-width: none; /* Allow it to shrink if container is smaller */
     }
 
     .date-error-message {
@@ -512,7 +574,6 @@ input[type="number"] {
         left: auto; /* Remove fixed left position */
         grid-column: auto; /* Reset grid column */
     }
-
 
     /* Ensure all remaining inputs become full width on mobile */
     .form-textbox,
