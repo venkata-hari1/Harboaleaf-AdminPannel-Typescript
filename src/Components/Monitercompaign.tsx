@@ -4,33 +4,54 @@ import { useNavigate } from 'react-router-dom';
 import Pagination from './Pagination';
 import Loader from '../../Utils/Loader';
 import { showToast } from '../../Utils/Validation';
-import { endpoints, baseURL } from '../../Utils/Config'; // Import your configured endpoints
+import { endpoints, baseURL } from '../../Utils/Config';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const ITEMS_PER_PAGE = 5;
 
-interface AdDuration {
-    startDate: string;
-    endDate: string;
-}
-
-interface Campaign {
-    _id: string;
+// Interface for the summary data displayed in the table
+interface CampaignSummary {
+    _id: string; // Used as the identifier
     title: string;
     description?: string;
     callToAction?: string;
     link?: string;
-    // Assuming 'file' in the Campaign interface means a URL to the file,
-    // as it's typically fetched as a string from the backend, not a File object.
-    file?: string; // Changed to string as typically backend returns file URL
+    file?: string; // Expecting URL from backend for display (optional)
     status: string;
     dailyBudget?: number;
-    eliminatedBudget?: number;
-    adDuration?: AdDuration;
+    eliminatedBudget?: number; // Backend might send this for total budget
+    adDuration?: {
+        startDate: string;
+        endDate: string;
+    };
 }
 
+// Interface for the detailed data returned by GET /advertisement/{id}
+// This needs to match exactly what Userform expects as FormState
+interface FullCampaignDetails {
+    _id: string; // Crucial for editing
+    title: string;
+    description: string;
+    callToAction: string;
+    link: string;
+    dailyBudget: number; // Expect number from API, will convert to string in Userform
+    estimatedBudget?: number; // Optional, convert to string in Userform
+    adDuration: {
+        startDate: string; // ISO string from API
+        endDate: string;   // ISO string from API
+    };
+    adMedia?: { // Assuming your backend nests media info
+        url: string; // The URL of the actual media file
+        // other media properties if any
+    };
+    file?: string; // If your backend directly returns the file URL at the top level
+    status: string;
+    // ... any other fields returned by the GET /advertisement/{id} API
+}
+
+
 interface MonitorCampaignsApiResponse {
-    data: Campaign[];
+    data: CampaignSummary[];
     totalCount: number;
     message: string;
 }
@@ -50,7 +71,7 @@ const formatDate = (dateString: string | null | undefined) => {
 const Monitercompaign: React.FC = () => {
     const [openActionId, setOpenActionId] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const [campaignsData, setCampaignsData] = useState<Campaign[]>([]);
+    const [campaignsData, setCampaignsData] = useState<CampaignSummary[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
     const [apiError, setApiError] = useState<string | null>(null);
@@ -91,6 +112,8 @@ const Monitercompaign: React.FC = () => {
                 setCampaignsData(data.data);
                 setTotalCount(data.totalCount);
                 if (data.totalCount === 0 && page === 1) {
+                    // Only show "No campaigns found" if it's the first page and truly empty
+                    // This prevents showing it temporarily if navigating to an empty page > 1
                     showToast(false, "No campaigns found.");
                 }
             }
@@ -109,12 +132,15 @@ const Monitercompaign: React.FC = () => {
         fetchData(currentPage, ITEMS_PER_PAGE);
     }, [currentPage, fetchData]);
 
+    // This is the key part for navigation and passing data
     const handleEditCampaign = useCallback(async (campaignId: string) => {
-        setLoading(true);
+        setLoading(true); // Show loader while fetching specific campaign data
         setApiError(null);
-        setOpenActionId(null);
+        setOpenActionId(null); // Close dropdown immediately
 
-        // --- IMPORTANT: Using 'getad' with the backend's exact spelling 'camaign' ---
+        // Fetch the specific campaign data before navigating
+        // IMPORTANT: Ensure your backend's GET /advertisement/{id} returns the full details
+        // that your Userform expects (e.g., adMedia.url or file: URL)
         const url = `${baseURL}${endpoints.getad}/${campaignId}`;
         const headers: HeadersInit = { 'Accept': 'application/json' };
         const token = localStorage.getItem('token');
@@ -123,14 +149,16 @@ const Monitercompaign: React.FC = () => {
 
         try {
             const res = await fetch(url, options);
-            const data = await res.json();
+            // Ensure the response matches FullCampaignDetails interface
+            const data: { data: FullCampaignDetails; message: string } = await res.json();
 
             if (!res.ok) {
                 const errorMessage = data.message || `Error ${res.status}: Failed to fetch campaign for edit.`;
                 showToast(false, errorMessage);
             } else {
-                // Assuming data.data contains the single campaign object
-                navigate('admin/admgmt/userform', { state: { campaignData: data.data } });
+                // Navigate to the Userform route and pass the fetched detailed data via state
+                // The Userform will then read this state to pre-fill
+                navigate('/admin/admgmt/userform', { state: { campaignData: data.data } });
             }
         } catch (err: any) {
             const errorMessage = err.message || "Network error while fetching campaign for edit.";
@@ -140,17 +168,22 @@ const Monitercompaign: React.FC = () => {
         }
     }, [navigate, endpoints.getad, baseURL]);
 
+    const handleCreateNewCampaign = useCallback(() => {
+        // Navigate to Userform without any state to indicate creation mode
+        navigate('/admin/admgmt/userform');
+    }, [navigate]);
+
     const handleDeleteClick = useCallback((campaignId: string) => {
         setCampaignToDeleteId(campaignId);
         setShowDeleteConfirm(true);
-        setOpenActionId(null);
+        setOpenActionId(null); // Close dropdown immediately
     }, []);
 
     const confirmDelete = useCallback(async () => {
         if (!campaignToDeleteId) return;
 
-        setLoading(true);
-        setShowDeleteConfirm(false);
+        setLoading(true); // Show loader during deletion
+        setShowDeleteConfirm(false); // Hide the modal
         setApiError(null);
 
         const url = `${baseURL}${endpoints.deletead}/${campaignToDeleteId}`;
@@ -168,14 +201,14 @@ const Monitercompaign: React.FC = () => {
                 showToast(false, errorMessage);
             } else {
                 showToast(true, data.message || "Campaign deleted successfully!");
-                fetchData(currentPage, ITEMS_PER_PAGE);
+                fetchData(currentPage, ITEMS_PER_PAGE); // Refresh data after deletion
             }
         } catch (err: any) {
             const errorMessage = err.message || "Network error while deleting campaign.";
             showToast(false, errorMessage);
         } finally {
             setLoading(false);
-            setCampaignToDeleteId(null);
+            setCampaignToDeleteId(null); // Clear the ID
         }
     }, [campaignToDeleteId, currentPage, fetchData, endpoints.deletead, baseURL]);
 
@@ -190,9 +223,10 @@ const Monitercompaign: React.FC = () => {
         setOpenActionId((prev) => (prev === campaignId ? null : campaignId));
     };
 
+    // Handle clicks outside the dropdown to close it
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            const clickedButton = actionButtonRefs.current[openActionId || ''];
+            const clickedButton = openActionId ? actionButtonRefs.current[openActionId] : null;
             if (openActionId && dropdownRef.current && clickedButton) {
                 if (!dropdownRef.current.contains(event.target as Node) && !clickedButton.contains(event.target as Node)) {
                     setOpenActionId(null);
@@ -200,7 +234,7 @@ const Monitercompaign: React.FC = () => {
             }
         };
 
-        const timer = setTimeout(() => {
+        const timer = setTimeout(() => { // Small delay to avoid immediate close on initial open
             document.addEventListener('mousedown', handleClickOutside);
         }, 0);
 
@@ -210,6 +244,7 @@ const Monitercompaign: React.FC = () => {
         };
     }, [openActionId]);
 
+    // Position the dropdown dynamically
     const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
 
     useEffect(() => {
@@ -218,7 +253,7 @@ const Monitercompaign: React.FC = () => {
             if (button) {
                 const rect = button.getBoundingClientRect();
                 setDropdownPosition({
-                    top: rect.bottom + window.scrollY + 5,
+                    top: rect.bottom + window.scrollY + 5, // 5px below the button
                     left: rect.left + window.scrollX,
                 });
             }
@@ -227,9 +262,21 @@ const Monitercompaign: React.FC = () => {
         }
     }, [openActionId]);
 
+
     return (
         <div className='container'>
             <div className='d-flex justify-content-end mt-4 gap-2'>
+                {/* Create New Campaign Button */}
+                <button
+                    className='btn btn-primary'
+                    style={{ backgroundColor: '#3856F3', fontFamily: 'Roboto' }}
+                    onClick={handleCreateNewCampaign}
+                    disabled={loading}
+                >
+                    Create New Campaign
+                    <i className="bi bi-plus-circle-fill ms-2"></i> {/* Plus icon for creation */}
+                </button>
+                {/* Filter and Suspended Accounts buttons (optional, as per your original code) */}
                 <button className='btn btn-primary' style={{ backgroundColor: '#3856F3', fontFamily: 'Roboto' }}>
                     Filter
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -275,15 +322,15 @@ const Monitercompaign: React.FC = () => {
                     </thead>
                     <tbody>
                         {!loading && campaignsData.length > 0 ? (
-                            campaignsData.map((tdata: Campaign, index: number) => (
-                                <tr key={tdata._id || index}>
+                            campaignsData.map((tdata: CampaignSummary, index: number) => (
+                                <tr key={tdata._id}> {/* Use _id for key */}
                                     <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                                     <td>{tdata.title || 'N/A'}</td>
                                     <td>{formatDate(tdata.adDuration?.startDate)}</td>
                                     <td>{formatDate(tdata.adDuration?.endDate)}</td>
                                     <td>{tdata.status || 'N/A'}</td>
-                                    <td>{'N/A'}</td>
-                                    <td>{'N/A'}</td>
+                                    <td>{'N/A'}</td> {/* Placeholder, replace with actual data */}
+                                    <td>{'N/A'}</td> {/* Placeholder, replace with actual data */}
                                     <td>
                                         {tdata.eliminatedBudget
                                             ? `₹${tdata.eliminatedBudget.toLocaleString('en-IN')}`
@@ -298,6 +345,7 @@ const Monitercompaign: React.FC = () => {
                                             className="btn dropdown-toggle border"
                                             type="button"
                                             aria-expanded={openActionId === tdata._id}
+                                            disabled={loading} // Disable if loading
                                         >
                                             Actions
                                         </button>
@@ -321,6 +369,7 @@ const Monitercompaign: React.FC = () => {
                 setPage={setCurrentPage}
             />
 
+            {/* Portal for dropdown to ensure it renders on top of everything */}
             {openActionId && dropdownPosition && ReactDOM.createPortal(
                 <ul
                     ref={dropdownRef}
