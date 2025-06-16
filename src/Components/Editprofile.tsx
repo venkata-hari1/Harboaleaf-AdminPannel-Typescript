@@ -1,11 +1,19 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import '../Styles/Editprofile.css';
 import Profilepic from'../assets/Adminpic.jpg';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../Redux/store/Store';
+import { AdminProfile } from '../Redux/Reducers/UserMangement';
 const Editprofile = () => {
-
+  const {profile,loading}:any=useSelector((state:RootState)=>state.UserMangment)
+  const dispatch=useDispatch<AppDispatch>()
+  useEffect(()=>{
+    async function getData(){
+      dispatch(AdminProfile())
+    }getData()
+  },[])
      const editdata=[
-            { id:1, key:"Phone Number",value:"+91 7550723470"},
-            {id:2,key:"Email",value:"Sourav@gmail.com"},
+            { id:1, key:"Phone Number",value:`${profile?.user?.countryCode}${profile?.user?.mobile}`},
             {id:3,key:"Password",value:"*******"}
           ]
 
@@ -18,7 +26,7 @@ const Editprofile = () => {
           </div>
      
           <div className='edit-data-box'>
-               <p className='edit-title'>Sourav Singh</p>
+               <p className='edit-title'>{profile?.user?.firstname}</p>
                 {
                     editdata.map(data=>(
 

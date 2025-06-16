@@ -1,63 +1,171 @@
-import React from 'react'
-import Popupimg from '../../assets/popimg.jpg'
-import '../../Styles/UserPopUp.css';
+import React, { useState } from 'react';
 import moment from 'moment';
- const UserPopUp = ({ handleClick,post }:any) => {
-    const[value,setValue]=React.useState(false)
-    const handleDelete=()=>{
-       
-    }
-    console.log(post)
-    const text=post.type==='post'?post.post?.[0].text:post.story?.[0].text
-    const image=post.type==='post'?post.post?.[0].files?.[0]:post.story?.[0].files?.[0]
-    const firstname=post.type==='post'?post.post?.[0].user?.firstname:post.story?.[0].user?.firstname
-    const lastname=post.type==='post'?post.post?.[0].user?.lastname:post.story?.[0].user?.lastname
-    const userimage=post.type==='post'?post.post?.[0].user?.image:post.story?.[0].user?.image
-    const createdAt=post.type==='post'?post.post?.[0].createdAt:post.story?.[0].createdAt
-    return (
-     <div className='main-popup-container'>
-      <div className='popup-container'>
-         <div className='popup-title-container'>
-           <img src={userimage?userimage:Popupimg} width="20px" height="20px"className="rounded-circle" alt=''/><p>{firstname}{lastname}</p>
-              <span>{moment(createdAt).fromNow()}</span>
-         </div>
-         <div className='popimg-container'>
-       
-           <img src={image?image:Popupimg} width="100%" height="100%" /> 
-             
-            <div className='menu-delete-box'>
-                 <div className='dot' onClick={()=>setValue(!value)}>
-                 <button className='dot-menu rounded-circle'>&#8942;</button>
-                 
-                 </div>
-                 {value&&<div className='dot-delete'>
-                  <button onClick={handleDelete}>Delete</button>  
-                  </div>}
-           </div>  
-             <div className='image-text'>
-              <p>{text}</p>
-             </div>
-           </div>
-         <div className='tools-wrapper'>
-           <div className='left-tool'>
-           <i className="bi bi-hand-thumbs-up-fill ms-3"></i>
-           <i className="bi bi-hand-thumbs-down ms-3"></i>
-           <i className="bi bi-chat-left-text ms-3"></i>
+import Popupimg from '../../assets/popimg.jpg';
+type IProps={
+  handleClose:(t:boolean)=>void,
+  post:{
+type:string,
+postId:string,
+vibeId:string,
+files:{file:string}[],
+text:string
+  } | any
 
-           </div>
-           <div className='right-tool'>
-           <i className="bi bi-link me-3"></i>
-           <i className="bi bi-send ms-3"></i> 
-           <i className="bi bi-three-dots-vertical ms-3"></i>
-
-           </div>
-           
-         </div>
-
-      </div>
-      </div>
- 
-  )
 }
+const UserPopUp = ({ post,handleClose}:IProps) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-export default UserPopUp
+  const isPost = post?.type === 'post';
+  const isVibe = post?.type === 'vibe';
+  const content = isPost ? post?.postId : isVibe ? post?.vibeId : null;
+
+  const text = content?.text;
+  const image = content?.files?.[0].file;
+  const firstname = post?.user?.firstname;
+
+  const userimage = post?.user?.image;
+  const createdAt = content?.createdAt || post?.createdAt;
+
+  const handleDeleteConfirm = () => {
+    setShowConfirm(false);
+    handleClose(false)
+  };
+const handleCancel=()=>{
+  setShowConfirm(false)
+  handleClose(false)
+}
+  return (
+    <>
+      {/* Main Popup */}
+      <div
+        className="modal fade show"
+        tabIndex={-1}
+        style={{ display: 'block', background: 'rgba(0,0,0,0.5)' }}
+        role="dialog"
+      >
+        <div className="modal-dialog modal-dialog-centered" style={{width: '320px',height:'20vh'}}>
+          <div className="modal-content main-popup-container">
+            <div className="popup-container p-3 position-relative">
+
+              {/* Header */}
+              <div className="popup-title-container d-flex align-items-center">
+                <img
+                  src={userimage || Popupimg}
+                  width="30px"
+                  height="30px"
+                  className="rounded-circle me-2"
+                  alt=""
+                />
+                <div>
+                <div className="ms-auto text-muted small">{firstname}</div>
+                <div className="ms-auto text-muted small">{moment(createdAt).fromNow()}</div>
+                </div>
+               
+
+                {/* 3-dot menu */}
+                <div className="position-absolute" style={{ top: '10px', right: '10px' }}>
+  <button
+    className="btn btn-link text-dark p-0"
+    onClick={() => setShowMenu(!showMenu)}
+  >
+    <i className="bi bi-three-dots-vertical fs-5"></i>
+  </button>
+
+  {showMenu && (
+    <ul
+      className="dropdown-menu show"
+      style={{
+        position: 'absolute',
+        right: 0,
+        top: '100%',
+        zIndex: 1050,
+        display: 'block',
+        minWidth: '120px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+      }}
+    >
+  
+      <li>
+        <button
+          className="dropdown-item"
+          onClick={() => {
+            handleClose(false);
+          }}
+        >
+          Close
+        </button>
+      </li>
+      <li>
+        <button
+          className="dropdown-item text-danger"
+          onClick={() => {
+            setShowMenu(false);
+            setShowConfirm(true);
+          }}
+        >
+          Delete
+        </button>
+      </li>
+    </ul>
+  )}
+</div>
+
+              </div>
+
+              {/* Image or Video */}
+              <div className="popimg-container my-3">
+                {isVibe ? (
+                  <video
+                    src={image}
+                    controls
+                    loop
+                    style={{ width: '100%', height: '100%', borderRadius: '10px' }}
+                  />
+                ) : (
+                  <img
+                    src={image || Popupimg}
+                    style={{ width: '100%', borderRadius: '10px' }}
+                    alt="popup"
+                  />
+                )}
+
+                <div className="image-text mt-2">
+                  <p>{text}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div
+          className="modal fade show"
+          tabIndex={-1}
+          role="dialog"
+          style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
+      <div className="modal-dialog modal-dialog-centered">
+  <div className="modal-content border border-white rounded-3">
+    <div className="modal-header border-1 border-grey">
+    <h5 className="modal-title text-danger fs-5">Confirm Deletion</h5>
+    </div>
+    <div className="modal-body border-0"> 
+      <p className="fs-7 text-black">Are you sure you want to delete this {isPost ? 'post' : 'vibe'}?</p>
+    </div>
+    <div className="modal-footer border-0">
+      <button className="btn btn-secondary" onClick={handleCancel}>Cancel</button>
+      <button className="btn btn-danger" onClick={handleDeleteConfirm}>Delete</button>
+    </div>
+  </div>
+</div>
+
+        </div>
+      )}
+    </>
+  );
+};
+
+export default UserPopUp;

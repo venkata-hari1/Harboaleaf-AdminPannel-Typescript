@@ -1,625 +1,638 @@
 import React, { useState, useEffect } from 'react';
 import '../Styles/Userform.css';
 import PreviewPopUp from './PreviewPopUp';
+import { endpoints, baseURL } from '../../Utils/Config'; // Ensure baseURL and endpoints are correctly imported
 
+// --- Common Fetch Handler - BROUGHT DIRECTLY INTO THIS FILE ---
+// This function performs the actual API call and handles common logic like headers and error parsing.
+interface FetchResult<T = any, E = any> {
+  response: T | null;
+  error: {
+    status?: number;
+    message: string;
+    data?: E;
+  } | null;
+}
+
+const executeFetch = async <T = any, E = any>(
+  fullUrl: string,
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  body?: FormData | object | string,
+): Promise<FetchResult<T, E>> => {
+  const headers: HeadersInit = { 'Accept': 'application/json' };
+  const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
+  if (token) headers['token'] = token;
+
+  const options: RequestInit = { method, headers };
+
+  if (body) {
+    if (body instanceof FormData) {
+      options.body = body; // FormData does not require 'Content-Type' header
+    } else if (typeof body === 'object') {
+      options.body = JSON.stringify(body);
+      headers['Content-Type'] = 'application/json';
+    } else {
+      options.body = body;
+      headers['Content-Type'] = 'text/plain';
+    }
+  } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+    // For POST/PUT/PATCH requests with no body, still set Content-Type if JSON is expected
+    headers['Content-Type'] = 'application/json';
+  }
+
+  try {
+    const res = await fetch(fullUrl, options);
+    // Attempt to parse JSON response; gracefully handle non-JSON responses
+    const data = await res.json().catch(() => ({ message: res.statusText || "Something went wrong" }));
+
+    if (!res.ok) {
+      // If response is not OK (e.g., 4xx, 5xx status codes)
+      return {
+        response: null,
+        error: { status: res.status, message: data.message || `Error ${res.status}`, data },
+      };
+    }
+    // If response is OK
+    return { response: data, error: null };
+  } catch (err: any) {
+    // Catch network errors or issues during fetch
+    return {
+      response: null,
+      error: { status: 0, message: err.message || "Network error or unexpected issue" },
+    };
+  }
+};
+// --- END executeFetch ---
+
+
+// Define the shape of your form data state, aligned with Figma
 interface FormState {
-  title: string;
-  description: string;
-  callToAction: string;
-  link: string;
-  location: string;
-  allIndia: boolean; // State for "All over India" option
-  ageFrom: string;
-  ageTo: string;
-  gender: string;
-  dailyBudget: string;
-  startDate: string;
-  endDate: string;
-  eliminatedBudget: string;
-  placing: string[];
-  file: File | null;
+    title: string;
+    description: string;
+    callToAction: string;
+    link: string;
+    dailyBudget: string; // Stored as string from input, converted to number for payload
+    startDate: string;
+    endDate: string;
+    estimatedBudget: string; // Stored as string from input, converted to number for payload
+    file: File | null; // This will be uploaded directly to the backend
 }
 
 const Userform: React.FC = () => {
-  const [state, setState] = useState<boolean>(false);
-  const [form, setForm] = useState<FormState>({
-    title: '',
-    description: '',
-    callToAction: '',
-    link: '',
-    location: '',
-    allIndia: false, // Initialize to false
-    ageFrom: '',
-    ageTo: '',
-    gender: '',
-    dailyBudget: '',
-    startDate: '',
-    endDate: '',
-    eliminatedBudget: '',
-    placing: [],
-    file: null,
-  });
-
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
-  const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
-
-  const handlePopup = () => setState(prev => !prev);
-
-  const validate = (name: keyof FormState, value: any): string => {
-    let error = '';
-    // A more robust URL regex, ensuring http/https and a domain
-    const urlRegex = /^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})$/i;
-
-    switch (name) {
-      case 'title':
-        if (value.trim().length < 4) error = 'Title must be more than 3 characters';
-        break;
-      case 'description':
-        if (value.trim().length < 10) error = 'Description must be more than 10 characters';
-        break;
-      case 'link':
-        if (!value.trim()) {
-          error = 'Link is required';
-        } else if (!urlRegex.test(value)) {
-          error = 'Please enter a valid URL (e.g., https://example.com)';
-        }
-        break;
-      case 'location':
-        // Validation for location: required ONLY if 'allIndia' is false
-        if (!form.allIndia && !value) error = 'Location is required if not "All over India"';
-        break;
-      case 'dailyBudget':
-        if (isNaN(Number(value)) || Number(value) <= 0) error = 'Budget must be greater than 0';
-        break;
-      case 'eliminatedBudget':
-        if (isNaN(Number(value)) || Number(value) < 0) error = 'Cannot be negative';
-        break;
-      case 'ageFrom':
-      case 'ageTo':
-        if (value && (isNaN(Number(value)) || Number(value) < 0)) error = 'Age must be a positive number';
-        if (name === 'ageTo' && form.ageFrom && value && Number(value) < Number(form.ageFrom)) {
-          error = 'Max age must be greater than min age';
-        }
-        break;
-      case 'startDate':
-      case 'endDate':
-        if (form.startDate && form.endDate) {
-          const start = new Date(form.startDate);
-          const end = new Date(form.endDate);
-          if (end <= start) {
-            error = 'End date must be after start date';
-          }
-        }
-        break;
-      case 'file':
-        if (value) {
-          const sizeMB = value.size / 1024 / 1024;
-          if (value.type.includes('image') && sizeMB > 1) error = 'Image should be less than 1MB';
-          if (value.type.includes('video') && sizeMB > 2) error = 'Video should be less than 2MB';
-        }
-        break;
-      default:
-        break;
-    }
-    return error;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, files } = e.target as HTMLInputElement;
-    let newVal: any = value;
-
-    if (type === 'file') {
-      newVal = files?.[0] || null;
-    } else if (type === 'radio' && name === 'placingRadio') {
-      newVal = [value];
-      setForm(prev => ({ ...prev, placing: newVal }));
-      setErrors(prev => ({ ...prev, placing: '' }));
-      return;
-    }
-
-    setForm(prev => ({ ...prev, [name]: newVal }));
-    const error = validate(name as keyof FormState, newVal);
-    setErrors(prev => ({ ...prev, [name]: error }));
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-    const error = validate(name as keyof FormState, form[name as keyof FormState]);
-    setErrors(prev => ({ ...prev, [name]: error }));
-  };
-
-  // Renamed from handleAllIndiaClick to handleAllIndiaChange
-  const handleAllIndiaChange = () => {
-    setForm(prev => ({
-      ...prev,
-      allIndia: !prev.allIndia, // Toggle the allIndia state
-      location: prev.allIndia ? '' : prev.location, // Clear location if enabling allIndia
-    }));
-    setErrors(prev => ({ ...prev, location: '' })); // Clear location error on toggle
-    setTouched(prev => ({ ...prev, location: true })); // Mark location as touched to update validation
-  };
-
-  const getHelperMessage = (name: keyof FormState): string => {
-    const emptyMsgs: Record<keyof FormState, string> = {
-      title: 'Enter at least 4 characters',
-      description: 'Enter at least 10 characters',
-      callToAction: 'Example: Learn More',
-      link: 'e.g., https://yourwebsite.com', // Updated helper message for link
-      location: 'Select a state',
-      allIndia: '', // No specific helper message for the checkbox itself
-      ageFrom: 'Min age (e.g., 18)',
-      ageTo: 'Max age (e.g., 65)',
-      gender: 'Select target gender',
-      dailyBudget: 'Enter a number > 0',
-      startDate: 'Select start date',
-      endDate: 'Must be after start date',
-      eliminatedBudget: 'Optional: Cannot be negative',
-      placing: 'Select placement option',
-      file: 'Upload image (<1MB) or video (<2MB)',
-    };
-
-    if (!touched[name]) return emptyMsgs[name];
-    return errors[name] || '';
-  };
-
-  const getInputClass = (name: keyof FormState): string => {
-    const baseClass = 'form-textbox';
-    if (touched[name] && errors[name]) return `${baseClass} has-error`;
-    return baseClass;
-  };
-
-  useEffect(() => {
-    if (touched.startDate || touched.endDate) {
-      const error = validate('endDate', form.endDate);
-      setErrors(prev => ({
-        ...prev,
-        endDate: error
-      }));
-    }
-  }, [form.startDate, form.endDate, touched.startDate, touched.endDate]);
-
-  useEffect(() => {
-    if (touched.ageFrom || touched.ageTo) {
-      const ageToError = validate('ageTo', form.ageTo);
-      setErrors(prev => ({ ...prev, ageTo: ageToError }));
-
-      const ageFromError = validate('ageFrom', form.ageFrom);
-      setErrors(prev => ({ ...prev, ageFrom: ageFromError }));
-    }
-  }, [form.ageFrom, form.ageTo, touched.ageFrom, touched.ageTo]);
-
-  // CORRECTED: Validate location only if it has been touched
-  useEffect(() => {
-    if (touched.location) {
-      const locationError = validate('location', form.location);
-      setErrors(prev => ({ ...prev, location: locationError }));
-    } else {
-      // If location is not touched, ensure no error message is displayed
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        // Only delete if the error specifically belongs to location
-        if (newErrors.location) {
-          delete newErrors.location;
-        }
-        return newErrors;
-      });
-    }
-  }, [form.location, form.allIndia, touched.location]);
-
-
-  const isFormValid = (): boolean => {
-    const requiredFields: Array<keyof FormState> = [
-      'title', 'description', 'callToAction', 'link', 'dailyBudget',
-      'startDate', 'endDate', 'gender', 'placing'
-    ];
-
-    // Location is conditionally required
-    if (!form.allIndia) {
-      requiredFields.push('location');
-    }
-
-    const allRequiredFieldsFilledAndValid = requiredFields.every(field => {
-      if (field === 'gender') {
-        return !!form[field] && validate(field, form[field]) === '';
-      }
-      if (field === 'placing') {
-        return form[field].length > 0;
-      }
-      if (field === 'location' && form.allIndia) {
-          return true; // If allIndia is true, location is not required
-      }
-      // For all other fields, check if value exists and validation passes
-      return !!form[field] && validate(field, form[field]) === '';
+    const [state, setState] = useState<boolean>(false); // For PreviewPopUp visibility
+    const [form, setForm] = useState<FormState>({
+        title: '',
+        description: '',
+        callToAction: '',
+        link: '',
+        dailyBudget: '',
+        startDate: '',
+        endDate: '',
+        estimatedBudget: '',
+        file: null,
     });
 
-    // Also check for general errors not caught by 'requiredFields' logic
-    const noOtherErrors = Object.values(errors).every(error => !error);
+    const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+    const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
 
-    return allRequiredFieldsFilledAndValid && noOtherErrors;
-  };
-
-  return (
-    <div className="form-container" style={{ position: 'relative' }}>
-      {state && (
-        <PreviewPopUp
-          handlePopup={handlePopup}
-          formData={{
-            file: form.file,
-            placing: form.placing,
-            title: form.title,
-            description: form.description,
-            callToAction: form.callToAction,
-          }}
-        />
-      )}
-      
-      <div className="form-wrapper">
-
-        {/* Title Input */}
-        <div className='title-box1'>
-          <label htmlFor="title">Add Title</label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            className={getInputClass('title')}
-            value={form.title}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
-          <span className={`input-message ${touched.title && errors.title ? 'error' : 'info'}`}>
-            {getHelperMessage('title')}
-          </span>
-        </div>
-
-        {/* Ad Media File Upload */}
-        <div className='admedia-box'>
-          <label>Ad Media</label>
-          <div className="file-upload-container-inline">
-            <label htmlFor="file1" className='file1-class'>
-              Attach <i className="bi bi-paperclip"></i>
-            </label>
-            <input
-              type="file"
-              id="file1"
-              name="file"
-              className='file-box'
-              onChange={handleChange}
-              onBlur={handleBlur}
-            />
-            {form.file && (
-              <div className="file-info-inline">
-                <span className="file-name">{form.file.name}</span>
-                <button
-                  type="button"
-                  className="file-remove"
-                  onClick={() => {
-                    setForm(prev => ({ ...prev, file: null }));
-                    setErrors(prev => ({ ...prev, file: '' }));
-                    setTouched(prev => ({ ...prev, file: false }));
-                  }}
-                  aria-label="Remove file"
-                >
-                  &times;
-                </button>
-              </div>
-            )}
-          </div>
-          {(touched.file && errors.file) && (
-            <p className="error-msg">{errors.file}</p>
-          )}
-          {!touched.file && !errors.file && (
-            <span className="input-message info">{getHelperMessage('file')}</span>
-          )}
-        </div>
-
-        {/* Description Input */}
-        <div className='desc-box'>
-          <label htmlFor="description">Add Description</label>
-          <textarea
-            id="description"
-            name="description"
-            className={getInputClass('description')}
-            value={form.description}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          ></textarea>
-          <span className={`input-message ${touched.description && errors.description ? 'error' : 'info'}`}>
-            {getHelperMessage('description')}
-          </span>
-        </div>
-
-        {/* Call To Action Input */}
-        <div className='call-action'>
-          <label htmlFor="callToAction">Call To Action (Button)</label>
-          <input
-            type="text"
-            id="callToAction"
-            name="callToAction"
-            className={getInputClass('callToAction')}
-            value={form.callToAction}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
-          <span className={`input-message ${touched.callToAction && errors.callToAction ? 'error' : 'info'}`}>
-            {getHelperMessage('callToAction')}
-          </span>
-        </div>
-
-        {/* Link Input */}
-        <div className='link-box'>
-          <label htmlFor="link">Link</label>
-          <input
-            type="text"
-            id="link"
-            name="link"
-            className={getInputClass('link')}
-            value={form.link}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
-          <span className={`input-message ${touched.link && errors.link? 'error' : 'info'}`}>
-            {getHelperMessage('link')}
-          </span>
-        </div>
-
-        {/* Target Location Select + All Over India Checkbox */}
-        <div className='taget-box'>
-            <label htmlFor="location">Target Location</label>
-            <div className="location-selection-group">
-                <select
-                    id="location"
-                    name="location"
-                    value={form.location}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    className={getInputClass('location')}
-                    disabled={form.allIndia} // Disable dropdown if "All over India" is selected
-                >
-                    <option value="">Select State</option>
-                    <option value="AP">Andhra Pradesh</option>
-                    <option value="MH">Maharashtra</option>
-                    {/* Add more states as needed */}
-                </select>
-                <label 
-                  className={`custom-checkbox-container all-india-checkbox-label`}
-                  onBlur={(e) => handleBlur(e as any)} // Ensure label blur also sets touched state for 'location'
-                >
-                    <input
-                        type="checkbox"
-                        name="allIndia"
-                        checked={form.allIndia}
-                        onChange={handleAllIndiaChange} // Use the renamed handler
-                    />
-                    <span className="checkmark"></span>
-                    All over India
-                </label>
-            </div>
-            <span className={`input-message ${touched.location && errors.location ? 'error' : 'info'}`}>
-                {getHelperMessage('location')}
-            </span>
-        </div>
+    // Local state for loading, error, and success messages (replacing Redux state)
+    const [loading, setLoading] = useState<boolean>(false);
+    const [apiError, setApiError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
 
-        {/* Target Age Range */}
-        <div className='target-num'>
-          <label>Target Age Range</label>
-          <div className="d-flex align-items-center">
-            <input
-              type="number"
-              name="ageFrom"
-              placeholder={getHelperMessage('ageFrom')}
-              value={form.ageFrom}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={getInputClass('ageFrom')}
-              min="0"
-            />
-            <span className='mx-2'>Age&nbsp;to</span>
-            <input
-              type="number"
-              name="ageTo"
-              placeholder={getHelperMessage('ageTo')}
-              value={form.ageTo}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={getInputClass('ageTo')}
-              min={form.ageFrom ? Number(form.ageFrom) + 1 : "0"}
-            />
-          </div>
-          <span className={`input-message ${
-            (touched.ageFrom || touched.ageTo) && (errors.ageFrom || errors.ageTo) ? 'error' : 'info'
-          }`}>
-            {errors.ageFrom || errors.ageTo || getHelperMessage('ageFrom')}
-          </span>
-        </div>
+    const handlePopup = () => setState(prev => !prev);
 
-        {/* Gender Radio Buttons */}
-        <div className='gender-box'>
-          <label>Gender</label>
-          <div className="d-flex gender-options">
-            <label className="me-3"><input type='radio' name="gender" value="male" checked={form.gender === 'male'} onChange={handleChange} onBlur={handleBlur} /> Male</label>
-            <label className="me-3"><input type='radio' name="gender" value="female" checked={form.gender === 'female'} onChange={handleChange} onBlur={handleBlur} /> Female</label>
-            <label><input type='radio' name="gender" value="all" checked={form.gender === 'all'} onChange={handleChange} onBlur={handleBlur} /> All</label>
-          </div>
-          <span className={`input-message ${touched.gender && errors.gender ? 'error' : 'info'}`}>
-            {getHelperMessage('gender')}
-          </span>
-        </div>
+    // Helper to get ISO string for dates (e.g., "2025-06-12T00:00:00.000Z")
+    const getISODateString = (dateString: string): string => {
+        if (!dateString) return '';
+        const [year, month, day] = dateString.split('-').map(Number);
+        // Using UTC to avoid timezone issues when sending to backend
+        return new Date(Date.UTC(year, month - 1, day, 0, 0, 0)).toISOString();
+    };
 
-        {/* Daily Budget Input */}
-        <div className='budget-box'>
-          <label htmlFor="dailyBudget">Daily Budget</label>
-          <div className="daily-budget-input-group">
-              <span className="currency-prefix">Rs.</span>
-              <input
-                type="number"
-                id="dailyBudget"
-                name="dailyBudget"
-                className={getInputClass('dailyBudget')}
-                value={form.dailyBudget}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                min="1"
-              />
-          </div>
-          <span className={`input-message ${touched.dailyBudget && errors.dailyBudget ? 'error' : 'info'}`}>
-            {getHelperMessage('dailyBudget')}
-          </span>
-        </div>
+    // --- Validation Logic ---
+    const validate = (name: keyof FormState, value: any, currentForm: FormState = form): string => {
+        let error = '';
+        const urlRegex = /^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})$/i;
 
-        {/* Ad Duration Dates */}
-        <div className='date-box'>
-          <label>Ad Duration</label>
-          <div className='date-pick d-flex align-items-center'>
-            <input
-              type="date"
-              name="startDate"
-              className={getInputClass('startDate')}
-              value={form.startDate}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              min={new Date().toISOString().split('T')[0]}
-            />
-            <span className='mx-2'>to</span>
-            <input
-              type="date"
-              name="endDate"
-              className={getInputClass('endDate')}
-              value={form.endDate}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              min={form.startDate || new Date().toISOString().split('T')[0]}
-            />
-          </div>
-          <span className={`input-message ${touched.endDate && errors.endDate ? 'error' : 'info'}`}>
-            {getHelperMessage('endDate')}
-          </span>
-        </div>
-
-        {/* Eliminated Budget Input */}
-        <div className='budget-box'>
-          <label htmlFor="eliminatedBudget">Estimated Budget</label>
-          <div className="daily-budget-input-group">
-              <span className="currency-prefix">Rs.</span>
-              <input
-                type="number"
-                id="eliminatedBudget"
-                name="eliminatedBudget"
-                className={getInputClass('eliminatedBudget')}
-                value={form.eliminatedBudget}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                min="0"
-              />
-          </div>
-          <span className={`input-message ${touched.eliminatedBudget && errors.eliminatedBudget ? 'error' : 'info'}`}>
-            {getHelperMessage('eliminatedBudget')}
-          </span>
-        </div>
-
-        {/* Placing Radio Buttons */}
-        <div className='placing-box'>
-          <label>Placing</label>
-          <div className="placing-options d-flex">
-            <label className="placing-option me-3">
-              <input
-                type="radio"
-                name="placingRadio"
-                value="top"
-                checked={form.placing.includes('top')}
-                onChange={handleChange}
-                onBlur={handleBlur}
-              />
-              Top
-            </label>
-
-            <label className="placing-option">
-              <input
-                type="radio"
-                name="placingRadio"
-                value="bottom"
-                checked={form.placing.includes('bottom')}
-                onChange={handleChange}
-                onBlur={handleBlur}
-              />
-              Bottom
-            </label>
-          </div>
-          <span className={`input-message ${touched.placing && errors.placing ? 'error' : 'info'}`}>
-            {getHelperMessage('placing')}
-          </span>
-        </div>
-
-        {/* Preview Button */}
-        <div className='preview-box'>
-          <label>Preview</label>
-          <button
-            className='preview-button'
-            onClick={handlePopup}
-            aria-label="Preview Ad"
-            type="button"
-          >
-            <i className="bi bi-eye-fill"></i>
-          </button>
-        </div>
-
-        {/* Submit & Discard*/}
-        <div className='buttons-ds'>
-          <button
-            className='discard-button'
-            type="button"
-            onClick={() => {
-              setForm({ // Reset form data
-                title: '',
-                description: '',
-                callToAction: '',
-                link: '',
-                location: '',
-                allIndia: false,
-                ageFrom: '',
-                ageTo: '',
-                gender: '',
-                dailyBudget: '',
-                startDate: '',
-                endDate: '',
-                eliminatedBudget: '',
-                placing: [],
-                file: null,
-              });
-              setErrors({}); // Clear all errors
-              setTouched({}); // Reset all touched states
-            }}
-          >
-            Discard
-          </button>
-          <button
-            className='submit-button'
-            type="submit"
-            disabled={!isFormValid()}
-            style={{
-              opacity: !isFormValid() ? 0.5 : 1,
-              cursor: !isFormValid() ? 'not-allowed' : 'pointer'
-            }}
-            onClick={() => {
-                if (isFormValid()) {
-                    console.log("Form submitted:", form);
-                } else {
-                    const newTouched: Partial<Record<keyof FormState, boolean>> = {};
-                    (Object.keys(form) as Array<keyof FormState>).forEach(key => {
-                        newTouched[key] = true;
-                    });
-                    setTouched(newTouched);
+        switch (name) {
+            case 'title':
+                if (value.trim().length < 4) error = 'Title must be more than 3 characters';
+                break;
+            case 'description':
+                if (value.trim().length < 10) error = 'Description must be more than 10 characters';
+                break;
+            case 'link':
+                if (!value.trim()) {
+                    error = 'Link is required';
+                } else if (!urlRegex.test(value)) {
+                    error = 'Please enter a valid URL (e.g., https://example.com)';
                 }
-            }}
-          >
-            Submit
-          </button>
+                break;
+            case 'dailyBudget':
+                if (isNaN(Number(value)) || Number(value) <= 0) error = 'Daily Budget must be greater than 0';
+                break;
+            case 'estimatedBudget':
+                // Estimated budget is optional, but if entered, must be non-negative
+                if (value && (isNaN(Number(value)) || Number(value) < 0)) error = 'Estimated Budget cannot be negative';
+                break;
+            case 'startDate':
+            case 'endDate':
+                if (currentForm.startDate && currentForm.endDate) {
+                    const start = new Date(currentForm.startDate);
+                    const end = new Date(currentForm.endDate);
+                    if (end <= start) {
+                        error = 'End date must be after start date';
+                    }
+                } else if (!value.trim()) {
+                    error = `${name === 'startDate' ? 'Start' : 'End'} date is required`;
+                }
+                break;
+            case 'file':
+                if (!value) {
+                    error = 'Ad media file is required';
+                } else {
+                    const sizeMB = value.size / 1024 / 1024;
+                    if (value.type.includes('image') && sizeMB > 1) error = 'Image should be less than 1MB';
+                    if (value.type.includes('video') && sizeMB > 2) error = 'Video should be less than 2MB';
+                }
+                break;
+            default:
+                break;
+        }
+        return error;
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value, type, files } = e.target as HTMLInputElement;
+        let newVal: any = value;
+
+        if (type === 'file') {
+            newVal = files?.[0] || null;
+        } else if (type === 'number') {
+            newVal = value === '' ? '' : Number(value); // Keep as string for empty, convert to number otherwise
+        }
+
+        setForm(prev => {
+            const updatedForm = { ...prev, [name]: newVal };
+            const error = validate(name as keyof FormState, newVal, updatedForm);
+            setErrors(currentErrors => ({ ...currentErrors, [name]: error }));
+            return updatedForm;
+        });
+        // Clear success/error messages on input change
+        setApiError(null);
+        setSuccessMessage(null);
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name } = e.target;
+        setTouched(prev => ({ ...prev, [name]: true }));
+
+        setErrors(prevErrors => {
+            const newErrors = { ...prevErrors };
+            const fieldName = name as keyof FormState;
+            newErrors[fieldName] = validate(fieldName, form[fieldName], form); // Validate current field
+
+            // Re-validate interdependent fields on blur (only dates remain)
+            if (fieldName === 'startDate' || fieldName === 'endDate') {
+                newErrors.startDate = validate('startDate', form.startDate, form);
+                newErrors.endDate = validate('endDate', form.endDate, form);
+            }
+            return newErrors;
+        });
+    };
+
+    // Removed handleAllIndiaChange as 'allIndia' and 'location' are removed
+
+    const getHelperMessage = (name: keyof FormState): string => {
+        const emptyMsgs: Record<keyof FormState, string> = {
+            title: 'Enter at least 4 characters',
+            description: 'Enter at least 10 characters',
+            callToAction: 'Example: Learn More',
+            link: 'e.g., https://yourwebsite.com',
+            dailyBudget: 'Enter a number > 0',
+            startDate: 'Select start date',
+            endDate: 'Must be after start date',
+            estimatedBudget: 'Optional: Cannot be negative',
+            file: 'Upload image (<1MB) or video (<2MB)',
+        };
+        // Prioritize error messages if field is touched and has an error
+        if (touched[name] && errors[name]) {
+            return errors[name] || '';
+        }
+        return emptyMsgs[name];
+    };
+
+    const getInputClass = (name: keyof FormState): string => {
+        const baseClass = 'form-textbox';
+        if (touched[name] && errors[name]) return `${baseClass} has-error`;
+        return baseClass;
+    };
+
+    // --- Re-run validation for interdependent fields (on form state changes) ---
+    useEffect(() => {
+        setErrors(prev => ({
+            ...prev,
+            endDate: validate('endDate', form.endDate, form),
+            startDate: validate('startDate', form.startDate, form),
+        }));
+    }, [form.startDate, form.endDate]);
+
+    // Removed useEffect for ageFrom/ageTo, location/allIndia, gender/placing as they are removed
+
+    // --- Form Validity Check ---
+    const isFormValid = (): boolean => {
+        const allFormFields: Array<keyof FormState> = Object.keys(form) as Array<keyof FormState>;
+        let currentValidationErrors: Partial<Record<keyof FormState, string>> = {};
+
+        // Run validation for all fields that are part of the FormState
+        allFormFields.forEach(field => {
+            currentValidationErrors[field] = validate(field, form[field], form);
+        });
+
+        // Check if any field has a validation error
+        const hasErrors = Object.values(currentValidationErrors).some(error => !!error);
+
+        // Additionally check for explicitly required fields to not be empty/invalid
+        const requiredFieldsExplicitlyFilled =
+            form.title.trim() !== '' &&
+            form.description.trim() !== '' &&
+            form.callToAction.trim() !== '' &&
+            form.link.trim() !== '' &&
+            Number(form.dailyBudget) > 0 &&
+            form.startDate.trim() !== '' &&
+            form.endDate.trim() !== '' &&
+            form.file !== null && // Ensure a file is selected
+            (form.estimatedBudget === '' || Number(form.estimatedBudget) >= 0); // Estimated budget optional but if filled, valid
+
+        return requiredFieldsExplicitlyFilled && !hasErrors;
+    };
+
+    // --- Handle Submit ---
+    const handleSubmit = async () => {
+        // 1. Mark all fields as touched to display all validation errors
+        const newTouched: Partial<Record<keyof FormState, boolean>> = {};
+        (Object.keys(form) as Array<keyof FormState>).forEach(key => {
+            newTouched[key] = true;
+        });
+        setTouched(newTouched);
+
+        // 2. Perform a full validation pass to update `errors` state based on current form
+        let fullFormErrors: Partial<Record<keyof FormState, string>> = {};
+        (Object.keys(form) as Array<keyof FormState>).forEach(key => {
+            fullFormErrors[key] = validate(key, form[key], form);
+        });
+        setErrors(fullFormErrors);
+
+        // 3. Check validity based on the *latest* errors state and explicit checks
+        if (!isFormValid()) {
+            alert("Please correct the errors in the form before submitting.");
+            return; // Stop if form is not valid
+        }
+
+        setLoading(true); // Start loading
+        setApiError(null); // Clear previous API errors
+        setSuccessMessage(null); // Clear previous success messages
+
+        try {
+            // Build the FormData with all fields
+            const campaignFormData = new FormData();
+
+            campaignFormData.append('title', form.title);
+            campaignFormData.append('description', form.description);
+            campaignFormData.append('callToAction', form.callToAction);
+            campaignFormData.append('link', form.link);
+            campaignFormData.append('dailyBudget', form.dailyBudget);
+            campaignFormData.append('estimatedBudget', form.estimatedBudget);
+
+            // Append the File object directly
+            if (form.file) {
+                campaignFormData.append('file', form.file);
+            } else {
+                // This case should be caught by isFormValid(), but as a fallback
+                alert('Ad media file is required.');
+                setLoading(false);
+                return;
+            }
+
+            campaignFormData.append('adDuration[startDate]', getISODateString(form.startDate));
+            campaignFormData.append('adDuration[endDate]', getISODateString(form.endDate));
+
+            console.log("Userform.tsx: Sending FormData contents to API:");
+            for (const pair of campaignFormData.entries()) {
+                console.log(`${pair[0]}:`, pair[1] instanceof File ? `File: ${pair[1].name} (${pair[1].type})` : pair[1]);
+            }
+
+            // Directly call executeFetch
+            const { response, error } = await executeFetch(
+                `${baseURL}${endpoints.advertisement}`,
+                "POST",
+                campaignFormData
+            );
+
+            if (response) {
+                setSuccessMessage("Ad Campaign Created Successfully!");
+                // Reset form on successful submission
+                setForm({
+                    title: '', description: '', callToAction: '', link: '',
+                    dailyBudget: '', startDate: '', endDate: '',
+                    estimatedBudget: '', file: null,
+                });
+                setErrors({}); // Clear all validation errors
+                setTouched({}); // Reset all touched states
+                // Manually clear file input element
+                const fileInput = document.getElementById('file1') as HTMLInputElement;
+                if (fileInput) fileInput.value = '';
+            } else {
+                // Handle API error
+                setApiError(error?.message || "Failed to create ad campaign.");
+            }
+        } catch (err: any) {
+            // Handle unexpected errors (e.g., network issues)
+            setApiError(err.message || "An unexpected error occurred during submission.");
+        } finally {
+            setLoading(false); // Stop loading regardless of success or failure
+        }
+    };
+
+    const handleDiscard = () => {
+        // Reset all form fields
+        setForm({
+            title: '', description: '', callToAction: '', link: '',
+            dailyBudget: '', startDate: '', endDate: '',
+            estimatedBudget: '', file: null,
+        });
+        setErrors({}); // Clear all errors
+        setTouched({}); // Reset all touched states
+        // Manually clear file input element
+        const fileInput = document.getElementById('file1') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        setApiError(null); // Clear any API errors
+        setSuccessMessage(null); // Clear any success messages
+        setLoading(false); // Ensure loading is false
+    };
+
+    // Determine if the publish button should be disabled
+    const isPublishDisabled = loading || !isFormValid();
+
+    return (
+        <div className="form-container" style={{ position: 'relative' }}>
+            {state && (
+                <PreviewPopUp
+                    handlePopup={handlePopup}
+                    formData={{
+                        file: form.file,
+                        title: form.title,
+                        description: form.description,
+                        callToAction: form.callToAction,
+                        link: form.link, // Pass link to preview
+                    } as any}
+                />
+            )}
+
+            {loading && <p style={{ color: 'white', textAlign: 'center', margin: '10px 0' }}>Processing...</p>}
+
+            <div className="form-wrapper">
+                {/* Ad Title Input */}
+                <div className='title-box1'>
+                    <label htmlFor="title">Ad Title</label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        className={getInputClass('title')}
+                        value={form.title}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        disabled={loading} // Disable during submission
+                    />
+                    <span className={`input-message ${touched.title && errors.title ? 'error' : 'info'}`}>
+                        {getHelperMessage('title')}
+                    </span>
+                </div>
+
+                {/* Ad Media File Upload */}
+                <div className='admedia-box'>
+                    <label>Ad Media</label>
+                    <div className="file-upload-container-inline">
+                        <label htmlFor="file1" className='file1-class'>
+                            Attach <i className="bi bi-paperclip"></i>
+                        </label>
+                        <input
+                            type="file"
+                            id="file1"
+                            name="file" // Name corresponds to form state key
+                            className='file-box'
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            accept="image/*,video/*"
+                            disabled={loading} // Disable during submission
+                        />
+                        {form.file && (
+                            <div className="file-info-inline">
+                                <span className="file-name">{form.file.name}</span>
+                                <button
+                                    type="button"
+                                    className="file-remove"
+                                    onClick={() => {
+                                        setForm(prev => ({ ...prev, file: null }));
+                                        setErrors(prev => ({ ...prev, file: validate('file', null) }));
+                                        setTouched(prev => ({ ...prev, file: true }));
+                                        // Manually clear file input
+                                        const fileInput = document.getElementById('file1') as HTMLInputElement;
+                                        if (fileInput) fileInput.value = '';
+                                    }}
+                                    aria-label="Remove file"
+                                    disabled={loading} // Disable during submission
+                                >
+                                    &times;
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <span className={`input-message ${touched.file && errors.file ? 'error' : 'info'}`}>
+                        {getHelperMessage('file')}
+                    </span>
+                </div>
+
+                {/* Description Input */}
+                <div className='desc-box'>
+                    <label htmlFor="description">Ad Description</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        className={getInputClass('description')}
+                        value={form.description}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        disabled={loading} // Disable during submission
+                    ></textarea>
+                    <span className={`input-message ${touched.description && errors.description ? 'error' : 'info'}`}>
+                        {getHelperMessage('description')}
+                    </span>
+                </div>
+
+                {/* Call To Action Input */}
+                <div className='call-action'>
+                    <label htmlFor="callToAction">Call To Action (Button)</label>
+                    <input
+                        type="text"
+                        id="callToAction"
+                        name="callToAction"
+                        className={getInputClass('callToAction')}
+                        value={form.callToAction}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        disabled={loading} // Disable during submission
+                    />
+                    <span className={`input-message ${touched.callToAction && errors.callToAction ? 'error' : 'info'}`}>
+                        {getHelperMessage('callToAction')}
+                    </span>
+                </div>
+
+                {/* Link Input */}
+                <div className='link-box'>
+                    <label htmlFor="link">Link</label>
+                    <input
+                        type="text"
+                        id="link"
+                        name="link"
+                        className={getInputClass('link')}
+                        value={form.link}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        disabled={loading} // Disable during submission
+                    />
+                    <span className={`input-message ${touched.link && errors.link ? 'error' : 'info'}`}>
+                        {getHelperMessage('link')}
+                    </span>
+                </div>
+
+                {/* Daily Budget Input */}
+                <div className='budget-box'>
+                    <label htmlFor="dailyBudget">Daily Budget</label>
+                    <div className="daily-budget-input-group">
+                        <span className="currency-prefix">Rs.</span>
+                        <input
+                            type="number"
+                            id="dailyBudget"
+                            name="dailyBudget"
+                            className={getInputClass('dailyBudget')}
+                            value={form.dailyBudget}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            min="1"
+                            disabled={loading} // Disable during submission
+                            onWheel={(e) => e.currentTarget.blur()} // Prevent scroll effect
+                        />
+                    </div>
+                    <span className={`input-message ${touched.dailyBudget && errors.dailyBudget ? 'error' : 'info'}`}>
+                        {getHelperMessage('dailyBudget')}
+                    </span>
+                </div>
+
+                {/* Ad Duration Dates */}
+                <div className='date-box'>
+                    <label>Ad Duration</label>
+                    <div className='date-pick d-flex align-items-center'>
+                        <input
+                            type="date"
+                            name="startDate"
+                            className={getInputClass('startDate')}
+                            value={form.startDate}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            min={new Date().toISOString().split('T')[0]} // Min date is today
+                            disabled={loading} // Disable during submission
+                        />
+                        <span className='mx-2'>to</span>
+                        <input
+                            type="date"
+                            name="endDate"
+                            className={getInputClass('endDate')}
+                            value={form.endDate}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            min={form.startDate || new Date().toISOString().split('T')[0]} // Min date is start date or today
+                            disabled={loading} // Disable during submission
+                        />
+                    </div>
+                    <span className={`input-message ${touched.endDate && errors.endDate ? 'error' : 'info'}`}>
+                        {getHelperMessage('endDate')}
+                    </span>
+                </div>
+
+                {/* Estimated Budget Input */}
+                <div className='budget-box'>
+                    <label htmlFor="estimatedBudget">Estimated Budget</label>
+                    <div className="daily-budget-input-group">
+                        <span className="currency-prefix">Rs.</span>
+                        <input
+                            type="number"
+                            id="estimatedBudget"
+                            name="estimatedBudget"
+                            className={getInputClass('estimatedBudget')}
+                            value={form.estimatedBudget}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            min="0"
+                            disabled={loading} // Disable during submission
+                            onWheel={(e) => e.currentTarget.blur()} // Prevent scroll effect
+                        />
+                    </div>
+                    <span className={`input-message ${touched.estimatedBudget && errors.estimatedBudget ? 'error' : 'info'}`}>
+                        {getHelperMessage('estimatedBudget')}
+                    </span>
+                </div>
+
+                {/* Removed 'Placing' section */}
+
+                {/* Preview Button */}
+                <div className='preview-box'>
+                    <label>Preview</label>
+                    <button
+                        className='preview-button'
+                        onClick={handlePopup}
+                        aria-label="View Preview"
+                        type="button"
+                        disabled={loading} // Disable during submission
+                    >
+                        View Preview<i className="bi bi-eye-fill ms-2"></i>
+                    </button>
+                </div>
+
+                {/* Submit & Discard */}
+                <div className='buttons-ds'>
+                    <button
+                        className='discard-button'
+                        type="button"
+                        onClick={handleDiscard}
+                        disabled={loading} // Disable during submission
+                    >
+                        Discard
+                    </button>
+                    <button
+                        className='submit-button'
+                        type="button"
+                        disabled={isPublishDisabled} // Disable if invalid or loading
+                        style={{
+                            opacity: isPublishDisabled ? 0.5 : 1,
+                            cursor: isPublishDisabled ? 'not-allowed' : 'pointer'
+                        }}
+                        onClick={handleSubmit}
+                    >
+                        {loading ? 'Publishing...' : 'Publish'} {/* Text changed to 'Publish' */}
+                    </button>
+                </div>
+
+                {/* Local API Call Feedback */}
+                {apiError && <p style={{ color: 'red', marginTop: '15px', textAlign: 'center' }}>Error: {apiError}</p>}
+                {successMessage && <p style={{ color: 'green', marginTop: '15px', textAlign: 'center' }}>{successMessage}</p>}
+
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Userform;

@@ -9,7 +9,7 @@ export const SignIn = createAsyncThunk(
   async (payload: { data }, { fulfillWithValue, rejectWithValue }) => {
     try {
       const {data}=payload
-      const response = await fetch(`${baseURL}/${endpoints.SIGNIN}`, {
+      const response = await fetch(`${baseURL}${endpoints.SIGNIN}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

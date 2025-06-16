@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../Redux/store/Store';
 
 const Socialdata = () => {
-  const state=useSelector((state:RootState)=>state.UserMangment.socialUser)
+  const state:any=useSelector((state:RootState)=>state.UserMangment.socialUser)
     const socialdata=[
 
         {id:1, key:"Display Name",value:state?.user?.uniquename ||  'N/A'},

@@ -1,14 +1,18 @@
 import { Chart } from "react-google-charts";
 import "./Styles.css";
+import React from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../Redux/store/Store";
 
 const PieChart = () => {
+  const {dashboard}:any=useSelector((state:RootState)=>state.UserMangment)
   const data = [
     ["Task", "Hours per Day"],
-    ["Active users", 11],
-    ["Emergency", 2],
-    ["Reports", 2],
-    ["Critical Emergency", 2],
-    ["In active", 7],
+    ["Active users", dashboard?.data?.ActiveUsers ],
+    ["Emergency", dashboard?.data?.Emergency],
+    ["Reports", dashboard?.data?.TotalReports],
+    ["GST Users", dashboard?.data?.GstUsers],
+    ["In active", dashboard?.data?.TotalSuspendedAccounts],
   ];
 
   const options = {

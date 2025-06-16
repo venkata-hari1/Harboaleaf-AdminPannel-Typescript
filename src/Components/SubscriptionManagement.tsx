@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 import '../Styles/Gstusermanagement.css';
 import Pagination from './Pagination';
 import Loader from '../../Utils/Loader';
@@ -8,10 +8,10 @@ import { Subscription } from '../Redux/Reducers/UserMangement';
 import SkeletonRows from '../../Utils/Skeleton';
 
 const SubscriptionManagement = () => {
-  const state: any = useSelector((state: RootState) => state.UserMangment.subscription);
+  const { subscription, loading }: any = useSelector((state: RootState) => state.UserMangment);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [loading, setLoading] = useState(false);
+
   const [initialLoading, setInitialLoading] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [type, setType] = useState('');
@@ -23,18 +23,20 @@ const SubscriptionManagement = () => {
       if (firstLoad.current) {
         setInitialLoading(true);
         firstLoad.current = false;
-      } else {
-        setLoading(true);
       }
 
       try {
-        const data = { currentPage, type };
+        const data = {
+          page: currentPage,
+          filter: type,
+          state: ''
+        };
         await dispatch(Subscription({ data }));
       } catch (error) {
         console.error(error);
       } finally {
         setInitialLoading(false);
-        setLoading(false);
+
       }
     };
 
@@ -47,13 +49,9 @@ const SubscriptionManagement = () => {
     setShowFilterDropdown(false);
   };
 
-  const getIndianStateFromAddress = (address: string) => {
-    const stateRegex = /\b(Andhra Pradesh|Arunachal Pradesh|Assam|Bihar|Chhattisgarh|Goa|Gujarat|Haryana|Himachal Pradesh|Jharkhand|Karnataka|Kerala|Madhya Pradesh|Maharashtra|Manipur|Meghalaya|Mizoram|Nagaland|Odisha|Punjab|Rajasthan|Sikkim|Tamil Nadu|Telangana|Tripura|Uttar Pradesh|Uttarakhand|West Bengal|Andaman and Nicobar Islands|Chandigarh|Dadra and Nagar Haveli and Daman and Diu|Delhi|Jammu and Kashmir|Ladakh|Lakshadweep|Puducherry)\b/i;
-    const match = address?.match(stateRegex);
-    return match ? match[0] : null;
-  };
 
-  const totalPages = Math.ceil(state?.totalCount / state?.limit);
+
+  const totalPages = Math.ceil(subscription?.totalCount / subscription?.limit);
 
   return (
     <div className='container'>
@@ -83,7 +81,8 @@ const SubscriptionManagement = () => {
       {initialLoading ? (
         <Loader />
       ) : (
-        <div className='tab-content table-responsive mt-4'>
+        <Fragment>
+       {subscription?.data?.length>0? <div className='tab-content table-responsive mt-4'>
           <table className='table table-borderless' style={{ color: 'red' }}>
             <thead style={{ backgroundColor: '#f1f1f1' }}>
               <tr>
@@ -98,36 +97,44 @@ const SubscriptionManagement = () => {
             </thead>
             <tbody style={{ backgroundColor: '#fffaf0' }}>
               {loading ? (
-                <SkeletonRows />
+                <SkeletonRows count={7} />
               ) : (
-                state?.data?.map((tdata, index) => (
+                subscription?.data?.map((tdata, index) => (
                   <tr key={index}>
                     <td className='text-center'>
-                      {state?.sortOrder === 'desc'
-                        ? (state?.page - 1) * state?.limit + index + 1
-                        : state?.totalCount - ((state?.page - 1) * state?.limit + index)}
+                      {subscription?.sortOrder === 'desc'
+                        ? (subscription?.page - 1) * subscription?.limit + index + 1
+                        : subscription?.totalCount - ((subscription?.page - 1) * subscription?.limit + index)}
                     </td>
-                    <td>{tdata?.firstname} {tdata?.lastname}</td>
+                    <td>{tdata?.firstname} </td>
                     <td>{tdata?.subscriptionType || "N/A"}</td>
                     <td>{tdata?.subscriptionData?.[0]?.SubscribedOn || "N/A"}</td>
                     <td>{tdata?.subscriptionData?.[0]?.NextBillingDate || "N/A"}</td>
                     <td>{tdata?.subscriptionData?.[0]?.AmountPaid || "N/A"}</td>
-                    <td>{getIndianStateFromAddress(tdata?.address) || "Unknown"}</td>
+                    <td>{tdata.state ? tdata.state : 'N/A'}</td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
-        </div>
+          {!loading && !initialLoading && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              setPage={setCurrentPage}
+            />
+          )}
+        </div>:
+         <div className="nodata">
+         <p className="content">No data found</p>
+       </div>
+        }
+        </Fragment>
       )}
 
-      {!loading && !initialLoading && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          setPage={setCurrentPage}
-        />
-      )}
+
+
+
     </div>
   );
 };

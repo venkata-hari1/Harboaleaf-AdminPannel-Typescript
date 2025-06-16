@@ -1,174 +1,587 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import networkCall from "../../../Utils/NetworkCalls";
-import { baseURL, endpoints } from "../../../Utils/Config";
+// Redux/Reducers/UserMangement.ts
 
-const initialState:any = {
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { endpoints, baseURL } from "../../../Utils/Config";
+import { useLocation } from "react-router-dom";
+
+// --- Initial State ---
+const initialState = {
   loading: false,
-  data: [],
+  error: null as string | null,
+  data: {},
   reports: [],
   subscription: [],
+  monitorCampaigns: {},
   socialUser: null, // New state for social media user data
   socialUserLoading: false, // Loading state for social media user
   socialUserError: null, // Error state for social media user
+  GSTUsers: [],
+  GSTUserReports: [],
+  dashboard: [],
+  profile: {}
 };
 
-// Existing thunks (Users, Subscription, UserReports, UserSuspended) remain unchanged
+// --- Common Fetch Handler ---
+interface FetchResult<T = any, E = any> {
+  response: T | null;
+  error: {
+    status?: number;
+    message: string;
+    data?: E;
+  } | null;
+}
+
+const executeFetch = async <T = any, E = any>(
+  fullUrl: string,
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  body?: FormData | object | string,
+): Promise<FetchResult<T, E>> => {
+  const headers: HeadersInit = { 'Accept': 'application/json' };
+  const token = localStorage.getItem('token');
+  if (token) headers['token'] = token;
+
+  const options: RequestInit = { method, headers };
+
+  if (body) {
+    if (body instanceof FormData) {
+      options.body = body;
+    } else if (typeof body === 'object') {
+      options.body = JSON.stringify(body);
+      headers['Content-Type'] = 'application/json';
+    } else {
+      options.body = body;
+      headers['Content-Type'] = 'text/plain';
+    }
+  } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  try {
+    const res = await fetch(fullUrl, options);
+    const data = await res.json().catch(() => ({ message: res.statusText }));
+    if (!res.ok) {
+      return {
+        response: null,
+        error: { status: res.status, message: data.message || `Error ${res.status}`, data },
+      };
+    }
+    return { response: data, error: null };
+  } catch (err: any) {
+    return {
+      response: null,
+      error: { status: 0, message: err.message || "Network error" },
+    };
+  }
+};
+
+// --- Async Thunks ---
+
 export const Users = createAsyncThunk(
   "Users",
-  async (payload: { data: { page: number | string, sort: string, filter: string } }, { fulfillWithValue, rejectWithValue }) => {
+  async (
+    payload: { data: { page: number | string; sort: string; filter: string, state } },
+    { fulfillWithValue, rejectWithValue }
+  ) => {
     try {
-      const { data } = payload;
-      const { response, error } = await networkCall(
-        `${endpoints.USERS}?page=${data.page}&sort=${data.sort}&state=&accountStatus=${data.filter}`,
-        "GET"
+      const { page, sort, filter, state } = payload.data;
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${baseURL}api/admin/users?page=${page}&sort=${sort}&state=${state}&accountStatus=${filter}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'token': `${token}`,
+        },
+      }
       );
-      if (response) {
-        return fulfillWithValue(response);
-      } else if (error) {
+
+      if (!response.ok) {
+        const error = await response.json();
         return rejectWithValue(error);
       }
-    } catch (error) {
-      return rejectWithValue(error);
+
+      const data = await response.json();
+      return fulfillWithValue(data);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || "Something went wrong" });
     }
   }
 );
 
 export const Subscription = createAsyncThunk(
   "Subscription",
-  async (payload: { data: { type: string, currentPage: number } }, { fulfillWithValue, rejectWithValue }) => {
+  async (
+    payload: { data: { filter: string; page: number; state: string } },
+    { fulfillWithValue, rejectWithValue }
+  ) => {
     try {
       const { data } = payload;
-      const { response, error } = await networkCall(
-        `${endpoints.subscription}?page=${data.currentPage}&accountType=${data.type}`,
-        "GET"
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(
+        `${baseURL}${endpoints.subscription}?page=${data.page}&accountType=${data.filter}&state=${data.state}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'token': `${token}`,
+          },
+        }
       );
-      if (response) {
-        return fulfillWithValue(response);
-      } else if (error) {
-        return rejectWithValue(error);
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(result);
       }
-    } catch (error) {
-      return rejectWithValue(error);
+
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Failed to fetch subscriptions' });
     }
   }
 );
-
 export const UserReports = createAsyncThunk(
   "UserReports",
-  async (payload: { data: { page: number | string, sort: string, filter: string } }, { fulfillWithValue, rejectWithValue }) => {
+  async (
+    payload: { data: { page: number | string; sort: string; filter: string, state: string } },
+    { fulfillWithValue, rejectWithValue }
+  ) => {
     try {
-      const {data}=payload
-      const { response, error } = await networkCall(
-        `${endpoints.REPORTS}?page=${data.page}sortField=type&sortOrder=${data.sort}`,
-        "GET"
+      const { data } = payload;
+      const response = await fetch(
+        `${baseURL}${endpoints.REPORTS}?page=${data.page}&sortField=type&sortOrder=${data.sort}&state=${data.state}&accountStatus=${data.filter}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            token: localStorage.getItem('token') || ''
+          },
+        }
       );
-      if (response) {
-        return fulfillWithValue(response);
-      } else if (error) {
-        return rejectWithValue(error);
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(result);
       }
-    } catch (error) {
-      return rejectWithValue(error);
+
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Failed to fetch user reports' });
     }
   }
 );
 
 export const UserSuspended = createAsyncThunk(
   'user/UserSuspended',
-  async (payload: { data: { id: string, temSuspended: boolean, suspended: boolean } }, { fulfillWithValue, rejectWithValue, dispatch }) => {
+  async (
+    payload: { data: { id: string; temSuspended: boolean; suspended: boolean, location: string } },
+    { fulfillWithValue, rejectWithValue, dispatch }
+  ) => {
     try {
-      const { response, error } = await networkCall(
-        endpoints.Suspended,
-        'PATCH',
-        JSON.stringify(payload.data)
-      );
-      if (response) {
-        const data = {
-          page: localStorage.getItem('page') || 1,
-          sort: 'desc',
-          filter: ''
-        };
-        dispatch(Users({ data: data }));
-        return fulfillWithValue(response);
+      const { data } = payload
+      const response = await fetch(`${baseURL}${endpoints.Suspended}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          token: localStorage.getItem('token') || ''
+
+        },
+        body: JSON.stringify(payload.data)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(result);
       }
-      return rejectWithValue(error);
-    } catch (err) {
-      return rejectWithValue(err);
+
+      // Re-fetch updated user list after suspension change
+      const page = localStorage.getItem('page') || 1;
+      const sort = localStorage.getItem('sort') || 'desc'
+      const filter = localStorage.getItem('filter') || ''
+      if (data.location === '/admin/user-reports') {
+        dispatch(
+          UserReports({
+            data: {
+              state: '',
+              page,
+              sort,
+              filter,
+            }
+          })
+        );
+      }
+      else if (data.location === '/admin/gst-reports') {
+        dispatch(
+          GST_User_Reports({
+            data: {
+              page,
+              sort,
+              filter,
+              state: ''
+            }
+          })
+        );
+      }
+      else {
+        dispatch(
+          Users({
+            data: {
+              state: '',
+              page,
+              sort,
+              filter
+            }
+          })
+        );
+      }
+
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Suspension failed' });
     }
   }
 );
 
-// New thunk for fetching social media user data
+export const createAdCampaign = createAsyncThunk(
+  "adCampaign/create",
+  async (formData: FormData, { fulfillWithValue, rejectWithValue }) => {
+    const { response, error } = await executeFetch(
+      `${baseURL}${endpoints.advertisement}`, "POST", formData
+    );
+    return response ? fulfillWithValue(response) : rejectWithValue(error?.message || "Failed to create ad campaign.");
+  }
+);
+
+export const MonitorCampaigns = createAsyncThunk(
+  "monitor/campaigns",
+  async ({ page, limit }: { page: number; limit: number }, { fulfillWithValue, rejectWithValue }) => {
+    const queryParams = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+    const { response, error } = await executeFetch(
+      `${baseURL}${endpoints.moniteradvertisement}?${queryParams.toString()}`, "GET"
+    );
+    return response ? fulfillWithValue(response) : rejectWithValue(error?.message || "Failed to fetch campaigns.");
+  }
+);
+
 export const fetchSocialUser = createAsyncThunk(
   "fetchSocialUser",
   async (userId: string | '', { fulfillWithValue, rejectWithValue }) => {
     try {
-      const { response, error } = await networkCall(
-        `${baseURL}/api/socialmedia/user?userid=${userId}&type=`,
-        "GET"
+      const token = localStorage.getItem('token') || '';
+
+
+      const response = await fetch(
+        `${baseURL}api/socialmedia/user?userid=${userId}&type=`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'token': `${token}`,
+          },
+        }
       );
-      if (response) {
-        return fulfillWithValue(response);
-      } else if (error) {
-        return rejectWithValue(error);
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(result);
       }
-    } catch (error) {
-      return rejectWithValue(error);
+
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Failed to fetch user' });
+    }
+  }
+);
+// --- Slice ---
+export const GSTUSERS = createAsyncThunk(
+  "GSTUSERS",
+  async (
+    payload: { data: { page: number | string; sort: string; state: string } },
+    { fulfillWithValue, rejectWithValue }
+  ) => {
+    try {
+      const { data } = payload;
+      const response = await fetch(
+        `${baseURL}${endpoints.gstusers}?page=${data.page}&limit=5&sortOrder=${data.sort}&state=${data.state}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            token: localStorage.getItem('token') || ''
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(result);
+      }
+
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Failed to fetch user reports' });
     }
   }
 );
 
-export const UserManagement_Slice = createSlice({
-  name: "UserManagementSlice",
+//GST User Reports
+export const GST_User_Reports = createAsyncThunk(
+  "GST_User_Reports",
+  async (
+    payload: { data: { page: number | string; sort: string; filter: string, state: string } },
+    { fulfillWithValue, rejectWithValue }
+  ) => {
+    try {
+      const { data } = payload;
+      const response = await fetch(
+        `${baseURL}${endpoints.gstUserReports}?page=${data.page}&sortOrder=${data.sort}&search=&accountStatus=${data.filter}&state=${data.state}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            token: localStorage.getItem('token') || ''
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(result);
+      }
+
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Failed to fetch user reports' });
+    }
+  }
+);
+//Admin Profile
+export const AdminProfile = createAsyncThunk(
+  'AdminProfile',
+  async (
+    __,
+    { fulfillWithValue, rejectWithValue, dispatch }
+  ) => {
+    try {
+      const response = await fetch(`${baseURL}${endpoints.adminprofile}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          token: localStorage.getItem('token') || ''
+
+        },
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        return rejectWithValue(result);
+      }
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Suspension failed' });
+    }
+  }
+);
+//Admin Dashboard
+export const Admin_Dashboard = createAsyncThunk(
+  "Admin_Dashboard",
+  async (
+    payload: { data: { year: number | string } },
+    { fulfillWithValue, rejectWithValue }
+  ) => {
+    try {
+      const { data } = payload;
+      const response = await fetch(
+        `${baseURL}${endpoints.dashboard}?year=${data.year}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            token: localStorage.getItem('token') || ''
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(result);
+      }
+
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Failed to fetch user reports' });
+    }
+  }
+);
+const UserMangement_Slice = createSlice({
+  name: "UserMangementSlice",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    // Existing cases for Users, Subscription, UserReports
-    builder.addCase(Users.pending, (state) => {
-      state.loading = true;
-    });
-    builder.addCase(Users.fulfilled, (state, action) => {
-      state.data = action.payload;
-      state.loading = false;
-    });
-    builder.addCase(Users.rejected, (state) => {
-      state.loading = false; // Fixed: Set loading to false on rejection
-    });
-    builder.addCase(UserReports.pending, (state) => {
-      state.loading = true;
-    });
-    builder.addCase(UserReports.fulfilled, (state, action) => {
-      state.reports = action.payload;
-      state.loading = false;
-    });
-    builder.addCase(UserReports.rejected, (state) => {
-      state.loading = false; // Fixed: Set loading to false on rejection
-    });
-    builder.addCase(Subscription.pending, (state) => {
-      state.loading = true;
-    });
-    builder.addCase(Subscription.fulfilled, (state, action) => {
-      state.subscription = action.payload;
-      state.loading = false;
-    });
-    builder.addCase(Subscription.rejected, (state) => {
-      state.loading = false; // Fixed: Set loading to false on rejection
-    });
+    // Users
+    builder
+      .addCase(Users.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(Users.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+        state.error = null;
+      })
+      .addCase(Users.rejected, (state, action) => {
+        state.loading = false;
+        state.data = {};
+        state.error = action.payload as string;
+      });
 
-    // New cases for fetchSocialUser
-    builder.addCase(fetchSocialUser.pending, (state) => {
-      state.socialUserLoading = true;
-      state.socialUserError = null;
-    });
-    builder.addCase(fetchSocialUser.fulfilled, (state, action) => {
-      state.socialUser = action.payload;
-      state.socialUserLoading = false;
-    });
-    builder.addCase(fetchSocialUser.rejected, (state, action) => {
-      state.socialUserLoading = false;
-      state.socialUserError = action.payload || 'Failed to fetch social user data';
-    });
+    // User Reports
+    builder
+      .addCase(UserReports.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(UserReports.fulfilled, (state, action) => {
+        state.reports = action.payload;
+        state.loading = false;
+      })
+      .addCase(UserReports.rejected, (state) => {
+        state.loading = false;
+      });
+
+    // Subscription
+    builder
+      .addCase(Subscription.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(Subscription.fulfilled, (state, action) => {
+        state.subscription = action.payload;
+        state.loading = false;
+      })
+      .addCase(Subscription.rejected, (state) => {
+        state.loading = false;
+      });
+
+    // User Suspended
+    builder
+      .addCase(UserSuspended.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(UserSuspended.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(UserSuspended.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
+    // Create Ad Campaign
+    builder
+      .addCase(createAdCampaign.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createAdCampaign.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(createAdCampaign.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
+    // Monitor Campaigns
+    builder
+      .addCase(MonitorCampaigns.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(MonitorCampaigns.fulfilled, (state, action) => {
+        state.loading = false;
+        state.monitorCampaigns = action.payload;
+        state.error = null;
+      })
+      .addCase(MonitorCampaigns.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        state.monitorCampaigns = {};
+      });
+
+    // Fetch Social User
+    builder
+      .addCase(fetchSocialUser.pending, (state) => {
+        state.socialUserLoading = true;
+        state.socialUserError = null;
+      })
+      .addCase(fetchSocialUser.fulfilled, (state, action) => {
+        state.socialUser = action.payload;
+        state.socialUserLoading = false;
+      })
+      .addCase(fetchSocialUser.rejected, (state, action) => {
+        state.socialUserLoading = false;
+      });
+
+    // GST Users
+    builder
+      .addCase(GSTUSERS.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(GSTUSERS.fulfilled, (state, action) => {
+        state.GSTUsers = action.payload;
+        state.loading = false;
+      })
+      .addCase(GSTUSERS.rejected, (state, action) => {
+        state.loading = false;
+
+      });
+    // GST Users Reports
+    builder
+      .addCase(GST_User_Reports.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(GST_User_Reports.fulfilled, (state, action) => {
+        state.GSTUserReports = action.payload;
+        state.loading = false;
+      })
+      .addCase(GST_User_Reports.rejected, (state, action) => {
+        state.loading = false;
+
+      });
+    //Admin Dashboard
+    builder
+      .addCase(Admin_Dashboard.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(Admin_Dashboard.fulfilled, (state, action) => {
+        state.dashboard = action.payload;
+        state.loading = false;
+      })
+      .addCase(Admin_Dashboard.rejected, (state, action) => {
+        state.loading = false;
+
+      });
+    //Admin Profile
+    builder
+      .addCase(AdminProfile.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(AdminProfile.fulfilled, (state, action) => {
+        state.profile = action.payload;
+        state.loading = false;
+      })
+      .addCase(AdminProfile.rejected, (state, action) => {
+        state.loading = false;
+
+      });
   },
 });
 
-export default UserManagement_Slice.reducer;
+
+export default UserMangement_Slice.reducer;

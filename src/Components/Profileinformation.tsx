@@ -14,8 +14,6 @@ const Profileinformation = () => {
   const dispatch=useDispatch<AppDispatch>()
   const location=useLocation()
   const pathname: any = location?.pathname.split('/')[4]
-
-
   useEffect(() => {
     async function fetchData(){
     dispatch(fetchSocialUser(pathname));}

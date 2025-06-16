@@ -1,4 +1,3 @@
-/* Base Styles & Global Resets */
 body {
     margin: 0;
     padding: 0;
@@ -33,14 +32,10 @@ body {
 .admedia-box,
 .desc-box,
 .call-action,
-.taget-box,
-.target-num,
-.link-box,
+.link-box, /* Keep link-box here, it's a direct input group */
 .budget-box,
-.date-box,
+.date-box, /* Date box itself is a grid item */
 .elimination-box,
-.gender-box,
-.placing-box,
 .preview-box {
     display: grid;
     grid-template-columns: 200px 1fr; /* Fixed width for label column, 1fr for input */
@@ -53,7 +48,7 @@ body {
 
 /* General label styles */
 .form-wrapper label {
-    font-size: 20px; /* Slightly smaller font for labels */
+    font-size: 15px; /* Reverted to 20px as per previous discussions/typical usage for main labels */
     font-weight: 500;
     color: #C0C0C0; /* Light grey for labels */
     white-space: nowrap; /* Prevent labels from wrapping */
@@ -65,7 +60,7 @@ body {
 .form-textbox { /* Base class for all text-based inputs */
     width: 100%; /* Now takes 100% of its grid column */
     height: 40px; /* Standard input height */
-    padding: 24px, 12px;
+    padding: 0 12px; /* Adjusted padding to be consistent */
     border-radius: 5px; /* Slightly less rounded than wrapper */
     border: 1px solid #4A5568; /* Subtle border color */
     background: #2D3748; /* Input background */
@@ -82,16 +77,19 @@ textarea.form-textbox {
 }
 
 /* Focus styles for inputs */
-.form-textbox:focus,
-.date-box input[type="date"]:focus,
-.target-num input[type="number"]:focus,
-select.form-textbox:focus,
-.custom-checkbox-container input:focus ~ .checkmark { /* Updated focus for custom checkbox */
+.form-textbox:focus {
     outline: none;
     border-color: #3856F3; /* Blue border on focus */
     box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3); /* Subtle glow on focus */
     background-color: #3B4553; /* Slightly lighter background on focus */
 }
+/* Apply focus style to the group for budget inputs */
+.daily-budget-input-group:focus-within,
+.estimated-budget-input-group:focus-within {
+    border-color: #3856F3;
+    box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3);
+}
+
 
 /* Placeholder color */
 input::placeholder,
@@ -107,7 +105,7 @@ textarea::placeholder {
     top: calc(100% - 20px); /* Position just above the bottom of the grid row */
     left: 220px; /* Aligned with the start of the input column (200px label + 20px gap) */
     width: calc(100% - 220px); /* Take remaining width of input column */
-    max-width: none; /* Removed max-width here as well, let it be full width below the input */
+    max-width: none;
     font-size: 11px;
     padding: 2px 5px;
     pointer-events: none; /* Allows clicks to pass through */
@@ -146,7 +144,7 @@ textarea::placeholder {
     background-color: #080808;
     color: #FFFFFF;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 12px; /* Reduced from 14px to 12px */
     cursor: pointer;
     transition: background-color 0.2s ease, border-color 0.2s ease;
     flex-shrink: 0;
@@ -209,146 +207,8 @@ textarea::placeholder {
     color: #E53E3E;
 }
 
-.admedia-box .error-msg {
-    position: absolute;
-    bottom: 0;
-    left: 220px;
-    width: calc(100% - 220px);
-    max-width: none; /* Also removed max-width here for full width error message */
-    text-align: left;
-    font-size: 11px;
-    color: #FF5A5A;
-}
-
-/* Target Location - Select Dropdown AND All Over India Checkbox */
-.taget-box .location-selection-group {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-/* Specific styling for the location select dropdown */
-select#location { /* Targeting by ID for specific alignment */
-    text-align: center; /* Center align the displayed text */
-    /* If you also want options in dropdown to be centered, it's generally not supported
-       by default for <option> tags in standard <select> elements across all browsers.
-       This will center the currently selected value. */
-}
-
-select.form-textbox {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url('data:image/svg+xml;charset=UTF8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23E0E0E0"%3E%3Cpath d="M7 10l5 5 5-5H7z"/%3E%3C/svg%3E');
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 16px;
-    padding-right: 35px; /* Space for the custom arrow */
-    max-width: 250px; /* Keeps the select dropdown narrower */
-    flex-grow: 1;
-}
-
-select.form-textbox:disabled {
-    background-color: #3B4553;
-    cursor: not-allowed;
-    opacity: 0.7;
-    border-color: #5A6A7D;
-    background-image: url('data:image/svg+xml;charset=UTF8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23A0AEC0"%3E%3Cpath d="M7 10l5 5 5-5H7z"/%3E%3C/svg%3E');
-}
-
-/* --- Custom Checkbox Styling for "All over India" --- */
-.custom-checkbox-container {
-    display: flex;
-    align-items: center;
-    position: relative;
-    cursor: pointer;
-    font-size: 14px;
-    color: #E0E0E0;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    white-space: nowrap;
-}
-
-/* Hide the browser's default checkbox */
-.custom-checkbox-container input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
-}
-
-/* Create a custom checkmark/box */
-.checkmark {
-    position: absolute;
-    top: 50%; /* Center vertically */
-    transform: translateY(-50%);
-    left: 8px; /* Position inside the label's padding */
-    height: 18px;
-    width: 18px;
-    background-color: transparent;
-    border: 1px solid #3856F3;
-    border-radius: 3px; /* Slightly rounded corners for checkbox */
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-/* When the checkbox is checked, add a blue background */
-.custom-checkbox-container input[type="checkbox"]:checked ~ .checkmark {
-    background-color: #3856F3;
-    border-color: #3856F3;
-}
-
-/* Create the checkmark/indicator (hidden when not checked) */
-.checkmark:after {
-    content: "";
-    position: absolute;
-    display: none;
-}
-
-/* Show the checkmark when checked */
-.custom-checkbox-container input[type="checkbox"]:checked ~ .checkmark:after {
-    display: block;
-}
-
-/* Style the checkmark/indicator */
-.custom-checkbox-container .checkmark:after {
-    left: 6px;
-    top: 2px;
-    width: 5px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    -webkit-transform: rotate(45deg);
-    -ms-transform: rotate(45deg);
-    transform: rotate(45deg);
-}
-
-/* Specific styling for the 'All over India' checkbox label to make it look like the old button */
-.all-india-checkbox-label {
-    height: 40px; /* Match height of select box */
-    padding-left: 35px; /* Space for the custom checkbox + internal padding */
-    padding-right: 15px; /* Padding on the right of text */
-    border: 1px solid #4A5568;
-    background-color: #2D3748;
-    border-radius: 5px;
-    justify-content: flex-start;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    flex-shrink: 0;
-}
-
-.all-india-checkbox-label:hover {
-    background-color: #3B4553;
-    border-color: #5A6A7D;
-}
-/* No need for .checked class on the label, the input:checked handles styling of checkmark */
-
-
 /* Daily Budget & Estimated Budget with "Rs." prefix */
-.daily-budget-input-group,
-.estimated-budget-input-group {
+.daily-budget-input-group {
     display: flex;
     align-items: center;
     border: 1px solid #4A5568;
@@ -360,8 +220,7 @@ select.form-textbox:disabled {
     max-width: 200px; /* Keeps these budget inputs at 200px */
 }
 
-.daily-budget-input-group .currency-prefix,
-.estimated-budget-input-group .currency-prefix {
+.daily-budget-input-group .currency-prefix {
     background: #2D3748;
     color: #E0E0E0;
     padding: 0 12px;
@@ -373,8 +232,7 @@ select.form-textbox:disabled {
     flex-shrink: 0;
 }
 
-.daily-budget-input-group .form-textbox,
-.estimated-budget-input-group .form-textbox {
+.daily-budget-input-group .form-textbox {
     border: none;
     background: none;
     flex-grow: 1;
@@ -383,65 +241,108 @@ select.form-textbox:disabled {
     max-width: none;
 }
 
-.daily-budget-input-group .form-textbox:focus,
-.estimated-budget-input-group .form-textbox:focus {
-    box-shadow: none;
-    border-color: transparent;
-    background-color: transparent;
-}
-
-.daily-budget-input-group:focus-within,
-.estimated-budget-input-group:focus-within {
-    border-color: #3856F3;
-    box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3);
-}
-
-
-/* Ad Duration (Date Pickers) */
-.date-box .date-pick {
+/* Ad Duration (Date Pickers) - MODIFIED FOR FIGMA DESIGN */
+.date-box .date-fields-container {
     display: flex;
-    flex-direction: row;
-    gap: 15px;
-    align-items: center;
-    margin-top: 0;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Allows stacking on smaller screens */
+    gap: 20px; /* Space between start and end date inputs */
+    align-items: flex-start; /* Aligns them to the top */
+    /* This container now acts as the content for the 1fr grid column */
+}
+
+.date-box .date-input-wrap {
+    display: flex;
+    flex-direction: column; /* Stacks label and input vertically */
+    gap: 8px; /* Space between sub-label and input */
+    flex: 1; /* Allows each date input block to share space */
+    min-width: px; /* Minimum width for each date input block */
+    max-width: 200px; /* Set max-width to 200px to match budget inputs */
+}
+
+.date-box .date-sub-label {
+    font-size: 15px; /* Font size for "Start Date" / "End Date" labels */
+    font-weight: 500;
+    color: #C0C0C0;
+    text-align: left;
+    white-space: nowrap;
 }
 
 .date-box input[type="date"] {
-    width: calc(50% - 7.5px);
-    max-width: 200px; /* Keeps date inputs at 200px */
-    padding-right: 10px;
+    width: 150px; /* Reduced width for the date inputs */
+    height: 40px; /* Standard input height */
+    padding: 0 12px; /* Basic padding */
     border-radius: 5px;
-    height: 40px;
+    border: 1px solid #4A5568;
+    background: #2D3748;
+    color: #E0E0E0; /* This color will show the selected date */
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    /* Customizing the date input appearance */
+    -webkit-appearance: none; /* Remove default browser styling */
+    -moz-appearance: none;
+    appearance: none;
+
+    /* Add padding for the custom calendar icon */
+    padding-right: 0px; /* Space for the calendar icon */
+
+    /* SVG for a blue calendar icon */
+    
 }
 
-.date-box input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(100%) sepia(50%) hue-rotate(120deg) saturate(300%);
-    cursor: pointer;
-    font-size: 16px;
+/* This pseudo-element targets the inner text container of the date input in WebKit browsers */
+/* We set its color to transparent to hide the default "dd-mm-yyyy" text. */
+/* The selected date will still be visible due to the input's main color property. */
+.date-box input[type="date"]::-webkit-datetime-edit {
+    color: transparent;
+}
+/* This pseudo-element targets the text part for the date edit */
+.date-box input[type="date"]::-webkit-datetime-edit-text {
+    color: #E0E0E0; /* Ensure the actual selected date is visible */
+}
+/* Target for day, month, year fields */
+.date-box input[type="date"]::-webkit-datetime-edit-day-field,
+.date-box input[type="date"]::-webkit-datetime-edit-month-field,
+.date-box input[type="date"]::-webkit-datetime-edit-year-field {
+    color: #E0E0E0; /* Ensure selected day/month/year text is visible */
+}
+/* Target for separating slashes/dashes */
+.date-box input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    color: #E0E0E0; /* Ensure separators are visible if needed */
 }
 
-.date-separator {
-    color: #C0C0C0;
-    font-size: 14px;
+
+/* Specific focus style for date inputs */
+.date-box input[type="date"]:focus {
+    outline: none;
+    border-color: #3856F3;
+    box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3);
+    background-color: #3B4553;
 }
 
-/* Target Age Range */
-.target-num .age-range-inputs {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+/* Style for disabled date inputs */
+.date-box input[type="date"]:disabled {
+    background-color: #3B4553;
+    cursor: not-allowed;
+    opacity: 0.7;
+    border-color: #5A6A7D;
+    /* Grey calendar icon for disabled state */
+    background-image: url('data:image/svg+xml;charset=UTF8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23A0AEC0"%3E%3Cpath d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h2v2H7zm0 4h2v2H7zm4-4h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2z"/%3E%3C/svg%3E');
 }
 
-.target-num input[type="number"] {
-    width: 100px; /* Keeps age inputs at 100px */
-    text-align: center;
-    padding: 0 5px;
-    border-radius: 5px;
-    height: 40px;
+/* Specific error message positioning for date inputs */
+.date-error-message {
+    grid-column: 2 / 3; /* Aligns it to the second column where inputs are */
+    position: absolute;
+    top: calc(100% - 20px); /* Position just above the bottom of the grid row */
+    left: 220px; /* Aligned with the start of the input column (200px label + 20px gap) */
+    width: calc(100% - 220px); /* Take remaining width of input column */
+    max-width: none;
+    text-align: left;
+    font-size: 11px;
+    color: #FF5A5A; /* Clear red for errors */
 }
+
 
 /* --- REMOVE SPINNER BUTTONS FOR NUMBER INPUTS --- */
 input[type="number"]::-webkit-inner-spin-button,
@@ -456,105 +357,6 @@ input[type="number"] {
 /* --- END REMOVE SPINNER BUTTONS --- */
 
 
-.target-num .age-separator {
-    color: #C0C0C0;
-    font-size: 14px;
-    white-space: nowrap;
-}
-
-/* Gender Radios */
-.gender-box > div {
-    display: flex;
-    gap: 30px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.gender-box label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    color: #E0E0E0;
-}
-
-.gender-box input[type="radio"] {
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border: 1px solid #3856F3;
-    border-radius: 50%;
-    background-color: transparent;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    flex-shrink: 0;
-}
-
-.gender-box input[type="radio"]:checked {
-    background-color: #3856F3;
-    border-color: #3856F3;
-    position: relative;
-}
-
-.gender-box input[type="radio"]:checked::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 6px;
-    height: 6px;
-    background-color: #E0E0E0;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-}
-
-/* Placing Radios */
-.placing-box .placing-options {
-    display: flex;
-    flex-direction: row;
-    gap: 30px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-}
-
-.placing-box .placing-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    color: #E0E0E0;
-}
-
-.placing-box input[type="radio"] {
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border: 1px solid #3856F3;
-    border-radius: 50%;
-    background-color: transparent;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    flex-shrink: 0;
-}
-
-.placing-box input[type="radio"]:checked {
-    background-color: #3856F3;
-    border-color: #3856F3;
-    position: relative;
-}
-
-.placing-box input[type="radio"]:checked::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 6px;
-    height: 6px;
-    background-color: #E0E0E0;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-}
-
 /* --- Preview Button --- */
 .preview-box {
     align-items: center; /* This can remain centered if the preview button is vertically aligned to its label */
@@ -564,7 +366,7 @@ input[type="number"] {
 }
 .preview-box .preview-button {
     grid-column: 2 / 3;
-    width: 40px;
+    width: 100px;
     height: 40px;
     background-color: #3856F3;
     border: none;
@@ -574,7 +376,7 @@ input[type="number"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 10px;
     transition: background-color 0.3s ease;
 }
 
@@ -650,14 +452,10 @@ input[type="number"] {
     .admedia-box,
     .desc-box,
     .call-action,
-    .taget-box,
-    .target-num,
     .link-box,
     .budget-box,
     .date-box,
     .elimination-box,
-    .gender-box,
-    .placing-box,
     .preview-box {
         grid-template-columns: 1fr; /* Stack label and input vertically */
         align-items: flex-start; /* Ensure top alignment on mobile too */
@@ -679,34 +477,46 @@ input[type="number"] {
         border: none;
     }
 
-    .file-upload-container-inline,
-    .gender-box > div,
-    .target-num .age-range-inputs,
-    .date-box .date-pick,
-    .placing-box .placing-options {
+    .file-upload-container-inline > div { /* Target direct children of file-upload-container-inline */
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
         grid-column: 1 / -1;
     }
 
-    /* Target Location - Select and All India Checkbox on mobile */
-    .taget-box .location-selection-group {
-        flex-direction: column;
-        align-items: flex-start;
+    /* Responsive for date inputs */
+    .date-box .date-fields-container {
+        flex-direction: column; /* Stack date inputs vertically on mobile */
         width: 100%;
         max-width: none;
         gap: 10px;
+        align-items: flex-start; /* Ensure alignment when stacked */
     }
 
-    /* Ensure all inputs become full width on mobile */
-    .date-box input[type="date"],
-    .target-num input[type="number"],
+    .date-box .date-input-wrap {
+        width: 100%; /* Take full width on mobile */
+        max-width: none;
+    }
+
+    .date-box input[type="date"] {
+        width: 150px; /* Reduced width for the date inputs on mobile */
+        max-width: none;
+    }
+
+    .date-error-message {
+        position: static; /* Position statically on mobile */
+        width: 100%;
+        max-width: none;
+        text-align: left;
+        margin-top: 5px;
+        left: auto; /* Remove fixed left position */
+        grid-column: auto; /* Reset grid column */
+    }
+
+
+    /* Ensure all remaining inputs become full width on mobile */
     .form-textbox,
-    .daily-budget-input-group,
-    .estimated-budget-input-group,
-    select.form-textbox, /* Ensure select is also full width */
-    .all-india-checkbox-label { /* Ensure checkbox label is full width on mobile */
+    .daily-budget-input-group {
         width: 100%;
         max-width: none;
     }

@@ -8,37 +8,47 @@ import SkeletonRows from '../../Utils/Skeleton';
 import { UserReports, UserSuspended } from '../Redux/Reducers/UserMangement';
 import Loader from '../../Utils/Loader';
 import { showToast } from '../../Utils/Validation';
+import { useLocation } from 'react-router-dom';
 
 const Userreports = () => {
   const [popupVisible, setPopupVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [loading, setLoading] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
   const[sortOrder,setSortOrder]=useState(true)
-  const data: any = useSelector((state: RootState) => state.UserMangment.reports);
+
+  const {reports,loading}:any= useSelector((state: RootState) => state.UserMangment);
   const dispatch = useDispatch<AppDispatch>();
     const [value, setValue] = useState(false);
     const[filter,setFilter]=useState('')
+    const location=useLocation()
   useEffect(() => {
     const fetchData = async () => {
       if (initialLoad) {
         const data={
           page:currentPage,
           sort:sortOrder?'desc':'asc',
-          filter:filter
+          filter:filter,
+          state:''
         }
+        localStorage.setItem('filter',filter)
+        localStorage.setItem('page',currentPage.toString())
+        localStorage.setItem('sort',sortOrder?'desc':'asc')
         await dispatch(UserReports({data:data}));
         setInitialLoad(false);
       } else {
-        setLoading(true);
+
         const data={
           page:currentPage,
           sort:sortOrder?'desc':'asc',
-          filter:filter
+          filter:filter,
+          state:''
         }
+        localStorage.setItem('filter',filter)
+        localStorage.setItem('page',currentPage.toString())
+        localStorage.setItem('sort',sortOrder?'desc':'asc')
         await dispatch(UserReports({data:data}));
-        setLoading(false);
+
       }
     };
     fetchData();
@@ -52,39 +62,40 @@ const Userreports = () => {
   };
 
   const getSerialNumber = (index: number) => {
-    return data?.sortOrder === 'desc'
-      ? (data?.currentPage - 1) * data?.limit + index + 1
-      : data?.totalReports - ((data?.currentPage - 1) * data?.limit + index);
+    return reports?.sortOrder === 'desc'
+      ? (reports?.currentPage - 1) * reports?.limit + index + 1
+      : reports?.totalReports - ((reports?.currentPage - 1) * reports.limit + index);
   };
   const handleAscDesc = () => {
     setSortOrder(!sortOrder)
    };
    const handleFilter=(t:string)=>{
+
     setFilter(t)
+  
   }
 
     const handleTemSuspend = async (id: string, type: string) => {
       try {
-     
-        setLoading(true);
         let data;
         switch (type) {
           case "TemporarySuspended":
-            data = { id, temSuspended: true };
+            data = { id, temSuspended: true,location:location.pathname };
             break;
           case "Suspended":
-            data = { id, suspended: true };
+            data = { id, suspended: true ,location:location.pathname };
             break;
           case "ResetTemporarySuspension":
-            data = { id, temSuspended: false };
+            data = { id, temSuspended: false,location:location.pathname };
             break;
           case "ResetPermanentSuspension":
-            data = { id, suspended: false };
+            data = { id, suspended: false,location:location.pathname };
             break;
           default:
             setValue(false);
             return;
         }
+
         const res = await dispatch(UserSuspended({ data }));
         const fulfilled = res.payload;
         if (fulfilled?.status) {
@@ -95,12 +106,15 @@ const Userreports = () => {
       } catch {
         showToast(false, "Something went wrong");
       } finally {
-        setLoading(false);
       }
     };
+    const handleClose=(t:boolean)=>{
+    setPopupVisible(t)
+    }
+ 
   return (
     <div style={{ position: 'relative' }}>
-      {popupVisible && <UserPopUp post={selectedPost} />}
+      {popupVisible && <UserPopUp post={selectedPost} handleClose={handleClose}/>}
 
       <div className="container">
         <div className="d-flex justify-content-end mt-4">
@@ -138,14 +152,14 @@ const Userreports = () => {
 
         {initialLoad ? (
           <Loader />
-        ) : data?.data?.length > 0 ? (
+        ) : reports?.data?.length > 0 ? (
           <div className="tab-content table-responsive">
             <table className="table table-borderless mt-4">
               <thead>
                 <tr>
                   <th>S.No</th>
                   <th>User Name</th>
-                  <th>Address</th>
+                  <th>State</th>
                   <th>Contact</th>
                   <th>User Reported</th>
                   <th>Reason</th>
@@ -155,12 +169,16 @@ const Userreports = () => {
               </thead>
               <tbody>
                 {loading ? (
-                  <SkeletonRows />
+                  <SkeletonRows count={8}/>
                 ) : (
-                  data?.data?.map((tdata: any, index: number) => (
+                  reports?.data?.map((tdata: any, index: number) => (
                     <Fragment key={tdata._id}>
                       <tr>
-                        <td>{getSerialNumber(index)}</td>
+                        <td >
+                          <div style={{ color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
+                          {getSerialNumber(index)}
+                          </div>
+                        </td>
                         <td onClick={() => handleClick(tdata, tdata.type)} style={{ cursor: 'pointer' }}>
                           <div className="d-flex">
                             <img
@@ -171,42 +189,59 @@ const Userreports = () => {
                               height="30"
                               style={{ objectFit: "cover", border: '1px solid white' }}
                             />
-                            <div className="text-truncate" style={{ maxWidth: '100px' }}>
-                              {tdata?.user?.firstname} {tdata?.user?.lastname}
-                            </div>
+                            <span className="text-truncate" style={{marginTop:'3px', maxWidth: '100px',color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
+                              {tdata?.user?.firstname} 
+                            </span>
                           </div>
                         </td>
                         <td>
-                          <div className="text-truncate" style={{ maxWidth: '80px' }}>
-                            {tdata?.user?.address?.length > 10
-                              ? `${tdata.user.address.substring(0, 10)}...`
-                              : tdata?.user?.address || 'India'}
+                          <div className="text-truncate" style={{ maxWidth: '80px',color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
+                          {tdata.user.state?tdata.user.state:'N/A'}
                           </div>
                         </td>
                         <td >
-                          <div style={{ color: tdata?.suspended ? "red" : tdata.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
+                          <div style={{ color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
                           {tdata?.user?.countryCode}{tdata?.user?.mobile}
                           </div>
                         </td>
                         <td>
-                          {tdata?.reported?.image && (
+                         <div className="d-flex">
+                          {tdata?.reported?.image ? (
                             <img
                               src={tdata?.reported?.image}
                               alt="avatar"
                               className="rounded-circle me-2"
                               width="30"
                               height="30"
-                              style={{ objectFit: "cover", border: '1px solid white' }}
+                              style={{objectFit: "cover", border: '1px solid white' }}
                             />
-                          )}
-                          {tdata?.reported?.firstname} {tdata?.reported?.lastname}
+                          ):<img
+                              src={tdata?.user?.image || `https://robohash.org/${tdata?.user?.firstname || 'guest'}?size=40x40`}
+                              alt="avatar"
+                              className="rounded-circle me-2"
+                              width="30"
+                              height="30"
+                              style={{ objectFit: "cover", border: '1px solid white' }}
+                            />}
+                           <span style={{marginTop:'3px',color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
+                           {tdata?.reported?.firstname} 
+                           </span>
+                           </div>
                         </td>
-                        <td>{tdata?.reason}</td>
-                        <td>{tdata?.type}</td>
-                        <td className='action-btns'>
+                        <td>
+                        <div style={{ color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
+                          {tdata?.reason}
+                          </div>
+                          </td>
+                        <td>
+                        <div style={{ color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
+                          {tdata?.type}
+                          </div>
+                          </td>
+                          <td className='action-btns'>
                           <div className="dropdown">
                             <button
-                              className={`btn dropdown-toggle ${tdata?.suspended ? "btn-danger" : tdata.temSuspended ? 'btn-primary' : "btn-secondary"}`}
+                              className={`btn dropdown-toggle ${tdata?.user?.suspended ? "btn-danger" : tdata?.user?.temSuspended ? 'btn-primary' : "btn-secondary"}`}
                               type="button"
                               id="dropdownMenuButton"
                               data-bs-toggle="dropdown"
@@ -221,16 +256,16 @@ const Userreports = () => {
                                 opacity: value ? 0.5 : 1,
                               }}
                             >
-                              {!tdata?.temSuspended && !tdata?.suspended && (
+                              {!tdata?.user?.temSuspended && !tdata?.user?.suspended && (
                                 <>
                                   <a className="dropdown-item" href="#" onClick={() => handleTemSuspend(tdata.user._id, 'TemporarySuspended')}>Temporary Suspend</a>
                                   <a className="dropdown-item" href="#" onClick={() => handleTemSuspend(tdata.user._id, 'Suspended')}>Permanent Suspend</a>
                                 </>
                               )}
-                              {tdata?.temSuspended && (
+                              {tdata?.user?.temSuspended && (
                                 <a className="dropdown-item" href="#" onClick={() => handleTemSuspend(tdata.user._id, 'ResetTemporarySuspension')}>Reset Temporary Suspension</a>
                               )}
-                              {tdata?.suspended && (
+                              {tdata?.user?.suspended && (
                                 <a className="dropdown-item" href="#" onClick={() => handleTemSuspend(tdata.user._id, 'ResetPermanentSuspension')}>Reset Permanent Suspension</a>
                               )}
                             </div>
@@ -245,14 +280,14 @@ const Userreports = () => {
             {!loading && (
               <Pagination
                 currentPage={currentPage}
-                totalPages={data?.totalPages}
+                totalPages={reports?.totalPages}
                 setPage={setCurrentPage}
               />
             )}
           </div>
         ) : (
           <div className="nodata">
-            <p className="content">No data found</p>
+           <p className="content">No <span style={{textTransform:'capitalize'}}>{filter}</span> data found</p>
           </div>
         )}
       </div>

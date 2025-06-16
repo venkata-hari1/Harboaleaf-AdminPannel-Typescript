@@ -4,7 +4,7 @@ import '../Styles/Postdata.css';
 import { RootState } from '../Redux/store/Store';
 
 const Postdata = () => {
-  const { socialUser } = useSelector((state: RootState) => state.UserMangment);
+  const { socialUser }:any = useSelector((state: RootState) => state.UserMangment);
   const [activeTab, setActiveTab] = useState('Posts');
 
   const pvtdata = [
