@@ -6,8 +6,6 @@ import PreviewPopUp from './PreviewPopUp'; // Adjust path
 import { endpoints, baseURL } from '../../Utils/Config';
 import { showToast } from '../../Utils/Validation'; // Adjust path
 
-// Define the FormState interface to match the data structure that Userform uses internally
-// This must align with how data is passed from Monitercompaign's `FullCampaignDetails`
 interface FormState {
     id?: string; // Optional ID for edit mode (will be _id from backend)
     title: string;
@@ -35,8 +33,7 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
     const [form, setForm] = useState<FormState>(() => {
         // Initialize form based on campaignData from location state, or empty for new
         if (campaignData) {
-            // Map the incoming campaignData (FullCampaignDetails) to FormState structure
-            // Ensure dates are in 'YYYY-MM-DD' format for HTML date inputs
+            
             const mappedData: FormState = {
                 id: campaignData._id, // Use _id from backend as the form's ID
                 title: campaignData.title || '',
@@ -81,8 +78,6 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
         return new Date(Date.UTC(year, month - 1, day, 0, 0, 0)).toISOString();
     }, []);
 
-    // isFieldRequired: Determines if a field is generally considered required for submission.
-    // The 'file' field is handled specially here for edit vs. create.
     const isFieldRequired = useCallback((name: keyof FormState): boolean => {
         switch (name) {
             case 'title':
@@ -94,8 +89,6 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
             case 'endDate':
                 return true; // These fields are always required
             case 'file':
-                // File is NOT required for submission at all.
-                // It can be omitted, and the backend will handle existing media.
                 return false; 
             case 'estimatedBudget':
                 return false; // This is an optional field
@@ -110,8 +103,6 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
         let error = '';
         const urlRegex = /^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})$/i;
 
-        // Determine if validation should run for this field:
-        // Always validate required fields. For optional fields, only validate if they have a value.
         const hasActualValue = (typeof value === 'string' && value.trim() !== '') || (value !== null && value !== undefined && !(value instanceof File && value.size === 0));
         const shouldValidate = isFieldRequired(name) || hasActualValue;
 
@@ -162,10 +153,9 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
                 }
                 break;
             case 'file':
-                // Completely removed the error for missing file.
-                // Now, it only validates size/type if a new file is actually provided (value will be a File object).
+                
                 if (value) { 
-                    const sizeMB = value.size / 1024 / 1024;
+                    const sizeMB = (value.size / 1024 / 1024);
                     if (value.type.includes('image') && sizeMB > 1) error = 'Image should be less than 1MB';
                     if (value.type.includes('video') && sizeMB > 2) error = 'Video should be less than 2MB';
                 }
@@ -176,12 +166,8 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
         return error;
     }, [isFieldRequired]); 
 
-    // isFormValid: Determines overall form validity.
-    // If in edit mode, it ALWAYS returns true, bypassing validation for update.
-    // For new creation, it uses the regular validation logic.
     const isFormValid = useCallback((): boolean => {
-        // If in edit mode, bypass all validation for form submission.
-        // The submit button will always be enabled unless `loading` is true.
+        
         if (isEditMode) {
             return true;
         }
@@ -210,9 +196,6 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
         return !(hasRequiredErrors || hasOptionalValueErrors);
     }, [form, validate, isFieldRequired, isEditMode]);
 
-    // --- Effect Hooks (defined after functions they depend on) ---
-
-    // Effect to re-initialize form when `campaignData` from `location.state` changes
     useEffect(() => {
         if (campaignData) {
             const mappedData: FormState = {
@@ -240,10 +223,7 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
         setErrors({});
         setTouched({});
         setApiMessage(null);
-    }, [campaignData]); // Depend on campaignData from location state
-
-    // --- DEBUG LOGGING ---
-    // This useEffect is for debugging purposes. You can remove it when done.
+    }, [campaignData]); 
     useEffect(() => {
         console.log('--- Userform State Update ---');
         console.log('Form:', form);
@@ -284,6 +264,8 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
                     updatedForm.mediaUrl = undefined;
                 }
                 updatedForm.file = newVal;
+                // IMMEDIATELY MARK FILE AS TOUCHED ON CHANGE FOR INSTANT ERROR FEEDBACK
+                setTouched(currentTouched => ({ ...currentTouched, file: true }));
             } else {
                 updatedForm[name as keyof FormState] = newVal;
             }
@@ -339,25 +321,22 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
     // getInputClass: Determines CSS class for input elements (e.g., 'has-error', 'has-valid').
     const getInputClass = useCallback((name: keyof FormState): string => {
         const baseClass = 'form-textbox';
+        // First, always check for a specific error for the field
         if (touched[name] && errors[name]) {
             return `${baseClass} has-error`;
         }
 
         // Special handling for file input validity class
         if (name === 'file') {
-            // A file input is considered "valid" for styling if:
-            // 1. A new file is selected (form.file is not null)
-            // OR
-            // 2. There is an existing media URL (form.mediaUrl is not empty)
-            // AND there are no size/type errors for a newly uploaded file.
-            const isFileStylisticallyValid = (!!form.file || !!form.mediaUrl);
+            
+            const isFileStylisticallyPresentAndValid = (!!form.file || !!form.mediaUrl);
 
-            // If touched and stylistically valid, AND no validation error (only size/type can be an error now)
-            if (touched.file && isFileStylisticallyValid && !errors.file) {
+            if (touched.file && isFileStylisticallyPresentAndValid) {
                  return `${baseClass} has-valid`;
             }
-            // If it's touched, but neither a new file nor old media exists (but it's not an error condition anymore due to `isFieldRequired('file')` being false)
-            // or if there are errors (which would be size/type errors), return baseClass or has-error (handled by first if)
+            // If it's touched, but no file is selected and no existing media,
+            // or if there are errors (which are caught by the first `if`),
+            // then just return the base class.
             return baseClass; 
         }
 
@@ -370,28 +349,20 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
             return `${baseClass} has-valid`;
         }
         return baseClass;
-    }, [form, touched, errors, isFieldRequired, isEditMode]);
+    }, [form, touched, errors, isFieldRequired]);
 
     // handleSubmit: Handles form submission (create or update) to the backend.
     const handleSubmit = async () => {
-        // Step 1: Mark all fields as touched to show all validation errors immediately
-        // This is done regardless of edit mode, so user can still see issues even if they can submit.
         const newTouched: Partial<Record<keyof FormState, boolean>> = {};
         (Object.keys(form) as Array<keyof FormState>).forEach(key => {
             newTouched[key] = true;
         });
         setTouched(newTouched);
-
-        // Step 2: Perform a full validation pass to update the 'errors' state
-        // This is also done regardless of edit mode, to visually update error messages.
         let fullFormErrors: Partial<Record<keyof FormState, string>> = {};
         (Object.keys(form) as Array<keyof FormState>).forEach(key => {
             fullFormErrors[key] = validate(key, form[key], form);
         });
         setErrors(fullFormErrors);
-
-        // Step 3: Check overall validity for submission.
-        // IMPORTANT: Only block submission if NOT in edit mode AND there are validation errors.
         if (!isEditMode && !isFormValid()) {
             setApiMessage({ type: 'error', text: "Please correct the errors in the form before submitting." });
             showToast(false, "Please correct the errors in the form before submitting.");
@@ -402,9 +373,7 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
         setApiMessage(null); // Clear previous API messages
 
         try {
-            const campaignFormData = new FormData(); // FormData for mixed text and file upload
-
-            // Append all textual form fields (even if not changed, to ensure all data is sent)
+            const campaignFormData = new FormData(); 
             campaignFormData.append('title', form.title);
             campaignFormData.append('description', form.description);
             campaignFormData.append('callToAction', form.callToAction);
@@ -415,16 +384,10 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
                 campaignFormData.append('estimatedBudget', form.estimatedBudget);
             }
 
-            // Handle file upload logic: Only append 'file' if a NEW file has been selected by the user.
-            // If in edit mode and no new file is selected, the 'file' field will NOT be appended,
-            // which signals to the backend to keep the existing media.
             if (form.file) { 
                 campaignFormData.append('file', form.file);
             }
-            // Backend should interpret absence of 'file' field on PATCH as "keep existing media".
-
-
-            // Append ad duration dates, ensuring they are in ISO format for the backend
+            
             campaignFormData.append('adDuration[startDate]', getISODateString(form.startDate));
             campaignFormData.append('adDuration[endDate]', getISODateString(form.endDate));
 
@@ -440,8 +403,7 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
             const headers: HeadersInit = { 'Accept': 'application/json' };
             const token = localStorage.getItem('token');
             if (token) headers['token'] = token;
-            // IMPORTANT: Do NOT set 'Content-Type': 'multipart/form-data' explicitly when using FormData.
-            // The browser will automatically set it correctly, including the boundary.
+            
 
             const options: RequestInit = {
                 method: method,
@@ -450,7 +412,7 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
             };
 
             const res = await fetch(url, options);
-            // Attempt to parse JSON even if response is not OK, to get error messages
+            
             const data = await res.json().catch(() => ({ message: res.statusText || "Something went wrong" }));
 
             if (!res.ok) {
@@ -476,7 +438,7 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
                     const fileInput = document.getElementById('file1') as HTMLInputElement;
                     if (fileInput) fileInput.value = ''; // Manually clear file input visual
                 }
-                // If in edit mode, form retains values, and parent is responsible for navigation/refresh.
+               
             }
         } catch (err: any) {
             setApiMessage({ type: 'error', text: err.message || "An unexpected error occurred during submission." });
@@ -520,12 +482,8 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
         setLoading(false); // Ensure loading state is reset
     }, [campaignData]); // `campaignData` is a dependency to ensure proper reset based on context
 
-    // isPublishDisabled: Determines if the submit button should be disabled.
-    // Disabled if loading OR if the form is NOT in edit mode AND NOT valid.
     const isPublishDisabled = loading || (!isEditMode && !isFormValid());
 
-    // isPreviewDisabled: Determines if the preview button should be disabled.
-    // Preview still needs basic data to show something meaningful.
     const isPreviewDisabled = loading ||
                               !form.title ||
                               !form.description ||
@@ -820,4 +778,3 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
 };
 
 export default Userform;
-    
