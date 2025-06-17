@@ -1,4 +1,4 @@
-export const baseURL='http://localhost:8080/'
+export const baseURL='http://34.234.64.81/'
 export const endpoints:any={
     SIGNIN:'api/auth/signin',
     USERS:'api/admin/users',
