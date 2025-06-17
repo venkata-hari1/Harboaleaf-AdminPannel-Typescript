@@ -51,6 +51,7 @@ const Usermanagement = () => {
   }, [dispatch, currentPage, sortOrder, filter]);
 
   const userInfo = (id: number) => {
+ 
     navigate(`profile-info/${id}`);
   };
 

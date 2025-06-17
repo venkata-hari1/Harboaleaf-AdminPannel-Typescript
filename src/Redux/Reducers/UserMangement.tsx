@@ -475,6 +475,46 @@ export const AdminUploadProfileImage = createAsyncThunk(
     }
   }
 );
+
+export const DeletePostReel= createAsyncThunk(
+  'DeletePostReel',
+  async (
+   payload:{data:{id:string | number}},
+    { fulfillWithValue, rejectWithValue, dispatch }
+  ) => {
+    try {  
+      const {data}=payload  
+      const response = await fetch(`${baseURL}${endpoints.deletePost_Reel}/${data.id}`, {
+        method: 'DELETE',
+        headers: {
+          token: localStorage.getItem('token') || ''
+        },
+     
+      });
+    const page=localStorage.getItem('page') || 1;
+    const sort=localStorage.getItem('sort') ||'desc';
+    const filter=localStorage.getItem('filter') || ''
+      const result = await response.json();
+      if (response.ok) {
+        dispatch(
+          UserReports({
+            data: {
+              state: '',
+              page,
+              sort,
+              filter,
+            }
+          })
+        );
+        return fulfillWithValue(result);
+      } else {
+        return rejectWithValue(result);
+      }
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Upload failed' });
+    }
+  }
+);
 const UserMangement_Slice = createSlice({
   name: "UserMangementSlice",
   initialState,

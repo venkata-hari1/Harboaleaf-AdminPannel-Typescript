@@ -1,4 +1,4 @@
-export const baseURL='http://34.234.64.81/'
+export const baseURL='http://localhost:8080/'
 export const endpoints:any={
     SIGNIN:'api/auth/signin',
     USERS:'api/admin/users',
@@ -15,5 +15,6 @@ export const endpoints:any={
     uploadImage:'api/socialmedia/update_user',
     getad:'api/admin/get_ad_camaign',
     updatead:'api/admin//update_ad_campaign',
-    deletead:'api/admin/delete_ad_campaign'
+    deletead:'api/admin/delete_ad_campaign',
+    deletePost_Reel:'api/admin/delete_post_reel'
 }

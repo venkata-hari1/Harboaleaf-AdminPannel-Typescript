@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import moment from 'moment';
-import Popupimg from '../../assets/popimg.jpg';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../Redux/store/Store';
+import { DeletePostReel } from '../../Redux/Reducers/UserMangement';
+import { showToast } from '../../../Utils/Validation';
+import Loader from '../../../Utils/Loader';
+
 type IProps={
   handleClose:(t:boolean)=>void,
   post:{
@@ -15,25 +20,49 @@ text:string
 const UserPopUp = ({ post,handleClose}:IProps) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
+ const[loading,setLoading]=useState(false)
   const isPost = post?.type === 'post';
   const isVibe = post?.type === 'vibe';
   const content = isPost ? post?.postId : isVibe ? post?.vibeId : null;
-
   const text = content?.text;
   const image = content?.files?.[0].file;
   const firstname = post?.user?.firstname;
 
   const userimage = post?.user?.image;
   const createdAt = content?.createdAt || post?.createdAt;
-
-  const handleDeleteConfirm = () => {
-    setShowConfirm(false);
-    handleClose(false)
+const dispatch=useDispatch<AppDispatch>()
+  const handleDeleteConfirm = async() => {
+    try{
+      setLoading(true)
+      const data={
+        id:content?._id
+      }
+     const response= await dispatch(DeletePostReel({data:data}))
+     const fulfilled=response.payload
+     if(fulfilled?.status){
+      showToast(true,'deleted successfully')
+      setShowConfirm(false);
+      handleClose(false)
+     } 
+     else{
+      showToast(true,'something went wrong')
+     }
+   
+    }
+    catch(error){
+      
+    }
+    finally{
+      setLoading(false)
+    }
   };
 const handleCancel=()=>{
   setShowConfirm(false)
   handleClose(false)
+}
+const handleDelete=()=>{
+  setShowMenu(false);
+  setShowConfirm(true);
 }
   return (
     <>
@@ -44,6 +73,7 @@ const handleCancel=()=>{
         style={{ display: 'block', background: 'rgba(0,0,0,0.5)' }}
         role="dialog"
       >
+        {loading&&<Loader/>}
         <div className="modal-dialog modal-dialog-centered" style={{width: '320px',height:'20vh'}}>
           <div className="modal-content main-popup-container">
             <div className="popup-container p-3 position-relative">
@@ -51,7 +81,7 @@ const handleCancel=()=>{
               {/* Header */}
               <div className="popup-title-container d-flex align-items-center">
                 <img
-                  src={userimage || Popupimg}
+                  src={userimage }
                   width="30px"
                   height="30px"
                   className="rounded-circle me-2"
@@ -99,10 +129,7 @@ const handleCancel=()=>{
       <li>
         <button
           className="dropdown-item text-danger"
-          onClick={() => {
-            setShowMenu(false);
-            setShowConfirm(true);
-          }}
+          onClick={handleDelete}
         >
           Delete
         </button>
@@ -124,7 +151,7 @@ const handleCancel=()=>{
                   />
                 ) : (
                   <img
-                    src={image || Popupimg}
+                    src={image }
                     style={{ width: '100%', borderRadius: '10px' }}
                     alt="popup"
                   />
@@ -157,7 +184,7 @@ const handleCancel=()=>{
     </div>
     <div className="modal-footer border-0">
       <button className="btn btn-secondary" onClick={handleCancel}>Cancel</button>
-      <button className="btn btn-danger" onClick={handleDeleteConfirm}>Delete</button>
+      <button className="btn btn-danger" disabled={loading} onClick={handleDeleteConfirm}>{loading?'Delete...':'Delete'}</button>
     </div>
   </div>
 </div>
