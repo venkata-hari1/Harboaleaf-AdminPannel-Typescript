@@ -7,6 +7,7 @@ import { Admin_Dashboard, GST_User_Reports, GSTUSERS, Subscription, UserReports,
 const Header = () => {
   const[search,setSearch]=useState('')
   const totalusers= localStorage.getItem('totalusers')
+  const userspercentage=localStorage.getItem('userspercentage')
   const location = useLocation()
   const pathanme=location.pathname
 
@@ -172,7 +173,7 @@ const Header = () => {
       ) &&<div className='total'>
       <p id="total1">Total Users</p>
       <p id="total2">{totalusers}</p>
-      <p id="total3"><i className="bi bi-arrow-up-right "  style={{ background:"#26666333",color: "#4AD991" }}></i><span style={{ background:"#26666333",color: "#4AD991" }}>4.8</span> from yesterday</p>
+      <p id="total3"><i className="bi bi-arrow-up-right "  style={{ background:"#26666333",color: "#4AD991" }}></i><span style={{ background:"#26666333",color: "#4AD991" }}>{userspercentage}</span> from yesterday</p>
      </div>}
 
    </div>   

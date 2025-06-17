@@ -8,6 +8,7 @@ import Skeleton from 'react-loading-skeleton';
 function TotalInformation() {
   const {dashboard,loading}:any=useSelector((state:RootState)=>state.UserMangment)
   localStorage.setItem('totalusers',dashboard?.data?.TotalUsers)
+  localStorage.setItem('userspercentage',dashboard?.data?.YesterdayActivity?.percentage)
   const Earning = [
     { id: 1, txt: 'Total Users', data: dashboard?.data?.TotalUsers || 0},
     { id: 2, txt: 'Total Reports', data: dashboard?.data?.TotalReports || 0 },
