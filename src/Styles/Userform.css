@@ -138,11 +138,11 @@ textarea::placeholder {
 /* IMPORTANT: These need !important for background as well if the inner input overrides it */
 .daily-budget-input-group.has-error {
     border-color: #FF5A5A !important;
-    background-color: #2D3748 !important; /* Ensure background stays dark */
+    background-color: #2D3748 !important;
 }
 .daily-budget-input-group.has-valid {
-    border-color: #3856F3 !important; /* Changed to blue */
-    background-color: #2D3748 !important; /* Ensure background stays dark */
+    border-color: #3856F3 !important;
+    background-color: #2D3748 !important;
 }
 /* Ensure the inner input of the daily-budget-input-group maintains background */
 .daily-budget-input-group .form-textbox {
@@ -167,7 +167,7 @@ textarea::placeholder {
     background-color: #080808;
     color: #FFFFFF;
     border-radius: 5px;
-    font-size: 12px; /* Reduced from 14px to 12px */
+    font-size: 12px;
     cursor: pointer;
     transition: background-color 0.2s ease, border-color 0.2s ease;
     flex-shrink: 0;
@@ -197,7 +197,7 @@ textarea::placeholder {
     padding: 6px 10px;
     font-size: 13px;
     color: #E0E0E0;
-    background-color: #2D3748; /* Consistent background */
+    background-color: #2D3748;
     max-width: 200px;
     overflow: hidden;
     white-space: nowrap;
@@ -236,16 +236,16 @@ textarea::placeholder {
     align-items: center;
     border: 1px solid #4A5568;
     border-radius: 5px;
-    background: #2D3748; /* Ensure this background is consistent */
+    background: #2D3748;
     height: 40px;
     overflow: hidden;
     box-sizing: border-box;
-    max-width: 200px; /* Keeps these budget inputs at 200px */
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; /* Add background-color to transition */
+    max-width: 200px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .daily-budget-input-group .currency-prefix {
-    background: #2D3748; /* Should match parent */
+    background: #2D3748;
     color: #E0E0E0;
     padding: 0 12px;
     font-size: 14px;
@@ -258,7 +258,7 @@ textarea::placeholder {
 
 .daily-budget-input-group .form-textbox {
     border: none;
-    background: none; /* Important: this makes it inherit background from parent (.daily-budget-input-group) */
+    background: none;
     flex-grow: 1;
     padding: 0 12px;
     height: 100%;
@@ -268,22 +268,22 @@ textarea::placeholder {
 /* Ad Duration (Date Pickers) */
 .date-box .date-fields-container {
     display: flex;
-    flex-wrap: wrap; /* Allows stacking on smaller screens */
-    gap: 20px; /* Space between start and end date inputs */
-    align-items: flex-start; /* Aligns them to the top */
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
 }
 
 .date-box .date-input-wrap {
     display: flex;
-    flex-direction: column; /* Stacks label and input vertically */
-    gap: 8px; /* Space between sub-label and input */
-    flex: 1; /* Allows each date input block to share space */
-    min-width: 150px; /* Minimum width for each date input block */
-    max-width: 200px; /* Set max-width to 200px to match budget inputs */
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
 }
 
 .date-box .date-sub-label {
-    font-size: 15px; /* Font size for "Start Date" / "End Date" labels */
+    font-size: 15px;
     font-weight: 500;
     color: #C0C0C0;
     text-align: left;
@@ -291,42 +291,50 @@ textarea::placeholder {
 }
 
 .date-box input[type="date"] {
-    width: 150px; /* Reduced width for the date inputs */
-    height: 40px; /* Standard input height */
-    padding: 0 12px; /* Basic padding */
+    width: 150px;
+    height: 40px;
+    padding: 0 12px;
     border-radius: 5px;
     border: 1px solid #4A5568;
-    background: #2D3748; /* Default background for date inputs */
-    color: #E0E0E0; /* This color will show the selected date */
+    background: #2D3748;
+    color: #E0E0E0;
     box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; /* Add background-color to transition */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 
     /* Customizing the date input appearance */
-    -webkit-appearance: none; /* Remove default browser styling */
+    -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
 
-    /* Add padding for the custom calendar icon */
-    padding-right: 0px; /* Space for the calendar icon */
+    /* Add padding for the custom calendar icon - this is fine for spacing */
+    padding-right: 0px;
+
+    /* Custom calendar icon for all states, using a common SVG */
+    background-image: url('data:image/svg+xml;charset=UTF8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23E0E0E0"%3E%3Cpath d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h2v2H7zm0 4h2v2H7zm4-4h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2z"/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: right 8px center; /* Position the icon inside */
+    background-size: 18px 18px; /* Size the icon */
 }
 
-/* This pseudo-element targets the inner text container of the date input in WebKit browsers */
+/* IMPORTANT FIX: Remove transparent color from the webkit datetime edit pseudo-element. */
+/* This ensures the entire text area is visible and doesn't conflict with sub-parts. */
 .date-box input[type="date"]::-webkit-datetime-edit {
-    color: transparent;
+    color: #E0E0E0; /* Make sure the overall text area is visible */
 }
-/* This pseudo-element targets the text part for the date edit */
+
+/* This pseudo-element targets the text part for the date edit (redundant if main is not transparent) */
 .date-box input[type="date"]::-webkit-datetime-edit-text {
-    color: #E0E0E0; /* Ensure the actual selected date is visible */
+    color: #E0E0E0;
 }
 /* Target for day, month, year fields */
 .date-box input[type="date"]::-webkit-datetime-edit-day-field,
 .date-box input[type="date"]::-webkit-datetime-edit-month-field,
 .date-box input[type="date"]::-webkit-datetime-edit-year-field {
-    color: #E0E0E0; /* Ensure selected day/month/year text is visible */
+    color: #E0E0E0;
 }
 /* Target for separating slashes/dashes */
 .date-box input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-    color: #E0E0E0; /* Ensure separators are visible if needed */
+    color: #E0E0E0;
 }
 
 /* Specific focus style for date inputs */
@@ -334,19 +342,18 @@ textarea::placeholder {
     outline: none;
     border-color: #3856F3;
     box-shadow: 0 0 0 2px rgba(56, 86, 243, 0.3);
-    background-color: #3B4553; /* Slightly lighter on focus */
+    background-color: #3B4553;
 }
 
 /* Apply error/valid classes to date inputs */
 .date-box input[type="date"].has-error {
     border-color: #FF5A5A !important;
-    background-color: #2D3748 !important; /* Keep background dark */
+    background-color: #2D3748 !important;
 }
 .date-box input[type="date"].has-valid {
-    border-color: #3856F3 !important; /* Changed to blue */
-    background-color: #2D3748 !important; /* Keep background dark */
+    border-color: #3856F3 !important;
+    background-color: #2D3748 !important;
 }
-
 
 /* Style for disabled date inputs */
 .date-box input[type="date"]:disabled {
@@ -354,21 +361,20 @@ textarea::placeholder {
     cursor: not-allowed;
     opacity: 0.7;
     border-color: #5A6A7D;
-    /* Grey calendar icon for disabled state */
+    /* Use a grey calendar icon for disabled state */
     background-image: url('data:image/svg+xml;charset=UTF8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23A0AEC0"%3E%3Cpath d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h2v2H7zm0 4h2v2H7zm4-4h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2z"/%3E%3C/svg%3E');
 }
 
 /* Specific error message positioning for date inputs */
 .date-error-message {
-    grid-column: 2 / 3; /* Aligns it to the second column where inputs are */
+    grid-column: 2 / 3;
     position: absolute;
-    top: calc(100% - 20px); /* Position just above the bottom of the grid row */
-    left: 220px; /* Aligned with the start of the input column (200px label + 20px gap) */
-    width: calc(100% - 220px); /* Take remaining width of input column */
+    top: calc(100% - 20px);
+    left: 220px;
+    width: calc(100% - 220px);
     max-width: none;
     text-align: left;
     font-size: 11px;
-    /* Color is now managed by .input-message and .input-message.error */
 }
 
 /* --- REMOVE SPINNER BUTTONS FOR NUMBER INPUTS --- */
@@ -384,18 +390,16 @@ input[type="number"] {
 /* --- END REMOVE SPINNER BUTTONS --- */
 
 /* Autofill Fix for dark background */
-/* Apply to general form-textbox */
 .form-textbox:-webkit-autofill,
 .form-textbox:-webkit-autofill:hover,
 .form-textbox:-webkit-autofill:focus,
 .form-textbox:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0px 1000px #2D3748 inset !important; /* Force dark background */
-    -webkit-text-fill-color: #E0E0E0 !important; /* Force text color */
-    background-color: #2D3748 !important; /* Fallback */
-    transition: background-color 5000s ease-in-out 0s !important; /* Long transition to prevent flash */
+    -webkit-box-shadow: 0 0 0px 1000px #2D3748 inset !important;
+    -webkit-text-fill-color: #E0E0E0 !important;
+    background-color: #2D3748 !important;
+    transition: background-color 5000s ease-in-out 0s !important;
 }
 
-/* Apply to the inner input of the daily-budget-input-group */
 .daily-budget-input-group .form-textbox:-webkit-autofill,
 .daily-budget-input-group .form-textbox:-webkit-autofill:hover,
 .daily-budget-input-group .form-textbox:-webkit-autofill:focus,
@@ -406,7 +410,6 @@ input[type="number"] {
     transition: background-color 5000s ease-in-out 0s !important;
 }
 
-/* Apply to date inputs */
 .date-box input[type="date"]:-webkit-autofill,
 .date-box input[type="date"]:-webkit-autofill:hover,
 .date-box input[type="date"]:-webkit-autofill:focus,
@@ -420,7 +423,7 @@ input[type="number"] {
 
 /* --- Preview Button --- */
 .preview-box {
-    align-items: center; /* This can remain centered if the preview button is vertically aligned to its label */
+    align-items: center;
 }
 .preview-box label {
     grid-column: 1 / 2;
@@ -498,7 +501,7 @@ input[type="number"] {
 
 /* --- Responsive Adjustments --- */
 @media (max-width: 830px) {
-    .ad-management-header { /* Assuming this header exists in your HTML */
+    .ad-management-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
@@ -508,7 +511,6 @@ input[type="number"] {
         padding: 15px;
     }
 
-    /* On smaller screens, stack label and input vertically */
     .title-box1,
     .admedia-box,
     .desc-box,
@@ -518,8 +520,8 @@ input[type="number"] {
     .date-box,
     .elimination-box,
     .preview-box {
-        grid-template-columns: 1fr; /* Stack label and input vertically */
-        align-items: flex-start; /* Ensure top alignment on mobile too */
+        grid-template-columns: 1fr;
+        align-items: flex-start;
         gap: 8px;
         padding-bottom: 20px;
     }
@@ -528,9 +530,8 @@ input[type="number"] {
         margin-bottom: 5px;
     }
 
-    /* Input message positioning for mobile */
     .input-message {
-        position: static; /* Remove absolute positioning on mobile */
+        position: static;
         width: 100%;
         max-width: none;
         text-align: left;
@@ -539,43 +540,41 @@ input[type="number"] {
         border: none;
     }
 
-    .file-upload-container-inline > div { /* Target direct children of file-upload-container-inline */
+    .file-upload-container-inline > div {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
-        grid-column: 1 / -1; /* Make it span full width if needed */
+        grid-column: 1 / -1;
     }
 
-    /* Responsive for date inputs */
     .date-box .date-fields-container {
-        flex-direction: column; /* Stack date inputs vertically on mobile */
+        flex-direction: column;
         width: 100%;
         max-width: none;
         gap: 10px;
-        align-items: flex-start; /* Ensure alignment when stacked */
+        align-items: flex-start;
     }
 
     .date-box .date-input-wrap {
-        width: 100%; /* Take full width on mobile */
+        width: 100%;
         max-width: none;
     }
 
     .date-box input[type="date"] {
-        width: 150px; /* Retain original width for the date inputs on mobile if desired */
-        max-width: none; /* Allow it to shrink if container is smaller */
+        width: 150px;
+        max-width: none;
     }
 
     .date-error-message {
-        position: static; /* Position statically on mobile */
+        position: static;
         width: 100%;
         max-width: none;
         text-align: left;
         margin-top: 5px;
-        left: auto; /* Remove fixed left position */
-        grid-column: auto; /* Reset grid column */
+        left: auto;
+        grid-column: auto;
     }
 
-    /* Ensure all remaining inputs become full width on mobile */
     .form-textbox,
     .daily-budget-input-group {
         width: 100%;
