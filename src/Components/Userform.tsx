@@ -413,16 +413,13 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
             }
             // Backend should interpret absence of 'file' field on PATCH as "keep existing media".
 
-
+           
             // Append ad duration dates, ensuring they are in ISO format for the backend
             campaignFormData.append('adDuration[startDate]', getISODateString(form.startDate));
             campaignFormData.append('adDuration[endDate]', getISODateString(form.endDate));
 
-            console.log("Userform.tsx: Preparing to send FormData contents to API:");
-            for (const pair of campaignFormData.entries()) {
-                console.log(`${pair[0]}:`, pair[1] instanceof File ? `File: ${pair[1].name} (${pair[1].type})` : pair[1]);
-            }
-
+   
+           
             // Determine API URL and HTTP method based on edit mode and the provided endpoints
             const url = isEditMode ? `${baseURL}${endpoints.updatead}/${form.id}` : `${baseURL}${endpoints.advertisement}`;
             const method = isEditMode ? "PATCH" : "POST"; // Correctly set to PATCH for updates!
@@ -523,7 +520,7 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
                               !form.link ||
                               (!form.file && !form.mediaUrl); // Needs either a new file or an existing media URL
 
-
+                          
     return (
         <div className="form-container" style={{ position: 'relative' }}>
             {state && (

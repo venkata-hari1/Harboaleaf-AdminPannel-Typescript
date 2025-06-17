@@ -12,5 +12,8 @@ export const endpoints:any={
     dashboard:'api/admin/dashboards',
     adminprofile:'api/admin/admin_profile',
     updateProfile:'api/admin/admin_update_profile',
-    uploadImage:'api/socialmedia/update_user'
+    uploadImage:'api/socialmedia/update_user',
+    getad:'api/admin/get_ad_camaign',
+    updatead:'api/admin//update_ad_campaign',
+    deletead:'api/admin/delete_ad_campaign'
 }
