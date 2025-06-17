@@ -1,5 +1,3 @@
-// SubscriptionManagement.tsx
-
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import '../Styles/Gstusermanagement.css'; // Adjust this path as needed
 import Pagination from './Pagination'; // Adjust this path as needed
@@ -16,9 +14,7 @@ const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
     try {
         const date = new Date(dateString);
-        // Check if the date object is valid after parsing
         if (isNaN(date.getTime())) {
-            // If not a valid date, return the original string or 'N/A'
             return dateString;
         }
         return date.toLocaleDateString('en-US', {
@@ -28,85 +24,92 @@ const formatDate = (dateString: string | null | undefined) => {
         });
     } catch (error) {
         console.error("Error formatting date:", dateString, error);
-        return dateString; // Fallback on error
+        return dateString;
     }
 };
+
+const SkeletonRow = ({ columns }: { columns: number }) => (
+    <tr>
+        {Array.from({ length: columns }).map((_, i) => (
+            <td key={i}>
+                <div style={{
+                    height: '20px',
+                    backgroundColor: '#e0e0e0',
+                    borderRadius: '4px',
+                    width: i === 1 ? '70%' : '90%',
+                    animation: 'pulse 1.5s infinite ease-in-out',
+                }} />
+            </td>
+        ))}
+    </tr>
+);
 
 const SubscriptionManagement = () => {
     const dispatch = useDispatch<AppDispatch>();
 
-    // Local state for pagination and filtering
     const [currentPage, setCurrentPage] = useState<number>(1);
-    // `accountType` will be one of the filter options or null for 'All Accounts'
     const [accountType, setAccountType] = useState<string | null>(null);
-    const [showFilterDropdown, setShowFilterDropdown] = useState(false); // Controls filter dropdown visibility
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+    // This state tracks if it's the *very first* time data is being loaded for this component instance.
+    const [initialLoading, setInitialLoading] = useState(true);
 
-    const filterDropdownRef = useRef<HTMLDivElement>(null); // Ref for closing dropdown on outside click
+    const filterDropdownRef = useRef<HTMLDivElement>(null);
 
-    // Selectors to get data from Redux store
-    // `subscriptionResponse` holds the raw API response like { status: true, page: 1, totalCount: 6, data: [...] }
     const subscriptionResponse = useSelector((state: RootState) => state.UserMangment.subscription);
-    const loading = useSelector((state: RootState) => state.UserMangment.loading); // Redux loading state
+    // `loading` is the Redux state's general loading indicator for the subscription API call.
+    const loading = useSelector((state: RootState) => state.UserMangment.loading);
     const error = useSelector((state: RootState) => state.UserMangment.error);
 
-    // Extract the `data` array and pagination details from the raw API response.
-    // Provide empty array/default values for safety.
     const apiUsersData = subscriptionResponse?.data || [];
     const totalCount = subscriptionResponse?.totalCount || 0;
-    // Calculate total pages based on the total count of users returned by the API and our fixed ITEMS_PER_PAGE.
     const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE) || 1;
 
-    // --- Data Transformation Logic (more robust with defensive checks) ---
     const transformedRecords = useMemo(() => {
+        // ... (your data transformation logic, unchanged) ...
         const flattenedRecords = apiUsersData.flatMap(user => {
-            // Ensure user and its properties exist before accessing
             const userId = user?._id;
             const firstName = user?.firstname || '';
             const lastName = user?.lastname || '';
             const userName = `${firstName} ${lastName}`.trim();
-            const userUniqueName = user?.username || userId || 'N/A'; // Use _id as fallback for unique name
-            const userSubscriptionType = user?.subscriptionType || 'N/A'; // User's overall subscription type
-            const userAvatar = user?.avatar || ''; // Assuming avatar might be a direct property on the user object
+            const userUniqueName = user?.username || userId || 'N/A';
+            const userSubscriptionType = user?.subscriptionType || 'N/A';
+            const userAvatar = user?.avatar || '';
 
-            // Handle cases where subscriptionData might be missing or empty for a user
             if (!user?.subscriptionData || user.subscriptionData.length === 0) {
-                // Return a single record representing the user with no active subscription details
                 return [{
-                    id: userId ? `${userId}_no_sub` : `no_id_${Math.random()}`, // Create a unique ID for users without subscriptions
+                    id: userId ? `${userId}_no_sub` : `no_id_${Math.random()}`,
                     username: userName || 'N/A',
                     avatar: userAvatar,
                     uniquename: userUniqueName,
-                    subscriptionType: userSubscriptionType, // Keep user's overall type even if no specific sub record
+                    subscriptionType: userSubscriptionType,
                     ssdate: 'N/A',
                     sedate: 'N/A',
-                    state: 'No Subscription', // Default state for users without active subscriptions
+                    state: 'No Subscription',
                     amount: 'N/A',
                 }];
             }
 
-            // If user has subscriptionData, map each subscription item to a record
-            return user.subscriptionData.map((sub: any) => { // Added type 'any' for sub to avoid ts errors for now
+            return user.subscriptionData.map((sub: any) => {
                 const subId = sub?._id;
-                const amount = parseFloat(sub?.AmountPaid) || 0; // Ensure amount is a number, default to 0 if invalid
+                const amount = parseFloat(sub?.AmountPaid) || 0;
 
                 return {
-                    id: subId ? subId : `no_sub_id_${Math.random()}`, // Use subscription _id, or generate a random one
+                    id: subId ? subId : `no_sub_id_${Math.random()}`,
                     username: userName,
                     avatar: userAvatar,
                     uniquename: userUniqueName,
-                    subscriptionType: userSubscriptionType, // Use the user's overall subscription type
+                    subscriptionType: userSubscriptionType,
                     ssdate: sub?.SubscribedOn,
                     sedate: sub?.NextBillingDate,
-                    state: 'Active', // Default state (adjust if your API provides this for each sub)
+                    state: 'Active',
                     amount: amount,
                 };
             });
         });
 
         return flattenedRecords;
-    }, [apiUsersData]); // Recalculate only when apiUsersData from Redux changes
+    }, [apiUsersData]);
 
-    // Effect to close the filter dropdown when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
@@ -119,24 +122,27 @@ const SubscriptionManagement = () => {
         };
     }, []);
 
-    // Effect to dispatch the API call when currentPage or accountType changes
-    // This is the core logic for fetching data with pagination and filters.
+    // This useEffect dispatches the API call.
+    // Importantly, it sets `initialLoading` to false *after* the very first call completes.
     useEffect(() => {
-        dispatch(Subscription({ page: currentPage, limit: ITEMS_PER_PAGE, accountType }));
-    }, [dispatch, currentPage, accountType]); // Dependencies are stable and control fetching
+        dispatch(Subscription({ page: currentPage, limit: ITEMS_PER_PAGE, accountType }))
+            .finally(() => {
+                // This `finally` block runs once the promise returned by `dispatch(Subscription(...))` settles
+                // (either resolves or rejects). This is crucial for correctly switching loading states.
+                setInitialLoading(false);
+            });
+    }, [dispatch, currentPage, accountType]); // Dependencies ensure this runs on page/filter changes
 
-    // Effect to show toast messages for errors from Redux state
     useEffect(() => {
         if (error) {
             showToast(false, error);
         }
     }, [error]);
 
-    // Handles filter button clicks: updates `accountType` state and resets `currentPage` to 1
     const handleFilterSelect = (type: string | null) => {
-        setAccountType(type); // This will trigger the useEffect because `accountType` is a dependency
-        setCurrentPage(1); // Always reset to the first page when applying a new filter
-        setShowFilterDropdown(false); // Close the dropdown after selection
+        setAccountType(type);
+        setCurrentPage(1);
+        setShowFilterDropdown(false);
     };
 
     return (
@@ -173,9 +179,13 @@ const SubscriptionManagement = () => {
                 )}
             </div>
 
-            <div className="tab-content table-responsive mt-4" style={{ position: 'relative', minHeight: '300px' }}> {/* Added minHeight and position:relative */}
-                {loading && (
-                    // Display the Loader component centrally when loading
+            <div className="tab-content table-responsive mt-4" style={{ position: 'relative', minHeight: '300px' }}>
+                {/* RING LOADER LOGIC:
+                    It shows ONLY when `initialLoading` is true AND `loading` (from Redux) is true.
+                    `initialLoading` becomes false *after* the very first data fetch completes.
+                    So, this div will disappear after the first load.
+                */}
+                {initialLoading && loading && (
                     <div style={{
                         position: 'absolute',
                         top: '0',
@@ -185,10 +195,10 @@ const SubscriptionManagement = () => {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent overlay
-                        zIndex: 999 // Ensure it's above the table
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        zIndex: 999
                     }}>
-                        <Loader /> {/* Your loading ring/spinner */}
+                        <Loader />
                     </div>
                 )}
 
@@ -206,42 +216,56 @@ const SubscriptionManagement = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* Only render actual data rows if not loading AND there's data */}
-                        {!loading && transformedRecords.length > 0 ? (
-                            transformedRecords.map((item, index) => (
-                                <tr key={item.id}>
-                                    <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
-                                    <td className="d-flex align-items-center">
-                                        <img
-                                            src={item.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${item.username || 'User'}&radius=50`}
-                                            alt={item.username || 'User Avatar'}
-                                            style={{
-                                                width: '35px',
-                                                height: '35px',
-                                                borderRadius: '50%',
-                                                marginRight: '10px',
-                                                objectFit: 'cover',
-                                            }}
-                                            onError={(e) => {
-                                                e.currentTarget.onerror = null;
-                                                e.currentTarget.src = "https://via.placeholder.com/35"; // Generic placeholder
-                                            }}
-                                        />
-                                        {item.username}
-                                    </td>
-                                    <td>{item.uniquename}</td>
-                                    <td>{item.subscriptionType}</td>
-                                    <td>{formatDate(item.ssdate)}</td>
-                                    <td>{formatDate(item.sedate)}</td>
-                                    <td>{item.state}</td>
-                                    <td>{item.amount !== 'N/A' ? `$${item.amount.toFixed(2)}` : 'N/A'}</td>
-                                </tr>
+                        {/* SKELETON LOADER / NO DATA / ACTUAL DATA LOGIC:
+                            1. SKELETONS: Show when `loading` is true BUT `initialLoading` is false.
+                                This means a subsequent load (page change, filter change) is happening.
+                            2. NO DATA: Show when `loading` is false (data fetch complete) AND `transformedRecords` is empty.
+                            3. ACTUAL DATA: Show when `loading` is false AND `transformedRecords` has data.
+                        */}
+                        {loading && !initialLoading ? (
+                            // Display skeleton rows if a subsequent load is active
+                            Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+                                <SkeletonRow key={i} columns={8} />
                             ))
                         ) : (
-                            // Show "No subscriptions found" only if not loading AND no records
-                            !loading && <tr>
-                                <td colSpan={8} className="text-center">No subscriptions found</td>
-                            </tr>
+                            // Once loading is complete (or if initialLoading is true and the first data hasn't arrived yet but the overlay is on top)
+                            // check if there's data to display
+                            transformedRecords.length > 0 ? (
+                                transformedRecords.map((item, index) => (
+                                    <tr key={item.id}>
+                                        <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
+                                        <td className="d-flex align-items-center">
+                                            <img
+                                                src={item.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${item.username || 'User'}&radius=50`}
+                                                alt={item.username || 'User Avatar'}
+                                                style={{
+                                                    width: '35px',
+                                                    height: '35px',
+                                                    borderRadius: '50%',
+                                                    marginRight: '10px',
+                                                    objectFit: 'cover',
+                                                }}
+                                                onError={(e) => {
+                                                    e.currentTarget.onerror = null;
+                                                    e.currentTarget.src = "https://via.placeholder.com/35";
+                                                }}
+                                            />
+                                            {item.username}
+                                        </td>
+                                        <td>{item.uniquename}</td>
+                                        <td>{item.subscriptionType}</td>
+                                        <td>{formatDate(item.ssdate)}</td>
+                                        <td>{formatDate(item.sedate)}</td>
+                                        <td>{item.state}</td>
+                                        <td>{item.amount !== 'N/A' ? `$${item.amount.toFixed(2)}` : 'N/A'}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                // Show "No subscriptions found" only if not currently loading (and initial loading is done) AND no records are found
+                                !loading && !initialLoading && <tr>
+                                    <td colSpan={8} className="text-center">No subscriptions found</td>
+                                </tr>
+                            )
                         )}
                     </tbody>
                 </table>

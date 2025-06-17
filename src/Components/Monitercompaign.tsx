@@ -24,6 +24,9 @@ interface CampaignSummary {
         startDate: string;
         endDate: string;
     };
+    // Add impressions and engagementRate if your API returns them
+    impressions?: number;
+    engagementRate?: number; // Could be a percentage
 }
 
 // Interface for the detailed data returned by GET /advertisement/{id}
@@ -38,7 +41,7 @@ interface FullCampaignDetails {
     estimatedBudget?: number; // Optional, convert to string in Userform
     adDuration: {
         startDate: string; // ISO string from API
-        endDate: string;   // ISO string from API
+        endDate: string; // ISO string from API
     };
     adMedia?: { // Assuming your backend nests media info
         url: string; // The URL of the actual media file
@@ -48,7 +51,6 @@ interface FullCampaignDetails {
     status: string;
     // ... any other fields returned by the GET /advertisement/{id} API
 }
-
 
 interface MonitorCampaignsApiResponse {
     data: CampaignSummary[];
@@ -62,11 +64,38 @@ const formatDate = (dateString: string | null | undefined) => {
     return isNaN(date.getTime())
         ? dateString
         : date.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-          });
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
 };
+
+// --- Skeleton Loader Component ---
+// Added for consistency and better UX during subsequent loads
+const SkeletonRow = ({ columns }: { columns: number }) => (
+    <tr>
+        {Array.from({ length: columns }).map((_, i) => (
+            <td key={i}>
+                <div style={{
+                    height: '20px',
+                    backgroundColor: '#e0e0e0',
+                    borderRadius: '4px',
+                    width: i === 1 ? '70%' : '90%', // Vary width for visual appeal
+                    animation: 'pulse 1.5s infinite ease-in-out',
+                }} />
+            </td>
+        ))}
+    </tr>
+);
+
+// Add this to your CSS file (e.g., Styles/Gstusermanagement.css)
+/*
+@keyframes pulse {
+    0% { background-color: #e0e0e0; }
+    50% { background-color: #f0f0f0; }
+    100% { background-color: #e0e0e0; }
+}
+*/
 
 const Monitercompaign: React.FC = () => {
     const [openActionId, setOpenActionId] = useState<string | null>(null);
@@ -75,20 +104,35 @@ const Monitercompaign: React.FC = () => {
     const [totalCount, setTotalCount] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
     const [apiError, setApiError] = useState<string | null>(null);
+    // New state for initial full-page loading vs. skeleton loading
+    const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [campaignToDeleteId, setCampaignToDeleteId] = useState<string | null>(null);
 
+    // New state for campaign status filter
+    const [campaignStatus, setCampaignStatus] = useState<string | null>(null); // 'Active', 'Inactive', or null for 'All'
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false); // Controls filter dropdown visibility
+
     const navigate = useNavigate();
 
     const actionButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
-    const dropdownRef = useRef<HTMLUListElement>(null);
+    const dropdownRef = useRef<HTMLUListElement>(null); // Ref for action dropdown
+    const filterDropdownRef = useRef<HTMLDivElement>(null); // Ref for filter dropdown
 
-    const fetchData = useCallback(async (page: number, limit: number) => {
+    const fetchData = useCallback(async (page: number, limit: number, statusFilter: string | null) => {
         setLoading(true);
         setApiError(null);
 
-        const url = `${baseURL}${endpoints.moniteradvertisement}?page=${page}&limit=${limit}`;
+        // Construct the URL with optional status filter
+        let url = `${baseURL}${endpoints.moniteradvertisement}?page=${page}&limit=${limit}`;
+        if (statusFilter) {
+            url += `&status=${statusFilter}`;
+        }
+        // If your API also supports dailyBudget filtering based on status, you'd add it here too.
+        // For now, based on your provided endpoint, it looks like `status` is the key.
+        // Example: `&dailybudget=${yourBudgetParam}` if needed.
+
         const headers: HeadersInit = { 'Accept': 'application/json' };
         const token = localStorage.getItem('token');
         if (token) headers['token'] = token;
@@ -113,7 +157,6 @@ const Monitercompaign: React.FC = () => {
                 setTotalCount(data.totalCount);
                 if (data.totalCount === 0 && page === 1) {
                     // Only show "No campaigns found" if it's the first page and truly empty
-                    // This prevents showing it temporarily if navigating to an empty page > 1
                     showToast(false, "No campaigns found.");
                 }
             }
@@ -125,22 +168,20 @@ const Monitercompaign: React.FC = () => {
             setTotalCount(0);
         } finally {
             setLoading(false);
+            setInitialLoading(false); // Set initial loading to false after the first fetch
         }
     }, [endpoints.moniteradvertisement, baseURL]);
 
     useEffect(() => {
-        fetchData(currentPage, ITEMS_PER_PAGE);
-    }, [currentPage, fetchData]);
+        // Pass campaignStatus to fetchData
+        fetchData(currentPage, ITEMS_PER_PAGE, campaignStatus);
+    }, [currentPage, campaignStatus, fetchData]); // Add campaignStatus to dependencies
 
-    // This is the key part for navigation and passing data
     const handleEditCampaign = useCallback(async (campaignId: string) => {
-        setLoading(true); // Show loader while fetching specific campaign data
+        setLoading(true);
         setApiError(null);
         setOpenActionId(null); // Close dropdown immediately
 
-        // Fetch the specific campaign data before navigating
-        // IMPORTANT: Ensure your backend's GET /advertisement/{id} returns the full details
-        // that your Userform expects (e.g., adMedia.url or file: URL)
         const url = `${baseURL}${endpoints.getad}/${campaignId}`;
         const headers: HeadersInit = { 'Accept': 'application/json' };
         const token = localStorage.getItem('token');
@@ -149,15 +190,12 @@ const Monitercompaign: React.FC = () => {
 
         try {
             const res = await fetch(url, options);
-            // Ensure the response matches FullCampaignDetails interface
             const data: { data: FullCampaignDetails; message: string } = await res.json();
 
             if (!res.ok) {
                 const errorMessage = data.message || `Error ${res.status}: Failed to fetch campaign for edit.`;
                 showToast(false, errorMessage);
             } else {
-                // Navigate to the Userform route and pass the fetched detailed data via state
-                // The Userform will then read this state to pre-fill
                 navigate('/admin/admgmt/userform', { state: { campaignData: data.data } });
             }
         } catch (err: any) {
@@ -169,21 +207,20 @@ const Monitercompaign: React.FC = () => {
     }, [navigate, endpoints.getad, baseURL]);
 
     const handleCreateNewCampaign = useCallback(() => {
-        // Navigate to Userform without any state to indicate creation mode
         navigate('/admin/admgmt/userform');
     }, [navigate]);
 
     const handleDeleteClick = useCallback((campaignId: string) => {
         setCampaignToDeleteId(campaignId);
         setShowDeleteConfirm(true);
-        setOpenActionId(null); // Close dropdown immediately
+        setOpenActionId(null);
     }, []);
 
     const confirmDelete = useCallback(async () => {
         if (!campaignToDeleteId) return;
 
-        setLoading(true); // Show loader during deletion
-        setShowDeleteConfirm(false); // Hide the modal
+        setLoading(true);
+        setShowDeleteConfirm(false);
         setApiError(null);
 
         const url = `${baseURL}${endpoints.deletead}/${campaignToDeleteId}`;
@@ -201,16 +238,16 @@ const Monitercompaign: React.FC = () => {
                 showToast(false, errorMessage);
             } else {
                 showToast(true, data.message || "Campaign deleted successfully!");
-                fetchData(currentPage, ITEMS_PER_PAGE); // Refresh data after deletion
+                fetchData(currentPage, ITEMS_PER_PAGE, campaignStatus); // Refresh data after deletion, maintain filter
             }
         } catch (err: any) {
             const errorMessage = err.message || "Network error while deleting campaign.";
             showToast(false, errorMessage);
         } finally {
             setLoading(false);
-            setCampaignToDeleteId(null); // Clear the ID
+            setCampaignToDeleteId(null);
         }
-    }, [campaignToDeleteId, currentPage, fetchData, endpoints.deletead, baseURL]);
+    }, [campaignToDeleteId, currentPage, campaignStatus, fetchData, endpoints.deletead, baseURL]);
 
     const cancelDelete = useCallback(() => {
         setShowDeleteConfirm(false);
@@ -223,7 +260,7 @@ const Monitercompaign: React.FC = () => {
         setOpenActionId((prev) => (prev === campaignId ? null : campaignId));
     };
 
-    // Handle clicks outside the dropdown to close it
+    // Handle clicks outside the Action dropdown to close it
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const clickedButton = openActionId ? actionButtonRefs.current[openActionId] : null;
@@ -234,7 +271,7 @@ const Monitercompaign: React.FC = () => {
             }
         };
 
-        const timer = setTimeout(() => { // Small delay to avoid immediate close on initial open
+        const timer = setTimeout(() => {
             document.addEventListener('mousedown', handleClickOutside);
         }, 0);
 
@@ -244,7 +281,20 @@ const Monitercompaign: React.FC = () => {
         };
     }, [openActionId]);
 
-    // Position the dropdown dynamically
+    // Handle clicks outside the Filter dropdown to close it
+    useEffect(() => {
+        const handleClickOutsideFilter = (event: MouseEvent) => {
+            if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+                setShowFilterDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutsideFilter);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutsideFilter);
+        };
+    }, []);
+
+    // Position the Action dropdown dynamically
     const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
 
     useEffect(() => {
@@ -262,37 +312,55 @@ const Monitercompaign: React.FC = () => {
         }
     }, [openActionId]);
 
+    // Handle filter selection
+    const handleFilterSelect = (status: string | null) => {
+        setCampaignStatus(status); // This will trigger useEffect to refetch data
+        setCurrentPage(1); // Always reset to the first page when applying a new filter
+        setShowFilterDropdown(false); // Close the dropdown after selection
+    };
 
     return (
         <div className='container'>
             <div className='d-flex justify-content-end mt-4 gap-2'>
-                {/* Create New Campaign Button */}
-                <button
-                    className='btn btn-primary'
-                    style={{ backgroundColor: '#3856F3', fontFamily: 'Roboto' }}
-                    onClick={handleCreateNewCampaign}
-                    disabled={loading}
-                >
-                    Create New Campaign
-                    <i className="bi bi-plus-circle-fill ms-2"></i> {/* Plus icon for creation */}
-                </button>
-                {/* Filter and Suspended Accounts buttons (optional, as per your original code) */}
-                <button className='btn btn-primary' style={{ backgroundColor: '#3856F3', fontFamily: 'Roboto' }}>
-                    Filter
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                        className="bi bi-funnel-fill ms-2" viewBox="0 0 16 16">
-                        <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10
-                            8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1
-                            6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5z" />
-                    </svg>
-                </button>
-                <button className='btn' style={{ color: '#FF0000', border: '1px solid #FF0000', fontFamily: 'Roboto' }}>
-                    Suspended Accounts
-                </button>
+                
+                {/* Filter Dropdown Button */}
+                <div className="position-relative"> {/* Added position-relative for dropdown */}
+                    <button
+                        className='btn btn-primary'
+                        style={{ backgroundColor: '#3856F3', fontFamily: 'Roboto' }}
+                        onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                    >
+                        Filter
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            className="bi bi-funnel-fill ms-2" viewBox="0 0 16 16">
+                            <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5z" />
+                        </svg>
+                    </button>
+
+                    {showFilterDropdown && (
+                        <div
+                            ref={filterDropdownRef}
+                            className="dropdown-menu show"
+                            style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: '0', // Position to the right of the button
+                                zIndex: 1000,
+                                minWidth: '150px',
+                                marginTop: '5px' // Space below button
+                            }}
+                        >
+                            <button className="dropdown-item" onClick={() => handleFilterSelect(null)}>All Campaigns</button>
+                            <button className="dropdown-item" onClick={() => handleFilterSelect('Active')}>Active</button>
+                            <button className="dropdown-item" onClick={() => handleFilterSelect('Inactive')}>Inactive</button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="tab-content table-responsive" style={{ position: 'relative', minHeight: '300px' }}>
-                {loading && (
+                {/* Initial Full Page Loader (Ring Loader) */}
+                {initialLoading && loading && (
                     <div style={{
                         position: 'absolute',
                         top: 0, left: 0, right: 0, bottom: 0,
@@ -321,42 +389,53 @@ const Monitercompaign: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {!loading && campaignsData.length > 0 ? (
-                            campaignsData.map((tdata: CampaignSummary, index: number) => (
-                                <tr key={tdata._id}> {/* Use _id for key */}
-                                    <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
-                                    <td>{tdata.title || 'N/A'}</td>
-                                    <td>{formatDate(tdata.adDuration?.startDate)}</td>
-                                    <td>{formatDate(tdata.adDuration?.endDate)}</td>
-                                    <td>{tdata.status || 'N/A'}</td>
-                                    <td>{'N/A'}</td> {/* Placeholder, replace with actual data */}
-                                    <td>{'N/A'}</td> {/* Placeholder, replace with actual data */}
-                                    <td>
-                                        {tdata.eliminatedBudget
-                                            ? `₹${tdata.eliminatedBudget.toLocaleString('en-IN')}`
-                                            : tdata.dailyBudget
-                                            ? `₹${tdata.dailyBudget.toLocaleString('en-IN')}`
-                                            : 'N/A'}
-                                    </td>
-                                    <td className="position-relative">
-                                        <button
-                                            ref={el => actionButtonRefs.current[tdata._id] = el}
-                                            onClick={() => handleToggleActions(tdata._id)}
-                                            className="btn dropdown-toggle border"
-                                            type="button"
-                                            aria-expanded={openActionId === tdata._id}
-                                            disabled={loading} // Disable if loading
-                                        >
-                                            Actions
-                                        </button>
-                                    </td>
-                                </tr>
+                        {/* Conditional rendering for skeleton rows vs. actual data */}
+                        {loading && !initialLoading ? (
+                            // Show skeleton rows when loading *after* the initial load (e.g., page change, filter change)
+                            Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+                                <SkeletonRow key={i} columns={9} />
                             ))
                         ) : (
-                            !loading && (
-                                <tr>
-                                    <td colSpan={9} className="text-center">No campaigns found</td>
-                                </tr>
+                            // Show actual data if not loading (or if it's the initial load and ring loader is on top)
+                            campaignsData.length > 0 ? (
+                                campaignsData.map((tdata: CampaignSummary, index: number) => (
+                                    <tr key={tdata._id}>
+                                        <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
+                                        <td>{tdata.title || 'N/A'}</td>
+                                        <td>{formatDate(tdata.adDuration?.startDate)}</td>
+                                        <td>{formatDate(tdata.adDuration?.endDate)}</td>
+                                        <td>{tdata.status || 'N/A'}</td>
+                                        {/* Placeholders for Impressions and Engagement Rate */}
+                                        <td>{tdata.impressions !== undefined ? tdata.impressions.toLocaleString() : 'N/A'}</td>
+                                        <td>{tdata.engagementRate !== undefined ? `${tdata.engagementRate}%` : 'N/A'}</td>
+                                        <td>
+                                            {tdata.eliminatedBudget
+                                                ? `₹${tdata.eliminatedBudget.toLocaleString('en-IN')}`
+                                                : tdata.dailyBudget
+                                                    ? `₹${tdata.dailyBudget.toLocaleString('en-IN')}`
+                                                    : 'N/A'}
+                                        </td>
+                                        <td className="position-relative">
+                                            <button
+                                                ref={el => actionButtonRefs.current[tdata._id] = el}
+                                                onClick={() => handleToggleActions(tdata._id)}
+                                                className="btn dropdown-toggle border"
+                                                type="button"
+                                                aria-expanded={openActionId === tdata._id}
+                                                disabled={loading}
+                                            >
+                                                Actions
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                // Show "No campaigns found" only if not loading (and initial loading is done) AND no records are found
+                                !loading && !initialLoading && (
+                                    <tr>
+                                        <td colSpan={9} className="text-center">No campaigns found</td>
+                                    </tr>
+                                )
                             )
                         )}
                     </tbody>
