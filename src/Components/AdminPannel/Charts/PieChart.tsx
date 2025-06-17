@@ -13,6 +13,7 @@ const PieChart = () => {
     ["Reports", dashboard?.data?.TotalReports],
     ["GST Users", dashboard?.data?.GstUsers],
     ["In active", dashboard?.data?.TotalSuspendedAccounts],
+    ["Advertisments", dashboard?.data?.TotalAdvertisments],
   ];
 
   const options = {
