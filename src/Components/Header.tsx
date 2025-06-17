@@ -154,7 +154,13 @@ const Header = () => {
         </div>
         <div className='search-notify'>
         {(location.pathname!=="/admin/edit-profile" && location.pathname!=="/admin/admgmt" && location.pathname!=='/admin/admgmt/userform') &&<div className='header-serach'>
-        <input type={pathanme==="/admin/admin-pannel"?'number':'text'} value={search} name='year' onChange={(e)=>setSearch(e.target.value)} placeholder={pathanme==="/admin/admin-pannel"?'Search with year...':'Search with State'} id='header-input'/><i className="bi bi-search" onClick={handleSearch}></i> 
+        <input type={pathanme==="/admin/admin-pannel"?'number':'text'} value={search} name='year' onChange={(e)=>setSearch(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            handleSearch();
+          }
+        }}
+        placeholder={pathanme==="/admin/admin-pannel"?'Search with year...':'Search with State'} id='header-input'/><i className="bi bi-search" onClick={handleSearch}></i> 
         </div>}
 
         {/* <div className='header-notify'>
