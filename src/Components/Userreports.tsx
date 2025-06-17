@@ -16,7 +16,6 @@ const Userreports = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
   const[sortOrder,setSortOrder]=useState(true)
-
   const {reports,loading}:any= useSelector((state: RootState) => state.UserMangment);
   const dispatch = useDispatch<AppDispatch>();
     const [value, setValue] = useState(false);

@@ -18,7 +18,8 @@ const initialState = {
   GSTUsers: [],
   GSTUserReports: [],
   dashboard: [],
-  profile: {}
+  profile: {},
+  emergency: []
 };
 
 // --- Common Fetch Handler ---
@@ -422,7 +423,7 @@ export const Admin_Dashboard = createAsyncThunk(
 export const AdminUpdateProfile = createAsyncThunk(
   'AdminUpdateProfile',
   async (
-    payload: { data: { firstname: string; mobile:string } },
+    payload: { data: { firstname: string; mobile: string } },
     { fulfillWithValue, rejectWithValue, dispatch }
   ) => {
     try {
@@ -438,7 +439,7 @@ export const AdminUpdateProfile = createAsyncThunk(
       });
 
       const result = await response.json();
-    
+
       if (response) {
         dispatch(AdminProfile())
       }
@@ -451,10 +452,10 @@ export const AdminUpdateProfile = createAsyncThunk(
 export const AdminUploadProfileImage = createAsyncThunk(
   'AdminUploadProfileImage',
   async (
-   formData:FormData,
+    formData: FormData,
     { fulfillWithValue, rejectWithValue, dispatch }
   ) => {
-    try {    
+    try {
       const response = await fetch(`${baseURL}${endpoints.uploadImage}`, {
         method: 'PATCH',
         headers: {
@@ -465,7 +466,7 @@ export const AdminUploadProfileImage = createAsyncThunk(
 
       const result = await response.json();
       if (response.ok) {
-        dispatch(AdminProfile()); 
+        dispatch(AdminProfile());
         return fulfillWithValue(result);
       } else {
         return rejectWithValue(result);
@@ -476,24 +477,24 @@ export const AdminUploadProfileImage = createAsyncThunk(
   }
 );
 
-export const DeletePostReel= createAsyncThunk(
+export const DeletePostReel = createAsyncThunk(
   'DeletePostReel',
   async (
-   payload:{data:{id:string | number}},
+    payload: { data: { id: string | number } },
     { fulfillWithValue, rejectWithValue, dispatch }
   ) => {
-    try {  
-      const {data}=payload  
+    try {
+      const { data } = payload
       const response = await fetch(`${baseURL}${endpoints.deletePost_Reel}/${data.id}`, {
         method: 'DELETE',
         headers: {
           token: localStorage.getItem('token') || ''
         },
-     
+
       });
-    const page=localStorage.getItem('page') || 1;
-    const sort=localStorage.getItem('sort') ||'desc';
-    const filter=localStorage.getItem('filter') || ''
+      const page = localStorage.getItem('page') || 1;
+      const sort = localStorage.getItem('sort') || 'desc';
+      const filter = localStorage.getItem('filter') || ''
       const result = await response.json();
       if (response.ok) {
         dispatch(
@@ -512,6 +513,35 @@ export const DeletePostReel= createAsyncThunk(
       }
     } catch (error: any) {
       return rejectWithValue({ message: error.message || 'Upload failed' });
+    }
+  }
+);
+
+export const Emergency_Management = createAsyncThunk(
+  'Emergency_Management',
+  async (
+    payload: { data: { page: string | number, state: string ,sort:string} },
+    { fulfillWithValue, rejectWithValue, dispatch }
+  ) => {
+    try {
+      const { data } = payload
+      const response = await fetch(`${baseURL}${endpoints.emergency_management}?page=${data.page}&state=${data.state}&sort=${data.sort}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          token: localStorage.getItem('token') || ''
+
+        },
+      });
+
+      const result = await response.json();
+
+      if (response) {
+        dispatch(AdminProfile())
+      }
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Suspension failed' });
     }
   }
 );
@@ -673,6 +703,18 @@ const UserMangement_Slice = createSlice({
         state.loading = false;
       })
       .addCase(AdminProfile.rejected, (state, action) => {
+        state.loading = false;
+      });
+    //Emergency Management
+    builder
+      .addCase(Emergency_Management.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(Emergency_Management.fulfilled, (state, action) => {
+        state.emergency = action.payload;
+        state.loading = false;
+      })
+      .addCase(Emergency_Management.rejected, (state, action) => {
         state.loading = false;
 
       });

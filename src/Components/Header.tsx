@@ -3,7 +3,7 @@ import '../Styles/Header.css';
 import { useLocation } from 'react-router-dom'
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../Redux/store/Store';
-import { Admin_Dashboard, GST_User_Reports, GSTUSERS, Subscription, UserReports, Users } from '../Redux/Reducers/UserMangement';
+import { Admin_Dashboard, Emergency_Management, GST_User_Reports, GSTUSERS, Subscription, UserReports, Users } from '../Redux/Reducers/UserMangement';
 const Header = () => {
   const[search,setSearch]=useState('')
   const totalusers= localStorage.getItem('totalusers')
@@ -72,6 +72,15 @@ const Header = () => {
           state:search
         }
        await dispatch(Subscription(({data:data})))
+       break;
+      }
+      case '/admin/emergency':{
+        const data={
+          page:1,
+          state:search,
+          sort: 'desc' ,
+        }
+       await dispatch(Emergency_Management(({data:data})))
        break;
       }
       default:{
