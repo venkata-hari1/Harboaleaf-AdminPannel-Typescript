@@ -171,7 +171,7 @@ const Header = () => {
             handleSearch();
           }
         }}
-        placeholder={pathanme==="/admin/admin-pannel"?'Search with year...':'Search with State'} id='header-input'/><i className="bi bi-search" onClick={handleSearch}></i> 
+        placeholder={pathanme==="/admin/admin-pannel"?'Search with year...':pathanme==="/admin/moniter-compaign"?'Search with budget...':'Search with State'} id='header-input'/><i className="bi bi-search" onClick={handleSearch}></i> 
         </div>}
 
         {/* <div className='header-notify'>
