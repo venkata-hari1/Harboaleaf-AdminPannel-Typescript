@@ -17,5 +17,6 @@ export const endpoints:any={
     updatead:'api/admin//update_ad_campaign',
     deletead:'api/admin/delete_ad_campaign',
     deletePost_Reel:'api/admin/delete_post_reel',
-    emergency_management:'api/admin/admin_emergency_flow'
+    emergency_management:'api/admin/admin_emergency_flow',
+    victim_info:'api/admin/victiminfo'
 }

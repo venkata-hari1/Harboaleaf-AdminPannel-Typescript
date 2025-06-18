@@ -38,8 +38,16 @@ const Emergencymanagement = () => {
     fetchData();
   }, [page, sortOrder, dispatch]);
 
-  const handleNavigate = () => {
+  const handleNavigate = (tdata:{victim:{_id:string},rescuer:{firstname:string,image:string} ,createdAt:string,area:string,type:string}) => {
     navigate(`/admin/safety-reports`);
+    localStorage.setItem('id',tdata?.victim?._id)
+    localStorage.setItem('rescuername',tdata?.rescuer?.firstname ||'')
+    localStorage.setItem('rescuerimage',tdata?.rescuer?.image ||'')
+    localStorage.setItem('rescuerimage',tdata?.rescuer?.image ||'')
+    localStorage.setItem('rescuetime',tdata?.createdAt||'')
+    localStorage.setItem('rescuearea',tdata?.area||'')
+    localStorage.setItem('type',tdata?.type||'')
+    console.log(tdata?.rescuer?.firstname)
   };
 
   const handleAscDesc = () => {
@@ -77,9 +85,9 @@ const Emergencymanagement = () => {
             </svg>
           )}
         </button>
-        <button className='btn' style={{ color: '#FF0000', border: '1px solid #FF0000', fontFamily: 'Roboto' }}>
+        {/* <button className='btn' style={{ color: '#FF0000', border: '1px solid #FF0000', fontFamily: 'Roboto' }}>
           Emergency Reports
-        </button>
+        </button> */}
       </div>
 
       {initialLoading ? (
@@ -105,8 +113,16 @@ const Emergencymanagement = () => {
                   emergency?.data?.map((tdata: any, index: number) => (
                     <tr key={tdata._id}>
                       <th>{getSerialNumber(index)}</th>
-                      <td onClick={handleNavigate}>
+                      <td onClick={()=>handleNavigate(tdata)}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
+                        {tdata.victim.image?<img
+                            src={tdata.victim.image}
+                            alt="rescuer"
+                            className="rounded-circle me-2"
+                            width="30"
+                            height="30"
+                            style={{ objectFit: 'cover', border: '1px solid white' }}
+                          />:
                           <img
                             src={`https://robohash.org/${tdata.victim.firstname}?size=40x40`}
                             alt="victim"
@@ -114,7 +130,7 @@ const Emergencymanagement = () => {
                             width="30"
                             height="30"
                             style={{ objectFit: 'cover', border: '1px solid white' }}
-                          />
+                          />}
                           <div className="text-truncate" style={{ maxWidth: '100px' }}>
                             {tdata?.victim?.firstname}
                           </div>
@@ -122,14 +138,22 @@ const Emergencymanagement = () => {
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <img
+                          {tdata.rescuer.image?<img
                             src={tdata.rescuer.image}
                             alt="rescuer"
                             className="rounded-circle me-2"
                             width="30"
                             height="30"
                             style={{ objectFit: 'cover', border: '1px solid white' }}
-                          />
+                          />:
+                           <img
+                            src={`https://robohash.org/${tdata.rescuer.firstname}?size=40x40`}
+                            alt="victim"
+                            className="rounded-circle me-2"
+                            width="30"
+                            height="30"
+                            style={{ objectFit: 'cover', border: '1px solid white' }}
+                          />}
                           <div className="text-truncate" style={{ maxWidth: '100px' }}>
                             {tdata.rescuer.firstname}
                           </div>

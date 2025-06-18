@@ -55,7 +55,7 @@ export default function MobileHeader() {
         />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Verticalnavigation closeNav={() => setExpanded(false)} />
+            <Verticalnavigation />
           </Nav>
         </Navbar.Collapse>
       </Container>

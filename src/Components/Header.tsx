@@ -9,6 +9,8 @@ const Header = () => {
   const totalusers= localStorage.getItem('totalusers')
   const userspercentage=localStorage.getItem('userspercentage')
   const location = useLocation()
+  const id: any = location?.pathname.split('/')[4]
+
   const pathanme=location.pathname
 
   const dispatch=useDispatch<AppDispatch>()
@@ -162,7 +164,7 @@ const Header = () => {
            <p>{name}</p> 
         </div>
         <div className='search-notify'>
-        {(location.pathname!=="/admin/edit-profile" && location.pathname!=="/admin/admgmt" && location.pathname!=='/admin/admgmt/userform') &&<div className='header-serach'>
+        {(location.pathname!=="/admin/edit-profile" &&location.pathname!=='/admin/safety-reports' && location.pathname!==`/admin/user-management/profile-info/${id}` && location.pathname!=="/admin/admgmt" && location.pathname!=='/admin/admgmt/userform') &&<div className='header-serach'>
         <input type={pathanme==="/admin/admin-pannel"?'number':'text'} value={search} name='year' onChange={(e)=>setSearch(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {

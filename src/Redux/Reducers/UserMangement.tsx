@@ -19,7 +19,8 @@ const initialState = {
   GSTUserReports: [],
   dashboard: [],
   profile: {},
-  emergency: []
+  emergency: [],
+  victiminfo:{}
 };
 
 // --- Common Fetch Handler ---
@@ -545,6 +546,35 @@ export const Emergency_Management = createAsyncThunk(
     }
   }
 );
+
+export const Victim_Info = createAsyncThunk(
+  'Victim_Info',
+  async (
+    payload: { data: { id:string} },
+    { fulfillWithValue, rejectWithValue, dispatch }
+  ) => {
+    try {
+      const { data } = payload
+      const response = await fetch(`${baseURL}${endpoints.victim_info}/${data.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          token: localStorage.getItem('token') || ''
+
+        },
+      });
+
+      const result = await response.json();
+
+      if (response) {
+        dispatch(AdminProfile())
+      }
+      return fulfillWithValue(result);
+    } catch (error: any) {
+      return rejectWithValue({ message: error.message || 'Suspension failed' });
+    }
+  }
+);
 const UserMangement_Slice = createSlice({
   name: "UserMangementSlice",
   initialState,
@@ -715,6 +745,19 @@ const UserMangement_Slice = createSlice({
         state.loading = false;
       })
       .addCase(Emergency_Management.rejected, (state, action) => {
+        state.loading = false;
+
+      });
+
+      builder
+      .addCase(Victim_Info.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(Victim_Info.fulfilled, (state, action) => {
+        state.victiminfo = action.payload;
+        state.loading = false;
+      })
+      .addCase(Victim_Info.rejected, (state, action) => {
         state.loading = false;
 
       });
