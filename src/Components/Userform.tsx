@@ -3,8 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import '../Styles/Userform.css'; // Adjust path as per your project structure
 import PreviewPopUp from './PreviewPopUp'; // Adjust path as per your project structure
 import { endpoints, baseURL } from '../../Utils/Config'; // Adjust path as per your project structure
-import { showToast } from '../../Utils/Validation'; // Adjust path as per your project structure
+//import { showToast } from '../../Utils/Validation'; // Adjust path as per your project structure
 import Loader from '../../Utils/Loader';
+
 interface FormState {
     id?: string;
     title: string;
@@ -522,12 +523,12 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
         //    for errors, ensuring we don't rely on potentially async state updates
         //    from the `setXError` calls in this same function execution.
         if (getAllCurrentErrors()) {
-            showToast(false, "Please correct the errors in the form before submitting.");
+            //showToast(false, "Please correct the errors in the form before submitting.");
             return; // Stop submission if there are errors
         }
 
         // If no errors, proceed with API call
-        setLoading(true);
+        setLoading(true); // <--- Set loading to true here for the full-page loader
         setApiMessage(null);
 
         try {
@@ -580,14 +581,17 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
             if (!res.ok) {
                 const errorMessage = data.message || `Error ${res.status}: Failed to ${isEditMode ? 'update' : 'create'} ad campaign.`;
                 setApiMessage({ type: 'error', text: errorMessage });
-                showToast(false, errorMessage);
+                //showToast(false, errorMessage);
             } else {
                 setApiMessage({ type: 'success', text: `Ad Campaign ${isEditMode ? 'Updated' : 'Created'} Successfully!` });
-                showToast(true, `Ad Campaign ${isEditMode ? 'Updated' : 'Created'} Successfully!`);
+                //showToast(true, `Ad Campaign ${isEditMode ? 'Updated' : 'Created'} Successfully!`);
 
                 onSubmissionSuccess?.(); // Callback for parent component
 
-                if (!isEditMode) {
+                if (isEditMode) {
+                    // Navigate immediately, no delay
+                    navigate('/admin/moniter-compaign'); // Adjust this path if needed
+                } else {
                     // Reset form and validation states for new campaign creation success
                     setForm({
                         title: '', description: '', callToAction: '', link: '',
@@ -610,9 +614,13 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
             }
         } catch (err: any) {
             setApiMessage({ type: 'error', text: err.message || "An unexpected error occurred during submission." });
-            showToast(false, err.message || "An unexpected error occurred during submission.");
+            //showToast(false, err.message || "An unexpected error occurred during submission.");
         } finally {
-            setLoading(false);
+            // Only set loading to false if not navigating, otherwise navigation will unmount component
+            if (!isEditMode) { // Or if you decide to navigate for both create/update
+                setLoading(false);
+            }
+            // If navigating, the component will unmount, so no need to set loading to false here for edit mode.
         }
     };
 
@@ -683,7 +691,8 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
                 />
             )}
 
-            {loading && <p style={{ color: 'white', textAlign: 'center', margin: '10px 0' }}>Processing...</p>}
+            {/* Remove this p tag, the full-page loader handles processing message */}
+            {/* {loading && <p style={{ color: 'white', textAlign: 'center', margin: '10px 0' }}>Processing...</p>} */}
 
             <div className="form-wrapper">
                 <h5>{isEditMode ? 'Edit Ad Campaign' : 'Create New Ad Campaign'}</h5>
@@ -920,22 +929,22 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
                         Discard
                     </button>
                     <button
-                    className='submit-button'
-                    type="button"
-                    disabled={isPublishDisabled || loading} // Disable button while loading
-                    style={{
-                        opacity: (isPublishDisabled || loading) ? 0.5 : 1,
-                        cursor: (isPublishDisabled || loading) ? 'not-allowed' : 'pointer'
-                    }}
-                    onClick={handleSubmit}
-                >
-                    {loading ? (
-                        <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Processing...
-                        </>
-                    ) : (isEditMode ? 'Update Campaign' : 'Publish Campaign')}
-                </button>
+                        className='submit-button'
+                        type="button"
+                        disabled={isPublishDisabled || loading} // Disable button while loading
+                        style={{
+                            opacity: (isPublishDisabled || loading) ? 0.5 : 1,
+                            cursor: (isPublishDisabled || loading) ? 'not-allowed' : 'pointer'
+                        }}
+                        onClick={handleSubmit} // This calls the handleSubmit function
+                    >
+                        {loading ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Processing...
+                            </>
+                        ) : (isEditMode ? 'Update Campaign' : 'Publish Campaign')}
+                    </button>
                 </div>
 
                 {apiMessage && (

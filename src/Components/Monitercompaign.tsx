@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import Pagination from './Pagination';
 import Loader from '../../Utils/Loader';
-import { showToast } from '../../Utils/Validation';
+// import { showToast } from '../../Utils/Validation'; // Removed
 import { endpoints, baseURL } from '../../Utils/Config';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
@@ -64,14 +64,13 @@ const formatDate = (dateString: string | null | undefined) => {
     return isNaN(date.getTime())
         ? dateString
         : date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+          });
 };
 
 // --- Skeleton Loader Component ---
-// Added for consistency and better UX during subsequent loads
 const SkeletonRow = ({ columns }: { columns: number }) => (
     <tr>
         {Array.from({ length: columns }).map((_, i) => (
@@ -104,34 +103,28 @@ const Monitercompaign: React.FC = () => {
     const [totalCount, setTotalCount] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
     const [apiError, setApiError] = useState<string | null>(null);
-    // New state for initial full-page loading vs. skeleton loading
-    const [initialLoading, setInitialLoading] = useState<boolean>(true);
+    const [initialLoading, setInitialLoading] = useState<boolean>(true); // Keep this true initially
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [campaignToDeleteId, setCampaignToDeleteId] = useState<string | null>(null);
 
-    // New state for campaign status filter
-    const [campaignStatus, setCampaignStatus] = useState<string | null>(null); // 'Active', 'Inactive', or null for 'All'
-    const [showFilterDropdown, setShowFilterDropdown] = useState(false); // Controls filter dropdown visibility
+    const [campaignStatus, setCampaignStatus] = useState<string | null>(null);
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
     const navigate = useNavigate();
 
     const actionButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
-    const dropdownRef = useRef<HTMLUListElement>(null); // Ref for action dropdown
-    const filterDropdownRef = useRef<HTMLDivElement>(null); // Ref for filter dropdown
+    const dropdownRef = useRef<HTMLUListElement>(null);
+    const filterDropdownRef = useRef<HTMLDivElement>(null);
 
     const fetchData = useCallback(async (page: number, limit: number, statusFilter: string | null) => {
-        setLoading(true);
+        setLoading(true); // Always set loading to true when fetching data
         setApiError(null);
 
-        // Construct the URL with optional status filter
         let url = `${baseURL}${endpoints.moniteradvertisement}?page=${page}&limit=${limit}`;
         if (statusFilter) {
             url += `&status=${statusFilter}`;
         }
-        // If your API also supports dailyBudget filtering based on status, you'd add it here too.
-        // For now, based on your provided endpoint, it looks like `status` is the key.
-        // Example: `&dailybudget=${yourBudgetParam}` if needed.
 
         const headers: HeadersInit = { 'Accept': 'application/json' };
         const token = localStorage.getItem('token');
@@ -149,38 +142,34 @@ const Monitercompaign: React.FC = () => {
             if (!res.ok) {
                 const errorMessage = data.message || `Error ${res.status}: Failed to fetch campaigns.`;
                 setApiError(errorMessage);
-                showToast(false, errorMessage);
                 setCampaignsData([]);
                 setTotalCount(0);
             } else {
                 setCampaignsData(data.data);
                 setTotalCount(data.totalCount);
-                if (data.totalCount === 0 && page === 1) {
-                    // Only show "No campaigns found" if it's the first page and truly empty
-                    showToast(false, "No campaigns found.");
-                }
             }
         } catch (err: any) {
             const errorMessage = err.message || "An unexpected network error occurred while fetching campaigns.";
             setApiError(errorMessage);
-            showToast(false, errorMessage);
             setCampaignsData([]);
             setTotalCount(0);
         } finally {
             setLoading(false);
-            setInitialLoading(false); // Set initial loading to false after the first fetch
+            // This is the crucial part: set initialLoading to false *only after the very first fetch completes*.
+            if (initialLoading) { // Check if it was indeed the initial load
+                setInitialLoading(false);
+            }
         }
-    }, [endpoints.moniteradvertisement, baseURL]);
+    }, [endpoints.moniteradvertisement, baseURL, initialLoading]); // Depend on initialLoading to ensure logic runs correctly
 
     useEffect(() => {
-        // Pass campaignStatus to fetchData
         fetchData(currentPage, ITEMS_PER_PAGE, campaignStatus);
-    }, [currentPage, campaignStatus, fetchData]); // Add campaignStatus to dependencies
+    }, [currentPage, campaignStatus, fetchData]);
 
     const handleEditCampaign = useCallback(async (campaignId: string) => {
-        setLoading(true);
+        setLoading(true); // Show full-page loader for edit fetch
         setApiError(null);
-        setOpenActionId(null); // Close dropdown immediately
+        setOpenActionId(null);
 
         const url = `${baseURL}${endpoints.getad}/${campaignId}`;
         const headers: HeadersInit = { 'Accept': 'application/json' };
@@ -194,22 +183,19 @@ const Monitercompaign: React.FC = () => {
 
             if (!res.ok) {
                 const errorMessage = data.message || `Error ${res.status}: Failed to fetch campaign for edit.`;
-                showToast(false, errorMessage);
+                // showToast(false, errorMessage); // Removed
             } else {
                 navigate('/admin/admgmt/userform', { state: { campaignData: data.data } });
             }
         } catch (err: any) {
             const errorMessage = err.message || "Network error while fetching campaign for edit.";
-            showToast(false, errorMessage);
+            // showToast(false, errorMessage); // Removed
         } finally {
             setLoading(false);
         }
     }, [navigate, endpoints.getad, baseURL]);
 
-    const handleCreateNewCampaign = useCallback(() => {
-        navigate('/admin/admgmt/userform');
-    }, [navigate]);
-
+    
     const handleDeleteClick = useCallback((campaignId: string) => {
         setCampaignToDeleteId(campaignId);
         setShowDeleteConfirm(true);
@@ -219,7 +205,7 @@ const Monitercompaign: React.FC = () => {
     const confirmDelete = useCallback(async () => {
         if (!campaignToDeleteId) return;
 
-        setLoading(true);
+        setLoading(true); // Show full-page loader for delete operation
         setShowDeleteConfirm(false);
         setApiError(null);
 
@@ -235,14 +221,14 @@ const Monitercompaign: React.FC = () => {
 
             if (!res.ok) {
                 const errorMessage = data.message || `Error ${res.status}: Failed to delete campaign.`;
-                showToast(false, errorMessage);
+                // showToast(false, errorMessage); // Removed
             } else {
-                showToast(true, data.message || "Campaign deleted successfully!");
-                fetchData(currentPage, ITEMS_PER_PAGE, campaignStatus); // Refresh data after deletion, maintain filter
+                // showToast(true, data.message || "Campaign deleted successfully!"); // Removed
+                fetchData(currentPage, ITEMS_PER_PAGE, campaignStatus);
             }
         } catch (err: any) {
             const errorMessage = err.message || "Network error while deleting campaign.";
-            showToast(false, errorMessage);
+            // showToast(false, errorMessage); // Removed
         } finally {
             setLoading(false);
             setCampaignToDeleteId(null);
@@ -260,7 +246,6 @@ const Monitercompaign: React.FC = () => {
         setOpenActionId((prev) => (prev === campaignId ? null : campaignId));
     };
 
-    // Handle clicks outside the Action dropdown to close it
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const clickedButton = openActionId ? actionButtonRefs.current[openActionId] : null;
@@ -281,7 +266,6 @@ const Monitercompaign: React.FC = () => {
         };
     }, [openActionId]);
 
-    // Handle clicks outside the Filter dropdown to close it
     useEffect(() => {
         const handleClickOutsideFilter = (event: MouseEvent) => {
             if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
@@ -294,7 +278,6 @@ const Monitercompaign: React.FC = () => {
         };
     }, []);
 
-    // Position the Action dropdown dynamically
     const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
 
     useEffect(() => {
@@ -303,7 +286,7 @@ const Monitercompaign: React.FC = () => {
             if (button) {
                 const rect = button.getBoundingClientRect();
                 setDropdownPosition({
-                    top: rect.bottom + window.scrollY + 5, // 5px below the button
+                    top: rect.bottom + window.scrollY + 5,
                     left: rect.left + window.scrollX,
                 });
             }
@@ -312,23 +295,24 @@ const Monitercompaign: React.FC = () => {
         }
     }, [openActionId]);
 
-    // Handle filter selection
     const handleFilterSelect = (status: string | null) => {
-        setCampaignStatus(status); // This will trigger useEffect to refetch data
-        setCurrentPage(1); // Always reset to the first page when applying a new filter
-        setShowFilterDropdown(false); // Close the dropdown after selection
+        setCampaignStatus(status);
+        setCurrentPage(1);
+        setShowFilterDropdown(false);
     };
 
     return (
         <div className='container'>
             <div className='d-flex justify-content-end mt-4 gap-2'>
+                {/* Create New Campaign Button */}
                 
                 {/* Filter Dropdown Button */}
-                <div className="position-relative"> {/* Added position-relative for dropdown */}
+                <div className="position-relative">
                     <button
                         className='btn btn-primary'
                         style={{ backgroundColor: '#3856F3', fontFamily: 'Roboto' }}
                         onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                        disabled={loading}
                     >
                         Filter
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -344,10 +328,10 @@ const Monitercompaign: React.FC = () => {
                             style={{
                                 position: 'absolute',
                                 top: '100%',
-                                right: '0', // Position to the right of the button
+                                right: '0',
                                 zIndex: 1000,
                                 minWidth: '150px',
-                                marginTop: '5px' // Space below button
+                                marginTop: '5px'
                             }}
                         >
                             <button className="dropdown-item" onClick={() => handleFilterSelect(null)}>All Campaigns</button>
@@ -362,42 +346,47 @@ const Monitercompaign: React.FC = () => {
                 {/* Initial Full Page Loader (Ring Loader) */}
                 {initialLoading && loading && (
                     <div style={{
-                        position: 'absolute',
+                        position: 'fixed',
                         top: 0, left: 0, right: 0, bottom: 0,
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
                         backgroundColor: 'rgba(0,0,0,0.5)',
-                        zIndex: 999,
+                        zIndex: 9999,
                     }}>
                         <Loader />
                     </div>
                 )}
 
-                <table className="table table-borderless mt-4">
-                    <thead>
-                        <tr>
-                            <th>S.No</th>
-                            <th>Advertisement Name</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Status</th>
-                            <th>Impressions</th>
-                            <th>Engagement Rate</th>
-                            <th>Budget</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {/* Conditional rendering for skeleton rows vs. actual data */}
-                        {loading && !initialLoading ? (
-                            // Show skeleton rows when loading *after* the initial load (e.g., page change, filter change)
-                            Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
-                                <SkeletonRow key={i} columns={9} />
-                            ))
-                        ) : (
-                            // Show actual data if not loading (or if it's the initial load and ring loader is on top)
-                            campaignsData.length > 0 ? (
+                {/* Display API Error Message */}
+                {apiError && !initialLoading && (
+                    <p className="text-center text-danger mt-4">{apiError}</p>
+                )}
+
+                {/* Conditional rendering for the entire table */}
+                {/* Table shows if there is data OR if we are loading subsequent data (not initial load) and no API error */}
+                {(!initialLoading && loading && !apiError) || (!initialLoading && !loading && campaignsData.length > 0 && !apiError) ? (
+                    <table className="table table-borderless mt-4">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Advertisement Name</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                                <th>Impressions</th>
+                                <th>Engagement Rate</th>
+                                <th>Budget</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading && !initialLoading ? ( // Show skeleton rows when loading *and* not in initialLoading phase
+                                Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+                                    <SkeletonRow key={i} columns={9} />
+                                ))
+                            ) : (
+                                // Show actual data if not loading and initial loading is done, AND data exists
                                 campaignsData.map((tdata: CampaignSummary, index: number) => (
                                     <tr key={tdata._id}>
                                         <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
@@ -405,7 +394,6 @@ const Monitercompaign: React.FC = () => {
                                         <td>{formatDate(tdata.adDuration?.startDate)}</td>
                                         <td>{formatDate(tdata.adDuration?.endDate)}</td>
                                         <td>{tdata.status || 'N/A'}</td>
-                                        {/* Placeholders for Impressions and Engagement Rate */}
                                         <td>{tdata.impressions !== undefined ? tdata.impressions.toLocaleString() : 'N/A'}</td>
                                         <td>{tdata.engagementRate !== undefined ? `${tdata.engagementRate}%` : 'N/A'}</td>
                                         <td>
@@ -429,26 +417,27 @@ const Monitercompaign: React.FC = () => {
                                         </td>
                                     </tr>
                                 ))
-                            ) : (
-                                // Show "No campaigns found" only if not loading (and initial loading is done) AND no records are found
-                                !loading && !initialLoading && (
-                                    <tr>
-                                        <td colSpan={9} className="text-center">No campaigns found</td>
-                                    </tr>
-                                )
-                            )
-                        )}
-                    </tbody>
-                </table>
+                            )}
+                        </tbody>
+                    </table>
+                ) : (
+                    // Show "No campaigns found" only if not loading, not initial loading, no apiError, and no records found
+                    !loading && !initialLoading && campaignsData.length === 0 && !apiError && (
+                        <p className="text-center mt-4">No campaigns found</p>
+                    )
+                )}
             </div>
 
-            <Pagination
-                totalPages={totalPages}
-                currentPage={currentPage}
-                setPage={setCurrentPage}
-            />
+            {/* Pagination only shows when not initial loading and not just loading subsequent data, and there's data */}
+            {!initialLoading && !loading && totalCount > 0 && !apiError && (
+                <Pagination
+                    totalPages={totalPages}
+                    currentPage={currentPage}
+                    setPage={setCurrentPage}
+                />
+            )}
 
-            {/* Portal for dropdown to ensure it renders on top of everything */}
+            {/* Portal for dropdown (remains the same) */}
             {openActionId && dropdownPosition && ReactDOM.createPortal(
                 <ul
                     ref={dropdownRef}
