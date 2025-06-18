@@ -20,7 +20,8 @@ const initialState = {
   dashboard: [],
   profile: {},
   emergency: [],
-  victiminfo:{}
+  victiminfo:{},
+  budget:''
 };
 
 // --- Common Fetch Handler ---
@@ -578,7 +579,11 @@ export const Victim_Info = createAsyncThunk(
 const UserMangement_Slice = createSlice({
   name: "UserMangementSlice",
   initialState,
-  reducers: {},
+  reducers: {
+    setBudget:(state,action)=>{
+      state.budget=action.payload
+    }
+  },
   extraReducers: (builder) => {
     // Users
     builder
@@ -764,5 +769,5 @@ const UserMangement_Slice = createSlice({
   },
 });
 
-
+export const {setBudget}=UserMangement_Slice.actions
 export default UserMangement_Slice.reducer;

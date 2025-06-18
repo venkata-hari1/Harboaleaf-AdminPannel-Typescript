@@ -3,7 +3,7 @@ import '../Styles/Header.css';
 import { useLocation } from 'react-router-dom'
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../Redux/store/Store';
-import { Admin_Dashboard, Emergency_Management, GST_User_Reports, GSTUSERS, Subscription, UserReports, Users } from '../Redux/Reducers/UserMangement';
+import { Admin_Dashboard, Emergency_Management, GST_User_Reports, GSTUSERS, setBudget, Subscription, UserReports, Users } from '../Redux/Reducers/UserMangement';
 const Header = () => {
   const[search,setSearch]=useState('')
   const totalusers= localStorage.getItem('totalusers')
@@ -85,6 +85,9 @@ const Header = () => {
        await dispatch(Emergency_Management(({data:data})))
        break;
       }
+      case '/admin/moniter-compaign':{
+        dispatch(setBudget(search))
+      }
       default:{
         break
       }
@@ -108,6 +111,7 @@ const Header = () => {
       "/admin/moniter-compaign"
     ].includes(location.pathname)) {
       setSearch('');
+      dispatch(setBudget(''))
   
       
     }
@@ -165,7 +169,7 @@ const Header = () => {
         </div>
         <div className='search-notify'>
         {(location.pathname!=="/admin/edit-profile" &&location.pathname!=='/admin/safety-reports' && location.pathname!==`/admin/user-management/profile-info/${id}` && location.pathname!=="/admin/admgmt" && location.pathname!=='/admin/admgmt/userform') &&<div className='header-serach'>
-        <input type={pathanme==="/admin/admin-pannel"?'number':'text'} value={search} name='year' onChange={(e)=>setSearch(e.target.value)}
+        <input type={(pathanme==="/admin/admin-pannel" || pathanme==="/admin/moniter-compaign")?'number':'text'} value={search} name='year' onChange={(e)=>setSearch(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             handleSearch();
@@ -199,3 +203,4 @@ const Header = () => {
 }
 
 export default Header
+

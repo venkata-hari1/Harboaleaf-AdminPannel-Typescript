@@ -584,7 +584,9 @@ const Userform: React.FC<UserformProps> = ({ onSubmissionSuccess }) => {
             } else {
                 setApiMessage({ type: 'success', text: `Ad Campaign ${isEditMode ? 'Updated' : 'Created'} Successfully!` });
                 showToast(true, `Ad Campaign ${isEditMode ? 'Updated' : 'Created'} Successfully!`);
-
+                setTimeout(()=>{
+                    navigate('/admin/moniter-compaign')
+                },500)
                 onSubmissionSuccess?.(); // Callback for parent component
 
                 if (!isEditMode) {
