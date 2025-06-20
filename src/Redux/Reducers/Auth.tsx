@@ -9,6 +9,7 @@ export const SignIn = createAsyncThunk(
   async (payload: { data }, { fulfillWithValue, rejectWithValue }) => {
     try {
       const {data}=payload
+      console.log(data)
       const response = await fetch(`${baseURL}${endpoints.SIGNIN}`, {
         method: "POST",
         headers: {
@@ -31,6 +32,9 @@ export const SignIn = createAsyncThunk(
     }
   }
 );
+
+
+
 export const Auth_Slice = createSlice({
   name: "AuthSlice",
   initialState,

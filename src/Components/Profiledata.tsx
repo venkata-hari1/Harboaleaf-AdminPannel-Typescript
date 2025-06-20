@@ -3,27 +3,23 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import '../Styles/Profiledata.css';
 import { AppDispatch, RootState } from '../Redux/store/Store';
+import moment from 'moment';
 
 
 const Profiledata = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { socialUser,socialUserError }:any = useSelector((state:RootState) => state.UserMangment);
-  // Fetch social user data on mount
 
-  // Prepare data for display
   const profiledata = socialUser
     ? [
         { id: 1, key: 'Full Name', value: socialUser?.user?.firstname },
         { id: 2, key: 'Gender', value: socialUser?.user?.gender.charAt(0).toUpperCase() + socialUser?.user?.gender.slice(1) },
-        { id: 3, key: 'Date of Birth', value: new Date(socialUser?.user?.dateofbirth).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) },
+        { id: 3, key: 'Date of Birth', value:moment("1997-01-15T00:00:00.000Z").format("DD-MM-YYYY")},
         { id: 4, key: 'Phone Number', value: `${socialUser?.user?.countryCode}${socialUser?.user?.mobile}` },
       ]
     : [];
 
-  // Construct display name
   const displayName = socialUser ? `${socialUser?.user?.firstname}` : 'Loading...';
-
- 
 
   if (socialUserError) {
     return <div>{socialUserError}</div>;

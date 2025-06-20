@@ -87,6 +87,7 @@ export const Users = createAsyncThunk(
   ) => {
     try {
       const { page, sort, filter, state } = payload.data;
+      console.log(page)
       const token = localStorage.getItem('token');
       const response = await fetch(
         `${baseURL}api/admin/users?page=${page}&sort=${sort}&state=${state}&accountStatus=${filter}`, {
@@ -110,6 +111,8 @@ export const Users = createAsyncThunk(
     }
   }
 );
+
+
 
 export const Subscription = createAsyncThunk(
   "Subscription",

@@ -46,7 +46,7 @@ const Gstreportsmanagement = () => {
     navigate(`/admin/user-management/profile-info/${id}`);
   };
   return (
-    <div className='container'>
+    <div className='container' style={{marginTop:'60px'}}>
       <div className='d-flex justify-content-end mt-4'>
         <button className='btn btn-primary me-3'
           style={{ backgroundColor: "#3856F3", fontFamily: "Roboto" }} onClick={() => setSort(prev => (prev === 'asc' ? 'desc' : 'asc'))}>

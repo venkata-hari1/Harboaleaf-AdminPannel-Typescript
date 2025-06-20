@@ -66,7 +66,7 @@ function Login() {
         mobile: auth.mobile,
         password: auth.password,
       }
-      const response = await dispatch(SignIn({ data }))
+      const response = await dispatch(SignIn({ data:data }))
       const fulfilled = response.payload
       if (!fulfilled.status) {
         showToast(false, fulfilled.message)

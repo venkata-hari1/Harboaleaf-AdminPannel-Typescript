@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import moment from 'moment';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../Redux/store/Store';
@@ -18,18 +18,20 @@ text:string
 
 }
 const UserPopUp = ({ post,handleClose}:IProps) => {
-  const [showMenu, setShowMenu] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
- const[loading,setLoading]=useState(false)
   const isPost = post?.type === 'post';
   const isVibe = post?.type === 'vibe';
   const content = isPost ? post?.postId : isVibe ? post?.vibeId : null;
+  const [showMenu, setShowMenu] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+ const[loading,setLoading]=useState(false)
+
   const text = content?.text;
   const image = content?.files?.[0].file;
   const firstname = post?.user?.firstname;
 
-  const userimage = post?.user?.image;
-  const createdAt = content?.createdAt || post?.createdAt;
+
+const userimage = post?.user?.image;
+const createdAt = content?.createdAt || post?.createdAt;
 const dispatch=useDispatch<AppDispatch>()
   const handleDeleteConfirm = async() => {
     try{
@@ -37,6 +39,7 @@ const dispatch=useDispatch<AppDispatch>()
       const data={
         id:content?._id
       }
+
      const response= await dispatch(DeletePostReel({data:data}))
      const fulfilled=response.payload
      if(fulfilled?.status){
@@ -45,7 +48,7 @@ const dispatch=useDispatch<AppDispatch>()
       handleClose(false)
      } 
      else{
-      showToast(true,'something went wrong')
+      showToast(true,fulfilled?.message || 'Something went wrong')
      }
    
     }
