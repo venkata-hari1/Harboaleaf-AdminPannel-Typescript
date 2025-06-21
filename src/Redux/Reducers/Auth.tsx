@@ -16,7 +16,6 @@ export const SignIn = createAsyncThunk(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-        referrerPolicy: 'no-referrer-when-downgrade'
       });
 
       const result = await response.json();
