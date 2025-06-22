@@ -142,7 +142,7 @@ const handleLogout=()=>{
             <div style={{ fontSize: '12px', color: '#a0a0a0' }}>Admin</div>
           </div>
           <div className="ms-auto d-flex align-items-center gap-2">
-            <i className="bi bi-bell-fill" style={{ color: '#ccc' }}></i>
+            {/* <i className="bi bi-bell-fill" style={{ color: '#ccc' }}></i> */}
             {/* Logout icon */}
 
             <i

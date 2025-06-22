@@ -18,6 +18,7 @@ import Skeleton from "react-loading-skeleton";
 
 export default function App() {
   const {dashboard,loading}:any=useSelector((state:RootState)=>state.UserMangment)
+  console.log(dashboard)
   const chartData = dashboard?.data?.MonthlyRegistrations || [];
   const [year, setYear] = useState(new Date().getFullYear());
   const dispatch=useDispatch<AppDispatch>()
