@@ -135,7 +135,7 @@ const handleLogout=()=>{
             height="36px"
             alt="Admin"
           />
-          <div className="ms-2" style={{ lineHeight: '1.2' }} onClick={() => navigate('/')}>
+          <div className="ms-2" style={{ lineHeight: '1.2' }}>
             <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>
               {profile?.user?.firstname}
             </div>
