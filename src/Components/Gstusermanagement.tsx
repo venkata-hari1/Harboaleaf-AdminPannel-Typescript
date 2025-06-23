@@ -63,6 +63,7 @@ const Gstreportsmanagement = () => {
  {initialLoading ? (
         <Loader />
       ):
+      GSTUsers?.data?.length>0?
       <div className="tab-content table-responsive">
         <table className="table table-borderless mt-4">
           <thead>
@@ -110,9 +111,14 @@ const Gstreportsmanagement = () => {
             )}
           </tbody>
         </table>
-      </div>}
+        {!loading && <Pagination currentPage={page} totalPages={TotalUsers} setPage={setPage} />}
+      </div>:   <div className="nodata">
+            <p className="content">No data found</p>
+          </div>
+      
+    }
 
-      {!loading && <Pagination currentPage={page} totalPages={TotalUsers} setPage={setPage} />}
+     
     </div>
   );
 };
