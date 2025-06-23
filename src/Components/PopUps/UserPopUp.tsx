@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import moment from 'moment';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../Redux/store/Store';
@@ -27,6 +27,7 @@ const UserPopUp = ({ post,handleClose}:IProps) => {
 
   const text = content?.text;
   const image = content?.files?.[0].file;
+  
   const firstname = post?.user?.firstname;
 
 
@@ -67,6 +68,7 @@ const handleDelete=()=>{
   setShowMenu(false);
   setShowConfirm(true);
 }
+const isVideo = image?.match(/\.(mp4|webm|ogg)$/i)
   return (
     <>
       {/* Main Popup */}
@@ -153,11 +155,21 @@ const handleDelete=()=>{
                     style={{ width: '100%', height: '100%', borderRadius: '10px' }}
                   />
                 ) : (
+
+                  <Fragment>
+                {isVideo?
+                 <video
+                 src={image}
+                 controls
+                 style={{ width: '100%', borderRadius: '10px' }}
+               />
+                : 
                   <img
                     src={image }
                     style={{ width: '100%', borderRadius: '10px' }}
                     alt="popup"
-                  />
+                  />}
+                  </Fragment>
                 )}
 
                 <div className="image-text mt-2">
