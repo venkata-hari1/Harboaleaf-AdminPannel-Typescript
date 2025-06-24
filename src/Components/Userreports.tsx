@@ -1,6 +1,5 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import Pagination from './Pagination';
-import Actions from './ActionBtns/Actions';
 import UserPopUp from './PopUps/UserPopUp';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../Redux/store/Store';
@@ -9,7 +8,7 @@ import { UserReports, UserSuspended } from '../Redux/Reducers/UserMangement';
 import Loader from '../../Utils/Loader';
 import { showToast } from '../../Utils/Validation';
 import { useLocation } from 'react-router-dom';
-
+import Home from '../assets/home.png'
 const Userreports = () => {
   const [popupVisible, setPopupVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
@@ -233,8 +232,8 @@ const Userreports = () => {
                           </div>
                         </td>
                         <td>
-                          <div style={{ color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
-                            {tdata?.type}
+                          <div onClick={() => handleClick(tdata, tdata.type)} style={{ color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
+                            {(tdata?.type==='post' || tdata?.type==='vibe')?<Fragment><img src={Home} alt=''/><span className='ms-1' style={{textTransform:'capitalize',color:'rgb(56, 86, 243)'}}>{tdata?.type}</span></Fragment>:<span style={{textTransform:'capitalize'}}>{tdata?.type}</span>}
                           </div>
                         </td>
                         <td className='action-btns'>

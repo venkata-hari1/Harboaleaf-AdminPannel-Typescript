@@ -3,7 +3,6 @@ import "../Styles/Usermanagement.css";
 import Pagination from './Pagination';
 import '../Styles/Pagination.css';
 import { useNavigate } from 'react-router-dom';
-import Actions from './ActionBtns/Actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { Users, UserSuspended } from '../Redux/Reducers/UserMangement';
 import { AppDispatch, RootState } from '../Redux/store/Store';

@@ -22,8 +22,8 @@ const AppRoutes = () => {
       <Route path='/social' element={<Socialdata />}/> 
       <Route path='/post' element={<Postdata />}/> 
       <Route path='/profile-info' element={<Profileinformation />} />
-      <Route path='/safetable' element={< Safetytable/>} />
-      <Route path='/preview-popup' element={< PreviewPopUp/>} />
+      <Route path='/safetable' element={< Safetytable victiminfo={[]}/>} />
+      <Route path='/preview-popup' element={< PreviewPopUp />} />
     </Routes>
     
   )
