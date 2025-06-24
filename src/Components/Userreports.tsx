@@ -177,7 +177,7 @@ const Userreports = () => {
                             {getSerialNumber(index)}
                           </div>
                         </td>
-                        <td onClick={() => handleClick(tdata, tdata.type)} style={{ cursor: 'pointer' }}>
+                        <td style={{ cursor: 'pointer' }}>
                           <div className="d-flex">
                             <img
                               src={tdata?.user?.image || `https://robohash.org/${tdata?.user?.firstname || 'guest'}?size=40x40`}
@@ -231,8 +231,8 @@ const Userreports = () => {
                             {tdata?.reason}
                           </div>
                         </td>
-                        <td>
-                          <div onClick={() => handleClick(tdata, tdata.type)} style={{ color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
+                        <td onClick={() => handleClick(tdata, tdata.type)}>
+                          <div  style={{ color: tdata?.user?.suspended ? "red" : tdata?.user?.temSuspended ? 'rgb(56, 86, 243)' : 'white' }}>
                             {(tdata?.type==='post' || tdata?.type==='vibe')?<Fragment><img src={Home} alt=''/><span className='ms-1' style={{textTransform:'capitalize',color:'rgb(56, 86, 243)'}}>{tdata?.type}</span></Fragment>:<span style={{textTransform:'capitalize'}}>{tdata?.type}</span>}
                           </div>
                         </td>
