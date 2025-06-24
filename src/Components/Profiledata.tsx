@@ -7,7 +7,6 @@ import moment from 'moment';
 
 
 const Profiledata = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const { socialUser,socialUserError }:any = useSelector((state:RootState) => state.UserMangment);
   const [showPreview, setShowPreview] = useState(false);
   const [csvContent, setCsvContent] = useState(''); 
@@ -21,29 +20,76 @@ const Profiledata = () => {
     : [];
 
   const displayName = socialUser ? `${socialUser?.user?.firstname}` : 'Loading...';
-  const generateCsvData = () => {
-    const csvData = [
-      ['Key', 'Value'],
-      ['Full Name', socialUser?.user?.firstname || 'N/A'],
-      ['Gender', socialUser?.user?.gender ? socialUser.user.gender.charAt(0).toUpperCase() + socialUser.user.gender.slice(1) : 'N/A'],
-      ['Date of Birth', moment(socialUser?.user?.dateofbirth).format('DD-MM-YYYY') || 'N/A'],
-      ['Phone Number', `${socialUser?.user?.countryCode || ''}${socialUser?.user?.mobile || 'N/A'}`],
-      ['Display Name', socialUser?.user?.firstname || 'N/A'],
-      ['User ID', socialUser?.user?._id || 'N/A'],
-      ['Bio', socialUser?.user?.bio || 'N/A'], 
-      ['Account Type', socialUser?.user?.privacy ? 'Private' : 'Public'],
-    ];
-    return csvData.map(row => row.join(',')).join('\n');
+ const generateCsvData = () => {
+  const followersCount = Array.isArray(socialUser?.followers) ? socialUser.followers.length : 0;
+  const followingCount = Array.isArray(socialUser?.following) ? socialUser.following.length : 0;
+  const friendsCount = Array.isArray(socialUser?.friends) ? socialUser.friends.length : 0;
+  const postsCount = Array.isArray(socialUser?.posts) ? socialUser.posts.length : 0;
+  const vibesCount =
+    typeof socialUser?.reels === 'string' && socialUser.reels.includes('No')
+      ? 0
+      : Array.isArray(socialUser?.reels)
+      ? socialUser?.reels?.length
+      : 0;
+  const taggedPostsCount =
+    socialUser?.Tagged_Posts && typeof socialUser.Tagged_Posts === 'object' ? 1 : 0;
+
+  const statusText = `${postsCount} - Posts, ${friendsCount} - Friends, ${followersCount} - Followers, ${followingCount} - Following, ${taggedPostsCount} - Tagged Posts, ${vibesCount} - Vibes`;
+
+  const escapeCSVValue = (value: string) => {
+    if (typeof value !== 'string') return value;
+    return `"${value.replace(/"/g, '""')}"`;
   };
 
+  const csvData = [
+    ['Key', 'Value'],
+    ['Full Name', socialUser?.user?.firstname || 'N/A'],
+    ['Gender', socialUser?.user?.gender ? socialUser.user.gender.charAt(0).toUpperCase() + socialUser.user.gender.slice(1) : 'N/A'],
+    ['Date of Birth', moment(socialUser?.user?.dateofbirth).format('DD-MM-YYYY') || 'N/A'],
+    ['Phone Number', `${socialUser?.user?.countryCode || ''}${socialUser?.user?.mobile || 'N/A'}`],
+    ['Display Name', socialUser?.user?.firstname || 'N/A'],
+    ['User ID', socialUser?.user?._id || 'N/A'],
+    ['Bio', socialUser?.user?.bio || 'N/A'],
+    ['Account Type', socialUser?.user?.privacy ? 'Private' : 'Public'],
+    ['Status', escapeCSVValue(statusText)],
+  ];
+  return csvData.map(row => row.join(',')).join('\n');
+};
+
+const parseCsvForTable = (csv: string) => {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentCell = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < csv.length; i++) {
+    const char = csv[i];
+    if (char === '"') {
+      inQuotes = !inQuotes; 
+    } else if (char === ',' && !inQuotes) {
+      currentRow.push(currentCell.trim());
+      currentCell = '';
+    } else if (char === '\n' && !inQuotes) {
+      currentRow.push(currentCell.trim());
+      rows.push(currentRow);
+      currentRow = [];
+      currentCell = '';
+    } else {
+      currentCell += char;
+    }
+  }
+  if (currentCell || currentRow.length) {
+    currentRow.push(currentCell.trim());
+    rows.push(currentRow);
+  }
+  return rows.map(row => row.map(cell => cell.replace(/^"|"$/g, '').replace(/""/g, '"')));
+};
   const handlePreviewClick = () => {
     const csv = generateCsvData();
     setCsvContent(csv);
     setShowPreview(true);
   };
-  const parseCsvForTable = (csv: string) => {
-    return csv.split('\n').map(row => row.split(','));
-  };
+
   const handleDownload = () => {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
